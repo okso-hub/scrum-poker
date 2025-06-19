@@ -4,20 +4,3 @@ services:
     build: .
     ports:
       - "3000:3000"
-    environment:
-      - DATABASE_URL=postgresql://quizzy:secret@postgres:5432/quizzydb
-    depends_on:
-      - postgres
-    
-  postgres:
-    image: postgres:15
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: quizzydb
-      POSTGRES_USER: quizzy
-      POSTGRES_PASSWORD: secret
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-volumes:
-  pgdata:
