@@ -67,6 +67,23 @@ app.post('/join', (req, res) => {
   res.json({ success: true });
 });
 
+/**
+ * GET /is-admin
+ * Checks if current user is admin of the given room
+ * Query: roomId
+ */
+app.get('/is-admin', (req, res) => {
+  const { roomId } = req.query;
+  if (!roomId) return res.status(400).json({ error: 'roomId is required' });
+
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: 'Room not found' });
+
+  const ip = req.ip;
+  const isAdmin = room.admin.ip === ip;
+  res.json({ isAdmin });
+});
+
 // Start HTTP server
 const server = app.listen(PORT, () => {
   console.log(`HTTP server listening on http://localhost:${PORT}`);
@@ -76,7 +93,6 @@ const server = app.listen(PORT, () => {
 const wss = new WebSocketServer({ server, path: '/ws' });
 
 wss.on('connection', (ws, req) => {
-  // Expect clients to send initial message with roomId and role
   ws.on('message', (data) => {
     let msg;
     try {
@@ -88,10 +104,10 @@ wss.on('connection', (ws, req) => {
     const room = rooms.get(roomId);
     if (!room) return;
 
-    // Attach ws to room if first message
+    // Attach roomId to ws for broadcasting
     if (!ws.roomId) ws.roomId = roomId;
 
-    // Broadcast payload to all clients in the same room
+    // Broadcast to others in same room
     wss.clients.forEach((client) => {
       if (client !== ws && client.readyState === client.OPEN && client.roomId === roomId) {
         client.send(JSON.stringify({ from: role, payload }));
