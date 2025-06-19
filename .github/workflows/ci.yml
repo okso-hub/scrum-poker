@@ -39,4 +39,5 @@ jobs:
         run: |
           docker build \
             --tag agileace:${{ github.sha }} \
+            --tag agileace:latest \
             --file Dockerfile .
