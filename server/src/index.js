@@ -11,40 +11,27 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // In-memory store for rooms
-// Key: roomId, Value: { admin: User, users: User[], items: string[] }
 const rooms = new Map();
 
-// Middleware to parse JSON bodies
+// Middleware
 app.use(express.json());
-// Serve static files
 app.use(express.static(path.join(__dirname, '../../public')));
 
 /**
- * User object
- * @typedef {{ name: string; ip: string }} User
- */
-
-/**
  * POST /create
- * Creates a new room and returns its ID
- * Body: { name: string }
  */
 app.post('/create', (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
   const ip = req.ip;
-  /** @type {User} */
-  const admin = { name, ip };
   const roomId = uuidv4();
-  rooms.set(roomId, { admin, users: [], items: [] });
+  rooms.set(roomId, { admin: { name, ip }, users: [], items: [] });
   console.log(`Room created: ${roomId} by admin ${name} (${ip})`);
   res.json({ roomId });
 });
 
 /**
  * POST /join
- * Joins an existing room, avoids duplicate joins by IP
- * Body: { name: string, roomId: string }
  */
 app.post('/join', (req, res) => {
   const { name, roomId } = req.body;
@@ -52,16 +39,14 @@ app.post('/join', (req, res) => {
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: 'Room not found' });
   const ip = req.ip;
-  const already = room.users.some(u => u.ip === ip);
-  if (!already) {
-    /** @type {User} */
-    const user = { name, ip };
-    room.users.push(user);
+  const exists = room.users.some(u => u.ip === ip);
+  if (!exists) {
+    room.users.push({ name, ip });
     console.log(`User ${name} (${ip}) joined room ${roomId}`);
-    // Notify existing ws clients in this room
-    wss.clients.forEach(client => {
-      if (client.readyState === client.OPEN && client.roomId === roomId) {
-        client.send(JSON.stringify({ event: 'user-joined', name }));
+    // notify others via WS
+    wss.clients.forEach(c => {
+      if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
+        c.send(JSON.stringify({ event: 'user-joined', name }));
       }
     });
   } else {
@@ -72,8 +57,6 @@ app.post('/join', (req, res) => {
 
 /**
  * GET /is-admin
- * Checks if current user is admin of the given room
- * Query: roomId
  */
 app.get('/is-admin', (req, res) => {
   const { roomId } = req.query;
@@ -81,14 +64,12 @@ app.get('/is-admin', (req, res) => {
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: 'Room not found' });
   const isAdmin = room.admin.ip === req.ip;
-  console.log(`is-admin check for ${req.ip} in ${roomId}: ${isAdmin}`);
+  console.log(`is-admin: ${req.ip} in ${roomId} = ${isAdmin}`);
   res.json({ isAdmin });
 });
 
 /**
- * POST /room/:roomId/items
- * Admin-only: set items list for room
- * Body: { items: string[] }
+ * Admin-only: set items
  */
 app.post('/room/:roomId/items', (req, res) => {
   const { roomId } = req.params;
@@ -96,15 +77,14 @@ app.post('/room/:roomId/items', (req, res) => {
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: 'Room not found' });
   if (room.admin.ip !== req.ip) return res.status(403).json({ error: 'Forbidden' });
-  if (!Array.isArray(items)) return res.status(400).json({ error: 'Items must be an array of strings' });
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'Items must be an array' });
   room.items = items;
-  console.log(`Items set for room ${roomId}: ${items.join(', ')}`);
+  console.log(`Items set for room ${roomId}: ${items}`);
   res.json({ success: true });
 });
 
 /**
- * POST /room/:roomId/start
- * Admin-only: start voting, sends first item with options to clients
+ * Admin-only: start voting
  */
 app.post('/room/:roomId/start', (req, res) => {
   const { roomId } = req.params;
@@ -115,35 +95,69 @@ app.post('/room/:roomId/start', (req, res) => {
   if (!first) return res.status(400).json({ error: 'No items to start' });
   const event = { event: 'start', item: first, options: [1,2,3,4,5] };
   console.log(`Starting room ${roomId} with item ${first}`);
-  wss.clients.forEach(client => {
-    if (client.readyState === client.OPEN && client.roomId === roomId) {
-      client.send(JSON.stringify(event));
-    }
+  wss.clients.forEach(c => {
+    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) c.send(JSON.stringify(event));
   });
   res.json({ success: true });
 });
 
-// Start HTTP server and WebSocket server
-const server = app.listen(PORT, () => console.log(`HTTP server on http://localhost:${PORT}`));
+
+/**
+ * GET /room/:roomId/participants
+ * Returns list of participants (admin + users)
+ */
+app.get('/room/:roomId/participants', (req, res) => {
+  const { roomId } = req.params;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: 'Room not found' });
+  // Build participants list (names only)
+  const participants = [
+    room.admin.name,
+    ...room.users.map(u => u.name)
+  ];
+  console.log(`Participants for room ${roomId}:`, participants);
+  res.json({ participants });
+});
+
+// Start servers
+const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
 const wss = new WebSocketServer({ server, path: '/ws' });
 
 wss.on('connection', (ws, req) => {
-  console.log(`WebSocket connected: ${req.socket.remoteAddress}`);
+  console.log(`WS connected: ${req.socket.remoteAddress}`);
+  ws.isAlive = true;
+  ws.on('pong', () => { ws.isAlive = true; });
+
   ws.on('message', data => {
-    let msg;
-    try { msg = JSON.parse(data); } catch(e) { return; }
-    const { roomId, role, payload } = msg;
-    const room = rooms.get(roomId);
-    if (!room) return;
-    if (!ws.roomId) ws.roomId = roomId;
+    const msg = data.toString();
+    if (!ws.roomId) {
+      ws.roomId = msg;
+      console.log(`Assigned ws to room ${ws.roomId}`);
+      return;
+    }
+    let parsed;
+    try { parsed = JSON.parse(msg); } catch { return; }
+    const { role, payload } = parsed;
     console.log(`Received from ${role}@${ws.roomId}:`, payload);
-    wss.clients.forEach(client => {
-      if (client !== ws && client.readyState === client.OPEN && client.roomId === roomId) {
-        client.send(JSON.stringify({ from: role, payload }));
+    wss.clients.forEach(c => {
+      if (c !== ws && c.readyState === WebSocket.OPEN && c.roomId === ws.roomId) {
+        c.send(JSON.stringify({ from: role, payload }));
       }
     });
   });
-  ws.on('close', () => console.log(`WebSocket closed: ${ws.roomId}`));
+
+  ws.on('close', () => console.log(`WS closed for room ${ws.roomId}`));
 });
+
+// Ping/pong to keep alive
+const interval = setInterval(() => {
+  wss.clients.forEach(ws => {
+    if (!ws.isAlive) return ws.terminate();
+    ws.isAlive = false;
+    ws.ping();
+  });
+}, 30000);
+
+process.on('SIGTERM', () => { clearInterval(interval); server.close(); });
 
 export default server;
