@@ -16,7 +16,7 @@ const rooms = new Map();
 
 // Middleware to parse JSON bodies
 app.use(express.json());
-// Serve static files from public
+// Serve static files
 app.use(express.static(path.join(__dirname, '../../public')));
 
 /**
@@ -32,38 +32,41 @@ app.use(express.static(path.join(__dirname, '../../public')));
 app.post('/create', (req, res) => {
   const { name } = req.body;
   if (!name) return res.status(400).json({ error: 'Name is required' });
-
   const ip = req.ip;
   /** @type {User} */
   const admin = { name, ip };
   const roomId = uuidv4();
-
-  rooms.set(roomId, {
-    admin,
-    users: [],
-    items: []
-  });
-
+  rooms.set(roomId, { admin, users: [], items: [] });
+  console.log(`Room created: ${roomId} by admin ${name} (${ip})`);
   res.json({ roomId });
 });
 
 /**
  * POST /join
- * Joins an existing room
+ * Joins an existing room, avoids duplicate joins by IP
  * Body: { name: string, roomId: string }
  */
 app.post('/join', (req, res) => {
   const { name, roomId } = req.body;
   if (!name || !roomId) return res.status(400).json({ error: 'Name and roomId are required' });
-
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: 'Room not found' });
-
   const ip = req.ip;
-  /** @type {User} */
-  const user = { name, ip };
-  room.users.push(user);
-
+  const already = room.users.some(u => u.ip === ip);
+  if (!already) {
+    /** @type {User} */
+    const user = { name, ip };
+    room.users.push(user);
+    console.log(`User ${name} (${ip}) joined room ${roomId}`);
+    // Notify existing ws clients in this room
+    wss.clients.forEach(client => {
+      if (client.readyState === client.OPEN && client.roomId === roomId) {
+        client.send(JSON.stringify({ event: 'user-joined', name }));
+      }
+    });
+  } else {
+    console.log(`User ${name} (${ip}) already in room ${roomId}`);
+  }
   res.json({ success: true });
 });
 
@@ -75,45 +78,72 @@ app.post('/join', (req, res) => {
 app.get('/is-admin', (req, res) => {
   const { roomId } = req.query;
   if (!roomId) return res.status(400).json({ error: 'roomId is required' });
-
   const room = rooms.get(roomId);
   if (!room) return res.status(404).json({ error: 'Room not found' });
-
-  const ip = req.ip;
-  const isAdmin = room.admin.ip === ip;
+  const isAdmin = room.admin.ip === req.ip;
+  console.log(`is-admin check for ${req.ip} in ${roomId}: ${isAdmin}`);
   res.json({ isAdmin });
 });
 
-// Start HTTP server
-const server = app.listen(PORT, () => {
-  console.log(`HTTP server listening on http://localhost:${PORT}`);
+/**
+ * POST /room/:roomId/items
+ * Admin-only: set items list for room
+ * Body: { items: string[] }
+ */
+app.post('/room/:roomId/items', (req, res) => {
+  const { roomId } = req.params;
+  const { items } = req.body;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: 'Room not found' });
+  if (room.admin.ip !== req.ip) return res.status(403).json({ error: 'Forbidden' });
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'Items must be an array of strings' });
+  room.items = items;
+  console.log(`Items set for room ${roomId}: ${items.join(', ')}`);
+  res.json({ success: true });
 });
 
-// WebSocket server on /ws
+/**
+ * POST /room/:roomId/start
+ * Admin-only: start voting, sends first item with options to clients
+ */
+app.post('/room/:roomId/start', (req, res) => {
+  const { roomId } = req.params;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: 'Room not found' });
+  if (room.admin.ip !== req.ip) return res.status(403).json({ error: 'Forbidden' });
+  const first = room.items[0];
+  if (!first) return res.status(400).json({ error: 'No items to start' });
+  const event = { event: 'start', item: first, options: [1,2,3,4,5] };
+  console.log(`Starting room ${roomId} with item ${first}`);
+  wss.clients.forEach(client => {
+    if (client.readyState === client.OPEN && client.roomId === roomId) {
+      client.send(JSON.stringify(event));
+    }
+  });
+  res.json({ success: true });
+});
+
+// Start HTTP server and WebSocket server
+const server = app.listen(PORT, () => console.log(`HTTP server on http://localhost:${PORT}`));
 const wss = new WebSocketServer({ server, path: '/ws' });
 
 wss.on('connection', (ws, req) => {
-  ws.on('message', (data) => {
+  console.log(`WebSocket connected: ${req.socket.remoteAddress}`);
+  ws.on('message', data => {
     let msg;
-    try {
-      msg = JSON.parse(data);
-    } catch {
-      return;
-    }
+    try { msg = JSON.parse(data); } catch(e) { return; }
     const { roomId, role, payload } = msg;
     const room = rooms.get(roomId);
     if (!room) return;
-
-    // Attach roomId to ws for broadcasting
     if (!ws.roomId) ws.roomId = roomId;
-
-    // Broadcast to others in same room
-    wss.clients.forEach((client) => {
+    console.log(`Received from ${role}@${ws.roomId}:`, payload);
+    wss.clients.forEach(client => {
       if (client !== ws && client.readyState === client.OPEN && client.roomId === roomId) {
         client.send(JSON.stringify({ from: role, payload }));
       }
     });
   });
+  ws.on('close', () => console.log(`WebSocket closed: ${ws.roomId}`));
 });
 
 export default server;
