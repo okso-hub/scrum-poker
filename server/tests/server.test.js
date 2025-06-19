@@ -1,4 +1,4 @@
-import server from '../index.js';
+import server from '../src/index.js';
 import { afterAll, describe, it, expect } from 'vitest';
 
 describe('Express Server', () => {
