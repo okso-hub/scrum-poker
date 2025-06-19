@@ -102,7 +102,7 @@ class AceLanding extends HTMLElement {
 
     joinBtn.onclick = () => {
       const name   = nameEl.value.trim();
-      const gameId = gameEl.value.trim().toUpperCase();
+      const gameId = gameEl.value.trim();
       if (!name) {
         alert('Bitte gib Deinen Namen ein.');
         return;
