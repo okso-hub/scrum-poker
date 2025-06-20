@@ -1,6 +1,6 @@
 import express from 'express';
 import path from 'path';
-import { WebSocketServer } from 'ws';
+import WebSocket, { WebSocketServer } from 'ws';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import { v4 as uuidv4 } from 'uuid';
@@ -29,6 +29,10 @@ app.post('/create', (req, res) => {
   console.log(`Room created: ${roomId} by admin ${name} (${ip})`);
   res.json({ roomId });
 });
+
+// Start servers
+const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
+const wss = new WebSocketServer({ server, path: '/ws' });
 
 /**
  * POST /join
@@ -118,10 +122,6 @@ app.get('/room/:roomId/participants', (req, res) => {
   console.log(`Participants for room ${roomId}:`, participants);
   res.json({ participants });
 });
-
-// Start servers
-const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
-const wss = new WebSocketServer({ server, path: '/ws' });
 
 wss.on('connection', (ws, req) => {
   console.log(`WS connected: ${req.socket.remoteAddress}`);

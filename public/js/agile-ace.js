@@ -128,7 +128,7 @@ class AgileAce extends HTMLElement {
     this._role   = 'player';
 
     this._connectWS();
-    // TODO: hier _renderPlayerLobby() aufrufen
+    this._renderLobby();
     console.log(`Player ${name} beigetreten Raum ${gameId}`);
   }
 

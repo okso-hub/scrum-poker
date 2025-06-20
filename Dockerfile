@@ -12,4 +12,4 @@ COPY --from=builder /app/server ./server
 ENV NODE_ENV=production
 WORKDIR /app/server
 EXPOSE 3000
-CMD ["node","index.js"]
+CMD ["node","src/index.js"]
