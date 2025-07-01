@@ -3,6 +3,9 @@ import './components/ace-landing.js';
 import './components/ace-items.js';
 import './components/ace-lobby.js';
 import './components/ace-question.js';
+import './components/ace-results.js';
+import './components/ace-voting.js';
+import './components/ace-summary.js';
 
 class AgileAce extends HTMLElement {
   constructor() {
@@ -49,41 +52,36 @@ class AgileAce extends HTMLElement {
   }
 
   _renderQuestion({ item, options }) {
-    // 1) Shadow-DOM leeren
     this.shadowRoot.innerHTML = '';
-
-    // 2) Frage zentriert darstellen
-    const container = document.createElement('div');
-    container.style.textAlign = 'center';
-    container.innerHTML = `
-      <h2 id="question">${item}</h2>
-      <div id="buttons" style="margin-top:2rem;"></div>
-    `;
-    this.shadowRoot.append(container);
-
-    // 3) nach 5s die Frage „schrumpfen“
-    setTimeout(() => {
-      const qEl = this.shadowRoot.getElementById('question');
-      qEl.animate([
-        { fontSize: '2rem' },
-        { fontSize: '1rem' }
-      ], { duration: 500 });
-
-      // 4) Buttons unterhalb anzeigen
-      const btns = this.shadowRoot.getElementById('buttons');
-      options.forEach(opt => {
-        const b = document.createElement('button');
-        b.textContent = opt;
-        b.onclick = () => console.log('Gewählt:', opt);
-        btns.append(b);
-      });
-    }, 5000);
+    const comp = document.createElement('ace-voting');
+    comp.setAttribute('item', item);
+    comp.setAttribute('options', JSON.stringify(options));
+    comp.setAttribute('room-id', this._roomId);
+    comp.setAttribute('player-name', this._name);
+    comp.setAttribute('is-admin', this._role === 'admin');
+    comp.setAttribute('all-players', JSON.stringify(this._allPlayers || []));
+    this.shadowRoot.append(comp);
   }
 
-  _sendVote(value) {
-    // Hier sendest Du per WebSocket Deinen Vote:
-    this._ws.send(JSON.stringify({ type:'vote', value }));
-    // und kannst z.B. in eine Warte-Komponente wechseln…
+  async _revealVotes() {
+    await fetch(`/room/${this._roomId}/reveal`, { method: 'POST' });
+  }
+
+  _showResults(results, isLastItem = false) {
+    this.shadowRoot.innerHTML = '';
+    const comp = document.createElement('ace-results');
+    comp.setAttribute('results', JSON.stringify(results));
+    comp.setAttribute('is-admin', this._role === 'admin');
+    comp.setAttribute('room-id', this._roomId);
+    comp.setAttribute('is-last-item', isLastItem);
+    this.shadowRoot.append(comp);
+  }
+
+  _renderSummary(summary) {
+    this.shadowRoot.innerHTML = '';
+    const comp = document.createElement('ace-summary');
+    comp.setAttribute('summary', JSON.stringify(summary));
+    this.shadowRoot.append(comp);
   }
 
   async _onCreate({ name }) {
@@ -105,9 +103,7 @@ class AgileAce extends HTMLElement {
 
     this._connectWS();
 
-
     this._renderItems();
-    // TODO: hier _renderLobby() aufrufen
     console.log(`Admin für Raum ${roomId}`);
   }
 
@@ -145,9 +141,21 @@ class AgileAce extends HTMLElement {
     };
 
     this._ws.onmessage = event => {
-      const { from, payload } = JSON.parse(event.data);
-      console.log(`WS ← ${from}:`, payload);
-      // TODO: dispatchen in die entsprechenden Child-Components
+      const msg = JSON.parse(event.data);
+      if (msg.event === 'cards-revealed') {
+        this._showResults(msg.results, msg.isLastItem);
+      } else if (msg.event === 'start') {
+        this._allPlayers = msg.allPlayers;
+        this._renderQuestion(msg);
+      } else if (msg.event === 'show-summary') {
+        this._renderSummary(msg.summary);
+      } else if (msg.event === 'vote-status-update') {
+        // Vote status updates are now handled by ace-voting component
+        console.log('Vote status update received, but handled by ace-voting component');
+      } else {
+        const { from, payload } = msg;
+        console.log(`WS ← ${from}:`, payload);
+      }
     };
 
     this._ws.onclose = () => {
