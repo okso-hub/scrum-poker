@@ -3,58 +3,101 @@
 const votingStyles = new CSSStyleSheet();
 votingStyles.replaceSync(`
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   font-family: sans-serif;
   padding: 1rem;
+  box-sizing: border-box;
 }
-h2 {
+
+.question-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  min-height: 0;
+}
+
+#question {
   text-align: center;
+  font-size: 4rem;
   margin-bottom: 2rem;
-  font-size: 2rem;
-  transition: font-size 0.5s ease;
+  transition: all 0.6s ease;
 }
-h2.shrink {
-  font-size: 1rem;
+
+#question.positioned {
+  font-size: 1.5rem;
   margin-bottom: 1rem;
 }
+
 .buttons {
   display: flex;
   justify-content: center;
   gap: 0.5rem;
-  margin-bottom: 2rem;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.4s ease 0.2s;
 }
+
 .buttons.visible {
   opacity: 1;
 }
+
 .buttons button {
   padding: 0.75rem 1rem;
   font-size: 1rem;
   cursor: pointer;
 }
-#voteStatus {
-  margin-bottom: 1rem;
-  padding: 1rem;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
+
+.bottom-section {
+  flex-shrink: 0;
 }
+
+#adminControls {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+#adminControls button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
 #playersTable {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   border: 1px solid #ddd;
   border-radius: 0.25rem;
+  table-layout: fixed;
 }
+
 #playersTable th,
 #playersTable td {
-  padding: 0.5rem;
+  padding: 0.75rem;
   text-align: left;
   border-bottom: 1px solid #eee;
+  word-wrap: break-word;
+  overflow: hidden;
 }
+
+#playersTable th:first-child,
+#playersTable td:first-child {
+  width: 60%;
+}
+
+#playersTable th:last-child,
+#playersTable td:last-child {
+  width: 40%;
+}
+
 #playersTable th {
   font-weight: bold;
   background-color: #f9f9f9;
 }
+
 #playersTable tr:last-child td {
   border-bottom: none;
 }
@@ -87,9 +130,12 @@ class AceVoting extends HTMLElement {
   _render() {
     this.shadowRoot.innerHTML = `
       <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
-      <h2 id="question">${this._item}</h2>
-      <div id="buttons" class="buttons"></div>
-      <div id="voteStatus">
+      <div class="question-section">
+        <h1 id="question">${this._item}</h1>
+        <div id="buttons" class="buttons"></div>
+      </div>
+      <div class="bottom-section">
+        <div id="adminControls"></div>
         <table id="playersTable">
           <thead>
             <tr>
@@ -100,17 +146,17 @@ class AceVoting extends HTMLElement {
           <tbody id="playersTableBody"></tbody>
         </table>
       </div>
-      <div id="adminControls" style="text-align: center; margin-top: 1rem;"></div>
     `;
 
     this._initializeVoteStatus();
-    this._showButtons();
+    setTimeout(() => this._showButtons(), 2000);
   }
 
   _showButtons() {
     const questionEl = this.shadowRoot.getElementById('question');
     const buttonsEl = this.shadowRoot.getElementById('buttons');
-    questionEl.classList.add('shrink');
+    
+    questionEl.classList.add('positioned');
 
     this._options.forEach(opt => {
       const btn = document.createElement('button');
@@ -126,9 +172,6 @@ class AceVoting extends HTMLElement {
       const adminControlsEl = this.shadowRoot.getElementById('adminControls');
       const revealBtn = document.createElement('button');
       revealBtn.textContent = 'Reveal Votes';
-      revealBtn.style.padding = '0.75rem 1.5rem';
-      revealBtn.style.fontSize = '1rem';
-      revealBtn.style.cursor = 'pointer';
       revealBtn.onclick = () => this._revealVotes();
       adminControlsEl.appendChild(revealBtn);
     }
