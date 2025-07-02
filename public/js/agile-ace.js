@@ -19,11 +19,31 @@ class AgileAce extends HTMLElement {
     this.addEventListener("ace-join", (e) => this._onJoin(e.detail));
     this.addEventListener("ace-started", (e) => this._renderQuestion(e.detail));
     this.addEventListener("ace-vote", (e) => this._sendVote(e.detail.value));
+    this.addEventListener("ace-back-to-landing", () => this._goBackToLanding());
   }
 
   _renderLanding() {
     this.shadowRoot.innerHTML = "";
     this.shadowRoot.append(document.createElement("ace-landing"));
+  }
+
+  _goBackToLanding() {
+    // WebSocket-Verbindung schließen, falls vorhanden
+    if (this._ws) {
+      this._ws.close();
+      this._ws = null;
+    }
+    
+    // Alle Zustandsvariablen zurücksetzen
+    this._roomId = null;
+    this._name = null;
+    this._role = null;
+    this._status = null;
+    this._item = null;
+    this._allPlayers = null;
+    
+    // Zur Startseite navigieren
+    this._renderLanding();
   }
 
   _renderItems() {
@@ -49,6 +69,7 @@ class AgileAce extends HTMLElement {
   _renderQuestion({ item, options }) {
     this.shadowRoot.innerHTML = "";
     const comp = document.createElement("ace-voting");
+    console.log('rendering question, admin?', this._role === "admin")
     comp.setAttribute("item", item);
     comp.setAttribute("options", JSON.stringify(options));
     comp.setAttribute("room-id", this._roomId);
@@ -96,6 +117,10 @@ class AgileAce extends HTMLElement {
     this._roomId = roomId;
     this._role = "admin";
 
+    const params = new URLSearchParams(window.location.search);
+    params.set('roomId', this._roomId);
+    window.history.replaceState({}, '', `${location.pathname}?${params}`);
+
     this._connectWS();
     this._renderItems();
     console.log(`Admin für Raum ${roomId}`);
@@ -119,6 +144,10 @@ class AgileAce extends HTMLElement {
     this._role = isAdmin ? "admin" : "player";
     this._status = roomState.status;
     this._item = roomState.currentItem;
+
+    const params = new URLSearchParams(window.location.search);
+    params.set('roomId', this._roomId);
+    window.history.replaceState({}, '', `${location.pathname}?${params}`);
 
     this._connectWS();
 

@@ -7,14 +7,6 @@ lobbyStyles.replaceSync(`
   font-family: sans-serif;
   padding: 1rem;
 }
-.header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-.header div {
-  font-size: 0.9rem;
-}
 .participants {
   text-align: center;
 }
@@ -77,19 +69,19 @@ class AceLobby extends HTMLElement {
   connectedCallback() {
     this._roomId = this.getAttribute('room-id');
     this._wsUrl  = this.getAttribute('ws-url');
-    this._render();
-    this._fetchParticipants();
-    this._checkAdmin();
-    this._setupWebSocket();
+    this._checkAdmin().then(() => {
+      this._render();
+      this._fetchParticipants();
+      this._setupWebSocket();
+    });
   }
 
   _render() {
-    const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
     this.shadowRoot.innerHTML = `
-      <div class="header">
-        <div>Room-ID: ${this._roomId}</div>
-        <div>Join-URL: <small>${joinUrl}</small></div>
-      </div>
+      <ace-navbar 
+        room-id="${this._roomId}" 
+        is-admin="${this._isAdmin}"
+      ></ace-navbar>
       <div class="participants">
         <h3>Participants</h3>
         <ul id="list"></ul>
@@ -183,8 +175,8 @@ class AceLobby extends HTMLElement {
     const ws = new WebSocket(`${this._wsUrl}/ws`);
     ws.onopen = () => ws.send(this._roomId);
     ws.onmessage = ev => {
+      console.log('received event');
       let msg;
-      console.log('received event')
       try { msg = JSON.parse(ev.data); } catch { return; }
 
       if (msg.event === 'start') {
