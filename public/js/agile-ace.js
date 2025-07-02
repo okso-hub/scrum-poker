@@ -49,6 +49,7 @@ class AgileAce extends HTMLElement {
   _renderQuestion({ item, options }) {
     this.shadowRoot.innerHTML = "";
     const comp = document.createElement("ace-voting");
+    console.log('rendering question, admin?', this._role === "admin")
     comp.setAttribute("item", item);
     comp.setAttribute("options", JSON.stringify(options));
     comp.setAttribute("room-id", this._roomId);

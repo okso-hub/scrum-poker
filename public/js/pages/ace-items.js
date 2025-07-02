@@ -1,4 +1,4 @@
-import "../components/ace-settings.js";
+import "../components/ace-navbar.js";
 
 const itemsStyles = new CSSStyleSheet();
 itemsStyles.replaceSync(`
