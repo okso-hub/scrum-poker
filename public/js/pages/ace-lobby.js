@@ -184,6 +184,7 @@ class AceLobby extends HTMLElement {
     ws.onopen = () => ws.send(this._roomId);
     ws.onmessage = ev => {
       let msg;
+      console.log('received event')
       try { msg = JSON.parse(ev.data); } catch { return; }
 
       if (msg.event === 'start') {
