@@ -30,6 +30,7 @@ class AgileAce extends HTMLElement {
     this.shadowRoot.innerHTML = "";
     const cmp = document.createElement("ace-items");
     cmp.setAttribute("room-id", this._roomId);
+    cmp.setAttribute("is-admin", this._role === "admin");
     cmp.addEventListener("ace-items-submitted", (e) => {
       console.log("Items gespeichert:", e.detail.items);
       this._renderLobby();
