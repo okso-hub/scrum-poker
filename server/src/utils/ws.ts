@@ -43,6 +43,7 @@ export function initWebSocket(server: any, path = "/ws") {
  * Broadcast helper: sendet `payload` an alle Clients im `roomId`.
  */
 export function broadcast(roomId: string, payload: any) {
+  console.log(`Broadcasting to room ${roomId}:`, payload);
   wss.clients.forEach((client: CustomWebSocket) => {
     if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
       client.send(JSON.stringify(payload));
