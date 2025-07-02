@@ -32,6 +32,13 @@ h2 {
   font-weight: bold;
   border: 1px solid #ddd;
   border-radius: 0.25rem;
+  margin-bottom: 1rem;
+}
+.back-button {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
 }
 `);
 
@@ -65,7 +72,17 @@ class AceSummary extends HTMLElement {
       <div class="total">
         ${totalTasks} Items • Average: ${totalAverage} • Total: ${sumOfAverages}
       </div>
+      <button class="back-button" id="backButton">Zurück zur Startseite</button>
     `;
+
+    // Event Handler für den Button
+    const backButton = this.shadowRoot.getElementById('backButton');
+    backButton.addEventListener('click', () => {
+      this.dispatchEvent(new CustomEvent('ace-back-to-landing', {
+        bubbles: true,
+        composed: true
+      }));
+    });
   }
 }
 
