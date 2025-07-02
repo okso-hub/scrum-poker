@@ -1,4 +1,3 @@
-// Server Types
 export interface User {
   name: string;
   ip: string;

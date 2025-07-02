@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { initWebSocket } from "./utils/ws.js";
-import routes from "./routes/index.js";
+import router from "./routes/index.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -19,13 +19,13 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, "../../public")));
 
 // Routes
-app.use(routes);
+app.use(router);
 
 // Start HTTP + WS servers
 const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
 const wss = initWebSocket(server);
 
-// Error handling middleware (must be last)
+// Error handling middleware
 app.use(errorHandler);
 
 process.on("SIGTERM", () => {

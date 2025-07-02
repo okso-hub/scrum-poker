@@ -109,15 +109,15 @@ router.post(
   requireAdminAccess,
   asyncHandler(async (req: Request, res: Response) => {
     const { roomId } = req.params;
-    const { userName }: { userName?: string } = req.body;
+    const { name }: { name?: string } = req.body;
 
-    const user = roomService.banUser(roomId, userName!);
+    const user = roomService.banUser(roomId, name!);
 
     // Disconnect the user's WebSocket
-    disconnectUser(roomId, userName!);
+    disconnectUser(roomId, name!);
 
     // Broadcast ban event
-    broadcast(roomId, { event: "user-banned", user: userName });
+    broadcast(roomId, { event: "user-banned", user: name });
 
     res.json({ success: true });
   })
