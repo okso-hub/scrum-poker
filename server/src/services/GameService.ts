@@ -88,6 +88,14 @@ export class GameService {
     };
   }
 
+  isVoteComplete(roomId: string): boolean {
+    const room = this.roomService.getRoom(roomId);
+    const votes = room.votes || {};
+    const players = this.roomService.getParticipants(roomId);
+
+    return Object.keys(votes).length === players.length;
+  }
+
   repeatVoting(roomId: string): GameEvent {
     const room = this.roomService.getRoom(roomId);
 

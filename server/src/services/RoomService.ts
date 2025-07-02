@@ -9,7 +9,7 @@ export class RoomService {
       throw new BadRequestError("Name is required");
     }
 
-    const roomId = uuidv4();
+    const roomId = this.generateUniqueRoomId();
     const room: Room = {
       admin: { name: adminName, ip: adminIp },
       users: [],
@@ -26,9 +26,18 @@ export class RoomService {
     return roomId;
   }
 
-  /**
-   * Gets a room by ID, throws if not found
-   */
+  generateUniqueRoomId(): string {
+    const chars = "0123456789";
+    const length = 6;
+
+    let roomId;
+    do {
+      roomId = Array.from({ length }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+    } while (this.rooms.has(roomId));
+
+    return roomId;
+  }
+
   getRoom(roomId: string): Room {
     const room = this.rooms.get(roomId);
     if (!room) {
@@ -37,9 +46,6 @@ export class RoomService {
     return room;
   }
 
-  /**
-   * Checks if a user is admin of a room
-   */
   isAdmin(roomId: string, ip: string): boolean {
     try {
       const room = this.getRoom(roomId);
@@ -49,26 +55,13 @@ export class RoomService {
     }
   }
 
-  /**
-   * Adds a user to a room or handles rejoin
-   */
-  joinRoom(
-    roomId: string,
-    userName: string,
-    userIp: string
-  ): {
-    isAdmin: boolean;
-    name: string;
-    rejoin: boolean;
-    roomState: { status: RoomStatus; currentItem: string | null };
-  } {
+  joinRoom(roomId: string, userName: string, userIp: string): { isAdmin: boolean; name: string; rejoin: boolean; roomState: { status: RoomStatus; currentItem: string | null } } {
     if (!userName || !roomId) {
       throw new BadRequestError("Name and roomId are required");
     }
 
     const room = this.getRoom(roomId);
 
-    // Check if IP is banned
     if (room.bannedIps.includes(userIp)) {
       throw new ForbiddenError("You are banned from this room");
     }
@@ -93,7 +86,7 @@ export class RoomService {
     const existingByIp = room.users.find((u) => u.ip === userIp);
     if (existingByIp) {
       if (existingByIp.name !== userName) {
-        // falls user mit neuem namen rejoined
+        // if user joins with new name
         this.isUsernameAvailable(room, userName, userIp);
         existingByIp.name = userName;
         console.log(`User ${userIp} changed name to ${userName} in room ${roomId}`);
@@ -108,7 +101,7 @@ export class RoomService {
       };
     }
 
-    // New user joining - check username uniqueness
+    // New user joining - check if username is unique
     this.isUsernameAvailable(room, userName);
 
     // Add new user
@@ -122,17 +115,11 @@ export class RoomService {
     };
   }
 
-  /**
-   * Gets all participants in a room (admin + users)
-   */
   getParticipants(roomId: string): string[] {
     const room = this.getRoom(roomId);
     return [room.admin.name, ...room.users.map((u) => u.name)];
   }
 
-  /**
-   * Validates that a player is in the room
-   */
   validatePlayerInRoom(room: Room, playerName: string): void {
     const participants = [room.admin.name, ...room.users.map((u) => u.name)];
     if (!participants.includes(playerName)) {
@@ -140,10 +127,6 @@ export class RoomService {
     }
   }
 
-  /**
-   * Bans a user from a room
-   * Admin validation should be done by middleware before calling this
-   */
   banUser(roomId: string, userName: string): User {
     const room = this.getRoom(roomId);
 
@@ -160,19 +143,13 @@ export class RoomService {
       throw new NotFoundError("User not in room");
     }
 
-    // Add IP to banned list
     room.bannedIps.push(user.ip);
 
-    // Remove user from room
     room.users = room.users.filter((u) => u.name !== userName);
 
     return user;
   }
 
-  /**
-   * Sets items for a room
-   * Admin validation should be done by middleware before calling this
-   */
   setItems(roomId: string, items: string[]): void {
     const room = this.getRoom(roomId);
 
@@ -186,17 +163,11 @@ export class RoomService {
     console.log(`Items set for room ${roomId}: ${items}`);
   }
 
-  /**
-   * Gets items for a room
-   */
   getItems(roomId: string): string[] {
     const room = this.getRoom(roomId);
     return room.items;
   }
 
-  /**
-   * Gets room status information
-   */
   getRoomStatus(roomId: string) {
     const room = this.getRoom(roomId);
     return {
@@ -209,9 +180,6 @@ export class RoomService {
     };
   }
 
-  /**
-   * Checks if a username is available in the room (not taken by admin or other users)
-   */
   private isUsernameAvailable(room: Room, userName: string, excludeIp?: string): void {
     if (userName === room.admin.name) {
       throw new BadRequestError("Username is already taken by the admin");

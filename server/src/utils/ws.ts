@@ -10,10 +10,6 @@ export interface CustomWebSocket extends WebSocket {
 
 let wss: WebSocketServer;
 
-/**
- * Initialisiert den WebSocketServer und legt die Connection-/Ping-Handler an.
- * Muss nach HTTP-Server-Startup aufgerufen werden.
- */
 export function initWebSocket(server: any, path = "/ws") {
   wss = new WebSocketServer({ server, path });
 
@@ -41,9 +37,6 @@ export function initWebSocket(server: any, path = "/ws") {
   return wss;
 }
 
-/**
- * Broadcast helper: sendet `payload` an alle Clients im `roomId`.
- */
 export function broadcast(roomId: string, payload: any) {
   console.log(`Broadcasting to room ${roomId}:`, payload);
   wss.clients.forEach((client: CustomWebSocket) => {
@@ -54,10 +47,6 @@ export function broadcast(roomId: string, payload: any) {
   });
 }
 
-/**
- * Trennt gezielt den Client mit `playerName` im `roomId`, z.B. beim Bannen.
- * Sendet vorher ein `banned-by-admin`-Event.
- */
 export function disconnectUser(roomId: string, playerName: string): void {
   wss.clients.forEach((client: CustomWebSocket) => {
     if (client.readyState === WebSocket.OPEN && client.roomId === roomId && client.playerName === playerName) {
@@ -67,11 +56,6 @@ export function disconnectUser(roomId: string, playerName: string): void {
   });
 }
 
-/**
- * Beispiel eines Message-Handlers; kann in util/ws.ts bleiben
- * oder in eine eigene Datei ausgelagert werden. Eigentlich rufen wir aber nur API endpoints auf,
- * die dann Broadcasts an alle Clients im Raum machen.
- */
 function handleMessage(data: RawData, ws: CustomWebSocket) {
   const msg = data.toString();
   if (!ws.roomId) {

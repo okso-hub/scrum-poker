@@ -5,9 +5,6 @@ import { broadcast } from "../utils/ws.js";
 
 const router = Router();
 
-/**
- * POST /room/:roomId/vote - Player votes on current item
- */
 router.post(
   "/room/:roomId/vote",
   asyncHandler(async (req: Request, res: Response) => {
@@ -15,15 +12,20 @@ router.post(
     const { vote, playerName }: { vote?: string; playerName?: string } = req.body;
 
     const { event } = gameService.vote(roomId, playerName!, vote!);
+
+    if (gameService.isVoteComplete(roomId)) {
+      console.log(`All players voted in ${roomId}, auto-revealing votes`);
+      const gameEvent = gameService.revealVotes(roomId);
+      broadcast(roomId, gameEvent);
+      return res.json({ success: true, gameEvent });
+    }
+
     broadcast(roomId, event);
 
     res.json({ success: true });
   })
 );
 
-/**
- * GET /room/:roomId/vote-status - Get current vote status
- */
 router.get(
   "/room/:roomId/vote-status",
   asyncHandler(async (req: Request, res: Response) => {

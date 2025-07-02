@@ -5,9 +5,6 @@ import { broadcast, disconnectUser } from "../utils/ws.js";
 
 const router = Router();
 
-/**
- * Admin-only: set items for a room
- */
 router.post(
   "/room/:roomId/items",
   requireAdminAccess,
@@ -15,15 +12,11 @@ router.post(
     const { roomId } = req.params;
     const { items }: { items?: string[] } = req.body;
 
-    // Admin validation already done by middleware
     roomService.setItems(roomId, items!);
     res.json({ success: true });
   })
 );
 
-/**
- * Admin-only: start voting
- */
 router.post(
   "/room/:roomId/start",
   requireAdminAccess,
@@ -37,73 +30,58 @@ router.post(
   })
 );
 
-/**
- * Admin-only: reveal votes
- */
 router.post(
   "/room/:roomId/reveal",
   requireAdminAccess,
   asyncHandler(async (req: Request, res: Response) => {
     const { roomId } = req.params;
 
-    const { results, isLastItem, event } = gameService.revealVotes(roomId);
-    broadcast(roomId, event);
+    const gameEvent = gameService.revealVotes(roomId);
+    broadcast(roomId, gameEvent);
 
-    res.json({ success: true, results, isLastItem });
+    res.json({ success: true, gameEvent });
   })
 );
 
-/**
- * Admin-only: repeat current voting
- */
 router.post(
   "/room/:roomId/repeat",
   requireAdminAccess,
   asyncHandler(async (req: Request, res: Response) => {
     const { roomId } = req.params;
 
-    const event = gameService.repeatVoting(roomId);
-    broadcast(roomId, event);
+    const gameEvent = gameService.repeatVoting(roomId);
+    broadcast(roomId, gameEvent);
 
-    res.json({ success: true, item: event.item });
+    res.json({ success: true, item: gameEvent.item });
   })
 );
 
-/**
- * Admin-only: next item
- */
 router.post(
   "/room/:roomId/next",
   requireAdminAccess,
   asyncHandler(async (req: Request, res: Response) => {
     const { roomId } = req.params;
 
-    const event = gameService.nextItem(roomId);
-    broadcast(roomId, event);
+    const gameEvent = gameService.nextItem(roomId);
+    broadcast(roomId, gameEvent);
 
-    res.json({ success: true, item: event.item });
+    res.json({ success: true, item: gameEvent.item });
   })
 );
 
-/**
- * Admin-only: show summary
- */
 router.post(
   "/room/:roomId/summary",
   requireAdminAccess,
   asyncHandler(async (req: Request, res: Response) => {
     const { roomId } = req.params;
 
-    const { summary, event } = gameService.showSummary(roomId);
-    broadcast(roomId, event);
+    const gameEvent = gameService.showSummary(roomId);
+    broadcast(roomId, gameEvent);
 
-    res.json({ success: true, summary });
+    res.json({ success: true, gameEvent });
   })
 );
 
-/**
- * Admin-only: ban user
- */
 router.post(
   "/room/:roomId/ban",
   requireAdminAccess,
@@ -113,10 +91,8 @@ router.post(
 
     const user = roomService.banUser(roomId, name!);
 
-    // Disconnect the user's WebSocket
     disconnectUser(roomId, name!);
 
-    // Broadcast ban event
     broadcast(roomId, { event: "user-banned", user: name });
 
     res.json({ success: true });

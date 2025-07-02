@@ -5,32 +5,25 @@ import { broadcast } from "../utils/ws.js";
 
 const router = Router();
 
-/**
- * POST /create
- */
 router.post(
   "/create",
   asyncHandler(async (req: Request, res: Response) => {
     const { name }: { name?: string } = req.body;
-    const ip = req.ip || "unknown";
+    const ip = req.ip;
 
-    const roomId = roomService.createRoom(name!, ip);
+    const roomId = roomService.createRoom(name!, ip!);
     res.json({ roomId });
   })
 );
 
-/**
- * POST /join
- */
 router.post(
   "/join",
   asyncHandler(async (req: Request, res: Response) => {
     const { name, roomId }: { name?: string; roomId?: string } = req.body;
-    const ip = req.ip || "unknown";
+    const ip = req.ip;
 
-    const result = roomService.joinRoom(roomId!, name!, ip);
+    const result = roomService.joinRoom(roomId!, name!, ip!);
 
-    // Broadcast join event
     broadcast(roomId!, {
       event: "user-joined",
       rejoin: result.rejoin,
@@ -46,23 +39,17 @@ router.post(
   })
 );
 
-/**
- * GET /is-admin
- */
 router.get("/is-admin", (req: Request, res: Response) => {
   const { roomId } = req.query;
   if (!roomId || typeof roomId !== "string") {
     return res.status(400).json({ error: "roomId is required" });
   }
 
-  const isAdmin = roomService.isAdmin(roomId, req.ip || "unknown");
+  const isAdmin = roomService.isAdmin(roomId, req.ip!);
   console.log(`is-admin: ${req.ip} in ${roomId} = ${isAdmin}`);
   res.json({ isAdmin });
 });
 
-/**
- * GET /room/:roomId/items
- */
 router.get(
   "/room/:roomId/items",
   asyncHandler(async (req: Request, res: Response) => {
@@ -72,9 +59,6 @@ router.get(
   })
 );
 
-/**
- * GET /room/:roomId/participants
- */
 router.get(
   "/room/:roomId/participants",
   asyncHandler(async (req: Request, res: Response) => {
@@ -84,9 +68,6 @@ router.get(
   })
 );
 
-/**
- * GET /room/:roomId/status
- */
 router.get(
   "/room/:roomId/status",
   asyncHandler(async (req: Request, res: Response) => {

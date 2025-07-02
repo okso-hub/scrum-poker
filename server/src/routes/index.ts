@@ -5,7 +5,6 @@ import adminRouter from "./admin.js";
 
 const router = Router();
 
-// Mount route modules
 router.use(roomsRouter);
 router.use(votingRouter);
 router.use(adminRouter);
