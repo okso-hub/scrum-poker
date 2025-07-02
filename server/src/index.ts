@@ -1,18 +1,15 @@
 import express, { Request, Response } from "express";
 import path from "path";
-import WebSocket, { WebSocketServer } from "ws";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { v4 as uuidv4 } from "uuid";
 import { IncomingMessage } from "http";
+import { initWebSocket, broadcast } from "./utils/ws.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// nur für testing
-app.set("trust proxy", true);
 
 // TypeScript Interfaces
 interface User {
@@ -71,12 +68,19 @@ interface Summary {
   totalTasks: number;
 }
 
-// In-memory store for rooms
+// Global state
 const rooms = new Map<string, Room>();
+
+// nur für testing
+app.set("trust proxy", true);
 
 // Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../../public")));
+
+// Start HTTP + WS servers
+const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
+const wss = initWebSocket(server);
 
 /**
  * POST /create
@@ -100,10 +104,6 @@ app.post("/create", (req: Request, res: Response) => {
   console.log(`Room created: ${roomId} by admin ${name} (${ip})`);
   res.json({ roomId });
 });
-
-// Start HTTP + WS servers
-const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
-const wss = new WebSocketServer({ server, path: "/ws" });
 
 /**
  * POST /join
@@ -134,12 +134,8 @@ app.post("/join", (req: Request, res: Response) => {
   if (!existing) {
     room.users.push({ name, ip });
     console.log(`User ${name} (${ip}) joined room ${roomId}`);
-    // notify via WS
-    wss.clients.forEach((c: CustomWebSocket) => {
-      if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-        c.send(JSON.stringify({ event: "user-joined", name }));
-      }
-    });
+
+    broadcast(roomId, { event: "user-joined", rejoin: true, user: name });
     return res.json({ success: true, isAdmin: false, name, roomState });
   } else {
     console.log(`User ${existing.name} (${ip}) rejoined room ${roomId}`);
@@ -516,15 +512,6 @@ wss.on("connection", (ws: CustomWebSocket, req: IncomingMessage) => {
         room.votes[ws.playerName] = parsed.value;
       }
       return;
-    }
-
-    // legacy broadcast
-    if (parsed.role && parsed.payload !== undefined) {
-      wss.clients.forEach((c: CustomWebSocket) => {
-        if (c !== ws && c.readyState === WebSocket.OPEN && c.roomId === ws.roomId) {
-          c.send(JSON.stringify({ from: parsed.role, payload: parsed.payload }));
-        }
-      });
     }
   });
 
