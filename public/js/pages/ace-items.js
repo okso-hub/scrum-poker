@@ -28,8 +28,8 @@ h2 {
   cursor: pointer;
 }
 #itemList {
-  max-height: 200px;
-  overflow-y: auto;
+  max-height: 50vh;       /* cap at half the viewport height */
+  overflow-y: auto;       /* scroll once it fills up */
   margin-bottom: 1rem;
   padding: 0;
   list-style: none;
@@ -121,6 +121,13 @@ class AceItems extends HTMLElement {
     this._listEl = this.shadowRoot.getElementById("itemList");
     this._nextBtn = this.shadowRoot.getElementById("nextBtn");
 
+    this._inputEl.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        this._onAdd();
+      }
+    });
+
     this._addBtn.addEventListener("click", () => this._onAdd());
     this._nextBtn.addEventListener("click", () => this._onNext());
 
@@ -131,6 +138,14 @@ class AceItems extends HTMLElement {
     console.log("AceItems._onAdd: adding item", this._inputEl.value);
     const text = this._inputEl.value.trim();
     if (!text) return;
+    // Check for uniqueness (case-insensitive)
+    const exists = this._items.some(item => item.toLowerCase() === text.toLowerCase());
+    if (exists) {
+      alert("Dieses Item existiert bereits.");
+      this._inputEl.value = "";
+      this._inputEl.focus();
+      return;
+    }
     this._items.push(text);
     this._inputEl.value = "";
     this._inputEl.focus();
@@ -148,9 +163,9 @@ class AceItems extends HTMLElement {
       </li>
     `
       )
-      .join("");
+      .join("\n");
 
-    this.shadowRoot.querySelectorAll(".trash").forEach((el) => {
+    this.shadowRoot.querySelectorAll(".trash").forEach(el => {
       el.addEventListener("click", () => {
         const idx = Number(el.dataset.idx);
         console.log("AceItems._updateList: removing index", idx);

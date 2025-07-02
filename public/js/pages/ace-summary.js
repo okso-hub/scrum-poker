@@ -49,7 +49,9 @@ class AceSummary extends HTMLElement {
 
   _render() {
     const { items = [], totalAverage = 0, totalTasks = 0 } = this._summary;
-    
+    // calculate sum of all averages
+    const sumOfAverages = items.reduce((acc, item) => acc + Number(item.average), 0);
+
     this.shadowRoot.innerHTML = `
       <h2>Sprint Summary</h2>
       <ul id="summaryList">
@@ -61,10 +63,10 @@ class AceSummary extends HTMLElement {
         `).join('')}
       </ul>
       <div class="total">
-        ${totalTasks} Items • Average: ${totalAverage}
+        ${totalTasks} Items • Average: ${totalAverage} • Total: ${sumOfAverages}
       </div>
     `;
   }
 }
 
-customElements.define('ace-summary', AceSummary); 
+customElements.define('ace-summary', AceSummary);
