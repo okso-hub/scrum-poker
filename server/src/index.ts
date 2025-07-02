@@ -483,22 +483,9 @@ app.post("/room/:roomId/ban", (req: Request, res: Response) => {
   disconnectUser(roomId, userName);
 
   // Broadcast an alle anderen Clients
-  broadcast(roomId, {
-    event: "user-banned",
-    user: userName,
-  });
+  broadcast(roomId, { event: "user-banned", user: userName });
 
   return res.json({ success: true });
-});
-
-// Unban (optional)
-app.delete("/room/:roomId/ban/:ip", (req, res) => {
-  const { roomId, ip } = req.params;
-  const room = rooms.get(roomId);
-  if (!room) return res.status(404).json({ error: "Room not found" });
-  if (room.admin.ip !== req.ip) return res.status(403).json({ error: "Forbidden" });
-  room.bannedIps = room.bannedIps.filter((x) => x !== ip);
-  res.json({ success: true });
 });
 
 process.on("SIGTERM", () => {
