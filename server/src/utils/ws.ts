@@ -48,7 +48,7 @@ export function broadcast(roomId: string, payload: any) {
   console.log(`Broadcasting to room ${roomId}:`, payload);
   wss.clients.forEach((client: CustomWebSocket) => {
     if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
-      console.log(`Sending to ${client.playerName || "unknown client"} in room ${roomId}`);
+      //console.log(`Sending to ${client.playerName || "unknown client"} in room ${roomId}`);
       client.send(JSON.stringify(payload));
     }
   });
