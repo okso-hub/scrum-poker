@@ -1,4 +1,5 @@
 // public/js/components/ace-landing.js
+
 const landingStyles = new CSSStyleSheet();
 landingStyles.replaceSync(`
 :host {
@@ -57,6 +58,16 @@ class AceLanding extends HTMLElement {
 
   connectedCallback() {
     this._render();
+    this._prefillRoomId();
+  }
+
+  _prefillRoomId() {
+    const params = new URLSearchParams(window.location.search);
+    const roomId = params.get('roomId') || params.get('gameId');
+    if (roomId) {
+      const gameEl = this.shadowRoot.getElementById("gameId");
+      if (gameEl) gameEl.value = roomId;
+    }
   }
 
   _render() {
@@ -95,7 +106,7 @@ class AceLanding extends HTMLElement {
       }
       this.dispatchEvent(
         new CustomEvent("ace-create", {
-          detail: { name, wsUrl: this.getAttribute("ws-url") },
+          detail: { name },
           bubbles: true,
           composed: true,
         })
@@ -115,7 +126,7 @@ class AceLanding extends HTMLElement {
       }
       this.dispatchEvent(
         new CustomEvent("ace-join", {
-          detail: { name, gameId, wsUrl: this.getAttribute("ws-url") },
+          detail: { name, gameId },
           bubbles: true,
           composed: true,
         })
