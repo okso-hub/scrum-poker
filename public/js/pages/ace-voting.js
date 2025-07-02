@@ -2,104 +2,98 @@
 
 const votingStyles = new CSSStyleSheet();
 votingStyles.replaceSync(`
-:host {
+.voting-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  font-family: sans-serif;
+  min-block-size: 100svh;
+  font-family: system-ui, sans-serif;
   padding: 1rem;
   box-sizing: border-box;
-}
-
-.question-section {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
-  min-height: 0;
-}
-
-#question {
-  text-align: center;
-  font-size: 4rem;
-  margin-bottom: 2rem;
-  transition: all 0.6s ease;
-}
-
-#question.positioned {
-  font-size: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.buttons {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  opacity: 0;
-  transition: opacity 0.4s ease 0.2s;
-}
-
-.buttons.visible {
-  opacity: 1;
-}
-
-.buttons button {
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.bottom-section {
-  flex-shrink: 0;
-}
-
-#adminControls {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-#adminControls button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-#playersTable {
-  width: 100%;
-  max-width: 100%;
-  border-collapse: collapse;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  table-layout: fixed;
-}
-
-#playersTable th,
-#playersTable td {
-  padding: 0.75rem;
-  text-align: left;
-  border-bottom: 1px solid #eee;
-  word-wrap: break-word;
-  overflow: hidden;
-}
-
-#playersTable th:first-child,
-#playersTable td:first-child {
-  width: 60%;
-}
-
-#playersTable th:last-child,
-#playersTable td:last-child {
-  width: 40%;
-}
-
-#playersTable th {
-  font-weight: bold;
-  background-color: #f9f9f9;
-}
-
-#playersTable tr:last-child td {
-  border-bottom: none;
+  
+  & .question-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-height: 0;
+    
+    & .question {
+      text-align: center;
+      font-size: 3rem;
+      margin-block-end: 1.5rem;
+      transition: all 0.6s ease;
+      line-height: 1.2;
+      
+      &.positioned {
+        font-size: 1.5rem;
+        margin-block-end: 1rem;
+      }
+    }
+    
+    & .voting-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      opacity: 0;
+      transition: opacity 0.4s ease 0.2s;
+      
+      &.visible {
+        opacity: 1;
+      }
+      
+      & button {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        cursor: pointer;
+        
+        &.selected {
+          font-weight: 700;
+        }
+      }
+    }
+  }
+  
+  & .bottom-section {
+    flex-shrink: 0;
+    
+    & .admin-controls {
+      text-align: center;
+      margin-block-end: 0.5rem;
+      
+      & button {
+        padding: 0.5rem 1rem;
+        font-size: 1rem;
+        line-height: 1.5;
+        cursor: pointer;
+      }
+    }
+    
+    & .players-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #ddd;
+      border-radius: 0.25rem;
+      
+      & th,
+      & td {
+        padding: 0.5rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+        line-height: 1.5;
+      }
+      
+      & th {
+        font-weight: 700;
+        background-color: #f9f9f9;
+      }
+      
+      & tr:last-child td {
+        border-bottom: none;
+      }
+    }
+  }
 }
 `);
 
@@ -129,22 +123,24 @@ class AceVoting extends HTMLElement {
 
   _render() {
     this.shadowRoot.innerHTML = `
-      <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
-      <div class="question-section">
-        <h1 id="question">${this._item}</h1>
-        <div id="buttons" class="buttons"></div>
-      </div>
-      <div class="bottom-section">
-        <div id="adminControls"></div>
-        <table id="playersTable">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="playersTableBody"></tbody>
-        </table>
+      <div class="voting-page">
+        <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
+        <div class="question-section">
+          <h1 class="question">${this._item}</h1>
+          <div class="voting-buttons"></div>
+        </div>
+        <div class="bottom-section">
+          <div class="admin-controls"></div>
+          <table class="players-table">
+            <thead>
+              <tr>
+                <th>Player</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody class="players-table-body"></tbody>
+          </table>
+        </div>
       </div>
     `;
 
@@ -153,15 +149,16 @@ class AceVoting extends HTMLElement {
   }
 
   _showButtons() {
-    const questionEl = this.shadowRoot.getElementById('question');
-    const buttonsEl = this.shadowRoot.getElementById('buttons');
+    const questionEl = this.shadowRoot.querySelector('.question');
+    const buttonsEl = this.shadowRoot.querySelector('.voting-buttons');
     
     questionEl.classList.add('positioned');
 
     this._options.forEach(opt => {
       const btn = document.createElement('button');
       btn.textContent = opt;
-      btn.className = 'option';
+      btn.type = 'button';
+      btn.setAttribute('aria-label', `Vote ${opt}`);
       btn.onclick = () => this._sendVote(opt);
       buttonsEl.append(btn);
     });
@@ -169,9 +166,11 @@ class AceVoting extends HTMLElement {
     buttonsEl.classList.add('visible');
 
     if (this._isAdmin) {
-      const adminControlsEl = this.shadowRoot.getElementById('adminControls');
+      const adminControlsEl = this.shadowRoot.querySelector('.admin-controls');
       const revealBtn = document.createElement('button');
       revealBtn.textContent = 'Reveal Votes';
+      revealBtn.type = 'button';
+      revealBtn.setAttribute('aria-label', 'Reveal all votes');
       revealBtn.onclick = () => this._revealVotes();
       adminControlsEl.appendChild(revealBtn);
     }
@@ -214,12 +213,12 @@ class AceVoting extends HTMLElement {
   }
 
   _updateButtonSelection(selectedValue) {
-    const buttons = this.shadowRoot.querySelectorAll('button.option');
+    const buttons = this.shadowRoot.querySelectorAll('.voting-buttons button');
     buttons.forEach(btn => {
       if (btn.textContent === selectedValue.toString()) {
-        btn.style.fontWeight = 'bold';
+        btn.classList.add('selected');
       } else {
-        btn.style.fontWeight = '';
+        btn.classList.remove('selected');
       }
     });
   }
@@ -243,17 +242,17 @@ class AceVoting extends HTMLElement {
   }
 
   _initializeVoteStatus() {
-    const body = this.shadowRoot.getElementById('playersTableBody');
+    const body = this.shadowRoot.querySelector('.players-table-body');
     body.innerHTML = this._allPlayers.map(player => `
       <tr>
         <td>${player}</td>
-        <td id="status-${player}">Waiting...</td>
+        <td class="status-${player}">Waiting...</td>
       </tr>
     `).join('');
   }
 
   _updateStatus(player, text) {
-    const el = this.shadowRoot.getElementById(`status-${player}`);
+    const el = this.shadowRoot.querySelector(`.status-${player}`);
     if (el) el.textContent = text;
   }
 
