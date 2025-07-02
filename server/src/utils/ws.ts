@@ -82,11 +82,11 @@ function handleMessage(data: RawData, ws: CustomWebSocket) {
         ws.roomId = parsed.roomId;
         ws.role = parsed.role;
         ws.playerName = parsed.payload?.name;
-        console.log(`Assigned ws: ${ws.playerName} (${ws.role}) to room ${ws.roomId}`);
+        // console.log(`Assigned ws: ${ws.playerName} (${ws.role}) to room ${ws.roomId}`);
       }
     } catch {
       ws.roomId = msg;
-      console.log(`Assigned ws to room ${ws.roomId}`);
+      //   console.log(`Assigned ws to room ${ws.roomId}`);
     }
     return;
   }
