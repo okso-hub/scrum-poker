@@ -4,12 +4,8 @@ import { RoomService } from "./RoomService.js";
 export class GameService {
   private readonly VOTING_OPTIONS = [1, 2, 3, 5, 8, 13, 21];
 
-  constructor(private roomService: RoomService) {}
+  constructor(private readonly roomService: RoomService) {}
 
-  /**
-   * Starts voting for the first item in the room
-   * Admin validation should be done by middleware before calling this
-   */
   startVoting(roomId: string): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
@@ -18,18 +14,22 @@ export class GameService {
       throw new BadRequestError("No items to start");
     }
 
-    room.votes = {};
     room.status = RoomStatus.VOTING;
 
     console.log(`Starting room ${roomId} with item ${first}`);
 
-    return this.createStartEvent(room, first);
+    const participants = this.roomService.getParticipants(roomId);
+
+    return {
+      event: "start",
+      item: first,
+      options: this.VOTING_OPTIONS,
+      totalPlayers: participants.length,
+      allPlayers: participants,
+    };
   }
 
-  /**
-   * Records a vote from a player
-   */
-  vote(roomId: string, playerName: string, vote: string): { event: GameEvent; room: Room } {
+  vote(roomId: string, playerName: string, vote: string): GameEvent {
     if (!playerName) {
       throw new BadRequestError("Player name is required");
     }
@@ -45,26 +45,20 @@ export class GameService {
 
     console.log(`Vote from ${playerName} in ${roomId}: ${vote}`);
 
-    const players = this.roomService.getAllPlayers(room);
+    const players = this.roomService.getParticipants(roomId);
     const voteCount = Object.keys(room.votes).length;
     const votedPlayers = Object.keys(room.votes);
 
-    const updateEvent: GameEvent = {
+    return {
       event: "vote-status-update",
       voteCount,
       totalPlayers: players.length,
       votedPlayers,
       allPlayers: players,
     };
-
-    return { event: updateEvent, room };
   }
 
-  /**
-   * Reveals votes and calculates results
-   * Admin validation should be done by middleware before calling this
-   */
-  revealVotes(roomId: string): { results: VoteResults; isLastItem: boolean; event: GameEvent } {
+  revealVotes(roomId: string): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
     const votes = room.votes || {};
@@ -74,7 +68,6 @@ export class GameService {
 
     const results = this.calculateVoteResults(votes);
 
-    // Save to history
     const current = room.items[0];
     if (current) {
       room.itemHistory.push({
@@ -88,19 +81,13 @@ export class GameService {
     const isLastItem = room.items.length <= 1;
     room.status = RoomStatus.REVEALING;
 
-    const event: GameEvent = {
+    return {
       event: "cards-revealed",
       results,
       isLastItem,
     };
-
-    return { results, isLastItem, event };
   }
 
-  /**
-   * Repeats the current voting round
-   * Admin validation should be done by middleware before calling this
-   */
   repeatVoting(roomId: string): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
@@ -112,13 +99,17 @@ export class GameService {
     room.votes = {};
     room.status = RoomStatus.VOTING;
 
-    return this.createStartEvent(room, current);
+    const participants = this.roomService.getParticipants(roomId);
+
+    return {
+      event: "start",
+      item: current,
+      options: this.VOTING_OPTIONS,
+      totalPlayers: participants.length,
+      allPlayers: participants,
+    };
   }
 
-  /**
-   * Moves to the next item
-   * Admin validation should be done by middleware before calling this
-   */
   nextItem(roomId: string): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
@@ -133,14 +124,18 @@ export class GameService {
 
     console.log(`Next item started for room ${roomId}: ${next}`);
 
-    return this.createStartEvent(room, next);
+    const participants = this.roomService.getParticipants(roomId);
+
+    return {
+      event: "start",
+      item: next,
+      options: this.VOTING_OPTIONS,
+      totalPlayers: participants.length,
+      allPlayers: participants,
+    };
   }
 
-  /**
-   * Shows the final summary
-   * Admin validation should be done by middleware before calling this
-   */
-  showSummary(roomId: string): { summary: Summary; event: GameEvent } {
+  showSummary(roomId: string): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
     const history = room.itemHistory;
@@ -154,21 +149,16 @@ export class GameService {
 
     room.status = RoomStatus.COMPLETED;
 
-    const event: GameEvent = {
+    return {
       event: "show-summary",
       summary,
     };
-
-    return { summary, event };
   }
 
-  /**
-   * Gets current vote status
-   */
   getVoteStatus(roomId: string) {
     const room = this.roomService.getRoom(roomId);
     const votes = room.votes || {};
-    const players = this.roomService.getAllPlayers(room);
+    const players = this.roomService.getParticipants(roomId);
 
     return {
       voteCount: Object.keys(votes).length,
@@ -178,24 +168,6 @@ export class GameService {
     };
   }
 
-  /**
-   * Creates a start event for voting
-   */
-  private createStartEvent(room: Room, item: string): GameEvent {
-    const players = this.roomService.getAllPlayers(room);
-
-    return {
-      event: "start",
-      item,
-      options: this.VOTING_OPTIONS,
-      totalPlayers: players.length,
-      allPlayers: players,
-    };
-  }
-
-  /**
-   * Calculates vote statistics
-   */
   private calculateVoteResults(votes: Record<string, string>): VoteResults {
     const summary: Record<string, number> = {};
     const values = Object.values(votes)
