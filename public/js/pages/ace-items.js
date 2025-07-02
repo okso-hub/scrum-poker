@@ -1,4 +1,3 @@
-// public/js/components/ace-items.js
 const itemsStyles = new CSSStyleSheet();
 itemsStyles.replaceSync(`
 :host {
@@ -60,14 +59,28 @@ button#nextBtn {
 class AceItems extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: "open" });
     this.shadowRoot.adoptedStyleSheets = [itemsStyles];
     this._items = [];
   }
 
-  connectedCallback() {
-    this._roomId = this.getAttribute('room-id');
+  async connectedCallback() {
+    this._roomId = this.getAttribute("room-id");
+    await this._loadItems(); // ← load existing items from server
     this._render();
+  }
+
+  async _loadItems() {
+    try {
+      const res = await fetch(`/room/${this._roomId}/items`);
+      if (res.ok) {
+        const { items } = await res.json();
+        console.log("Vorhandene Items geladen:", items);
+        this._items = items;
+      }
+    } catch (err) {
+      console.warn("Konnte vorhandene Items nicht laden:", err);
+    }
   }
 
   _render() {
@@ -81,12 +94,12 @@ class AceItems extends HTMLElement {
       <button id="nextBtn">Next</button>
     `;
 
-    this._inputEl = this.shadowRoot.getElementById('itemInput');
-    this._addBtn  = this.shadowRoot.getElementById('addBtn');
-    this._listEl  = this.shadowRoot.getElementById('itemList');
-    this._nextBtn = this.shadowRoot.getElementById('nextBtn');
+    this._inputEl = this.shadowRoot.getElementById("itemInput");
+    this._addBtn = this.shadowRoot.getElementById("addBtn");
+    this._listEl = this.shadowRoot.getElementById("itemList");
+    this._nextBtn = this.shadowRoot.getElementById("nextBtn");
 
-    this._addBtn.onclick  = () => this._onAdd();
+    this._addBtn.onclick = () => this._onAdd();
     this._nextBtn.onclick = () => this._onNext();
 
     this._updateList();
@@ -96,56 +109,60 @@ class AceItems extends HTMLElement {
     const text = this._inputEl.value.trim();
     if (!text) return;
     this._items.push(text);
-    this._inputEl.value = '';
+    this._inputEl.value = "";
     this._inputEl.focus();
     this._updateList();
   }
 
   _updateList() {
     this._listEl.innerHTML = this._items
-      .map((item, idx) =>
-        `<li>
+      .map(
+        (item, idx) =>
+          `<li>
            <span>${item}</span>
            <span class="trash" data-idx="${idx}" title="Entfernen">🗑️</span>
          </li>`
-      ).join('');
+      )
+      .join("");
 
-    // Trash-Handler setzen
-    this.shadowRoot.querySelectorAll('.trash')
-      .forEach(el => el.onclick = () => {
-        const idx = Number(el.dataset.idx);
-        this._items.splice(idx, 1);
-        this._updateList();
-      });
+    this.shadowRoot.querySelectorAll(".trash").forEach(
+      (el) =>
+        (el.onclick = () => {
+          const idx = Number(el.dataset.idx);
+          this._items.splice(idx, 1);
+          this._updateList();
+        })
+    );
 
-    // Scroll-to-bottom
     this._listEl.scrollTop = this._listEl.scrollHeight;
   }
 
   async _onNext() {
     if (this._items.length === 0) {
-      alert('Bitte mindestens ein Item hinzufügen.');
+      alert("Bitte mindestens ein Item hinzufügen.");
       return;
     }
     try {
       const res = await fetch(`/room/${this._roomId}/items`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: this._items })  // Array wird so übergeben
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: this._items }),
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || 'Fehler beim Speichern der Items');
+        throw new Error(err.error || "Fehler beim Speichern der Items");
       }
-      this.dispatchEvent(new CustomEvent('ace-items-submitted', {
-        detail: { roomId: this._roomId, items: this._items },
-        bubbles: true,
-        composed: true
-      }));
+      this.dispatchEvent(
+        new CustomEvent("ace-items-submitted", {
+          detail: { roomId: this._roomId, items: this._items },
+          bubbles: true,
+          composed: true,
+        })
+      );
     } catch (e) {
       alert(e.message);
     }
   }
 }
 
-customElements.define('ace-items', AceItems);
+customElements.define("ace-items", AceItems);

@@ -1,15 +1,18 @@
-import express, { Request, Response } from 'express';
-import path from 'path';
-import WebSocket, { WebSocketServer } from 'ws';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { v4 as uuidv4 } from 'uuid';
-import { IncomingMessage } from 'http';
+import express, { Request, Response } from "express";
+import path from "path";
+import WebSocket, { WebSocketServer } from "ws";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import { v4 as uuidv4 } from "uuid";
+import { IncomingMessage } from "http";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// nur für testing
+app.set("trust proxy", true);
 
 // TypeScript Interfaces
 interface User {
@@ -37,11 +40,12 @@ interface ItemHistory {
   summary: Record<string, number>;
 }
 
-enum RoomStatus {
-  SETUP = 'setup',           // Warten auf Items/Start
-  VOTING = 'voting',         // Abstimmung läuft
-  REVEALING = 'revealing',   // Ergebnisse werden gezeigt
-  COMPLETED = 'completed'    // Alle Items abgeschlossen
+export enum RoomStatus {
+  SETUP = "setup", // No items submitted yet
+  ITEMS_SUBMITTED = "items_submitted", // Admin has entered items
+  VOTING = "voting", // A round is in progress
+  REVEALING = "revealing", // Votes have been revealed
+  COMPLETED = "completed", // All items done, summary shown
 }
 
 interface Room {
@@ -50,7 +54,8 @@ interface Room {
   items: string[];
   itemHistory: ItemHistory[];
   votes?: Record<string, string>;
-  status: RoomStatus;        // Expliziter Status!
+  status: RoomStatus;
+  bannedIps: string[];
 }
 
 type CustomWebSocket = WebSocket & {
@@ -71,131 +76,121 @@ const rooms = new Map<string, Room>();
 
 // Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../../public')));
+app.use(express.static(path.join(__dirname, "../../public")));
 
 /**
  * POST /create
  */
-app.post('/create', (req: Request, res: Response) => {
+app.post("/create", (req: Request, res: Response) => {
   const { name }: { name?: string } = req.body;
-  if (!name) return res.status(400).json({ error: 'Name is required' });
-  
-  const ip = req.ip || 'unknown';
+  if (!name) return res.status(400).json({ error: "Name is required" });
+
+  const ip = req.ip || "unknown";
   const roomId = uuidv4();
-  
-  rooms.set(roomId, { 
-    admin: { name, ip }, 
-    users: [], 
-    items: [], 
+
+  rooms.set(roomId, {
+    admin: { name, ip },
+    users: [],
+    items: [],
     itemHistory: [],
-    status: RoomStatus.SETUP  // Explizit setzen
+    status: RoomStatus.SETUP,
+    bannedIps: [],
   });
-  
+
   console.log(`Room created: ${roomId} by admin ${name} (${ip})`);
   res.json({ roomId });
 });
 
-// Start servers
+// Start HTTP + WS servers
 const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
-const wss = new WebSocketServer({ server, path: '/ws' });
+const wss = new WebSocketServer({ server, path: "/ws" });
 
 /**
  * POST /join
  */
-app.post('/join', (req: Request, res: Response) => {
+app.post("/join", (req: Request, res: Response) => {
   const { name, roomId }: { name?: string; roomId?: string } = req.body;
-  if (!name || !roomId) return res.status(400).json({ error: 'Name and roomId are required' });
-  
+  if (!name || !roomId) return res.status(400).json({ error: "Name and roomId are required" });
+
   const room = rooms.get(roomId);
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  
-  const ip = req.ip || 'unknown';
-  
-  // Only send necessary info for navigation
+  if (!room) return res.status(404).json({ error: "Room not found" });
+
+  const ip = req.ip || "unknown";
+
+  // Build minimal state for client
   const roomState = {
     status: room.status,
-    currentItem: room.items[0] || null  // Optional: für UI-Anzeige
+    currentItem: room.items[0] || null,
   };
-  
-  // Check if this IP belongs to the admin
+
+  // Admin rejoin
   if (room.admin.ip === ip) {
     console.log(`Admin ${room.admin.name} (${ip}) rejoined room ${roomId}`);
-    res.json({ 
-      success: true, 
-      isAdmin: true, 
-      name: room.admin.name,
-      roomState
-    });
-    return;
+    return res.json({ success: true, isAdmin: true, name: room.admin.name, roomState });
   }
-  
-  // Check if user already exists
-  const existingUser = room.users.find(u => u.ip === ip);
-  
-  if (!existingUser) {
-    // New user joins
+
+  // Player join/rejoin
+  const existing = room.users.find((u) => u.ip === ip);
+  if (!existing) {
     room.users.push({ name, ip });
     console.log(`User ${name} (${ip}) joined room ${roomId}`);
-    
-    // notify others via WS
+    // notify via WS
     wss.clients.forEach((c: CustomWebSocket) => {
       if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-        c.send(JSON.stringify({ event: 'user-joined', name }));
+        c.send(JSON.stringify({ event: "user-joined", name }));
       }
     });
-    
-    res.json({ 
-      success: true, 
-      isAdmin: false, 
-      name,
-      roomState
-    });
+    return res.json({ success: true, isAdmin: false, name, roomState });
   } else {
-    // Existing user rejoins - use old name
-    console.log(`User ${existingUser.name} (${ip}) rejoined room ${roomId}`);
-    res.json({ 
-      success: true, 
-      isAdmin: false, 
-      name: existingUser.name,
-      roomState
-    });
+    console.log(`User ${existing.name} (${ip}) rejoined room ${roomId}`);
+    return res.json({ success: true, isAdmin: false, name: existing.name, roomState });
   }
 });
 
 /**
  * GET /is-admin
  */
-app.get('/is-admin', (req: Request, res: Response) => {
+app.get("/is-admin", (req: Request, res: Response) => {
   const { roomId } = req.query;
-  if (!roomId || typeof roomId !== 'string') {
-    return res.status(400).json({ error: 'roomId is required' });
+  if (!roomId || typeof roomId !== "string") {
+    return res.status(400).json({ error: "roomId is required" });
   }
-  
   const room = rooms.get(roomId);
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  
-  const isAdmin = room.admin.ip === (req.ip || 'unknown');
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  const isAdmin = room.admin.ip === (req.ip || "unknown");
   console.log(`is-admin: ${req.ip} in ${roomId} = ${isAdmin}`);
   res.json({ isAdmin });
 });
 
 /**
+ * GET /room/:roomId/items
+ */
+app.get("/room/:roomId/items", (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  res.json({ items: room.items });
+});
+
+/**
  * Admin-only: set items
  */
-app.post('/room/:roomId/items', (req: Request, res: Response) => {
+app.post("/room/:roomId/items", (req: Request, res: Response) => {
   const { roomId } = req.params;
   const { items }: { items?: string[] } = req.body;
-  
   const room = rooms.get(roomId);
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  if (room.admin.ip !== (req.ip || 'unknown')) {
-    return res.status(403).json({ error: 'Forbidden' });
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== (req.ip || "unknown")) {
+    return res.status(403).json({ error: "Forbidden" });
   }
   if (!Array.isArray(items)) {
-    return res.status(400).json({ error: 'Items must be an array' });
+    return res.status(400).json({ error: "Items must be an array" });
   }
-  
+
   room.items = items;
+  // → SETUP → ITEMS_SUBMITTED
+  room.status = RoomStatus.ITEMS_SUBMITTED;
+
   console.log(`Items set for room ${roomId}: ${items}`);
   res.json({ success: true });
 });
@@ -203,413 +198,328 @@ app.post('/room/:roomId/items', (req: Request, res: Response) => {
 /**
  * Admin-only: start voting
  */
-app.post('/room/:roomId/start', (req: Request, res: Response) => {
+app.post("/room/:roomId/start", (req: Request, res: Response) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  if (room.admin.ip !== (req.ip || 'unknown')) {
-    return res.status(403).json({ error: 'Forbidden' });
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== (req.ip || "unknown")) {
+    return res.status(403).json({ error: "Forbidden" });
   }
-  
+
   const first = room.items[0];
-  if (!first) return res.status(400).json({ error: 'No items to start' });
-  
-  // Reset votes when starting new voting round
+  if (!first) return res.status(400).json({ error: "No items to start" });
+
   room.votes = {};
-  
-  const event = { 
-    event: 'start', 
-    item: first, 
+
+  const event = {
+    event: "start",
+    item: first,
     options: [1, 2, 3, 5, 8, 13, 21],
     totalPlayers: room.users.length + 1,
-    allPlayers: [room.admin.name, ...room.users.map(u => u.name)]
+    allPlayers: [room.admin.name, ...room.users.map((u) => u.name)],
   };
-  
+
   console.log(`Starting room ${roomId} with item ${first}`);
-  
   wss.clients.forEach((c: CustomWebSocket) => {
     if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
       c.send(JSON.stringify(event));
     }
   });
-  
+
+  // → ITEMS_SUBMITTED → VOTING
   room.status = RoomStatus.VOTING;
-  
+
   res.json({ success: true });
 });
 
 /**
- * POST /room/:roomId/vote - Player submits vote
+ * POST /room/:roomId/vote
  */
-app.post('/room/:roomId/vote', (req: Request, res: Response) => {
+app.post("/room/:roomId/vote", (req: Request, res: Response) => {
   const { roomId } = req.params;
   const { vote, playerName }: { vote?: string; playerName?: string } = req.body;
-  
   const room = rooms.get(roomId);
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  
-  if (!playerName) return res.status(400).json({ error: 'Player name is required' });
-  if (!vote) return res.status(400).json({ error: 'Vote is required' });
-  
-  // Verify player exists in room
-  const roomPlayers = [room.admin.name, ...room.users.map(u => u.name)];
-  if (!roomPlayers.includes(playerName)) {
-    return res.status(403).json({ error: 'Player not found in room' });
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (!playerName) return res.status(400).json({ error: "Player name is required" });
+  if (!vote) return res.status(400).json({ error: "Vote is required" });
+
+  const players = [room.admin.name, ...room.users.map((u) => u.name)];
+  if (!players.includes(playerName)) {
+    return res.status(403).json({ error: "Player not in room" });
   }
-  
-  // Initialize votes if needed
+
   if (!room.votes) room.votes = {};
-  
-  // Store the vote
   room.votes[playerName] = vote;
   console.log(`Vote from ${playerName} in ${roomId}: ${vote}`);
-  console.log(`Current votes in room ${roomId}:`, room.votes);
-  
-  // Send vote status update to all participants
+
   const voteCount = Object.keys(room.votes).length;
-  const totalPlayers = room.users.length + 1; // +1 for admin
+  const totalPlayers = players.length;
   const votedPlayers = Object.keys(room.votes);
-  const allPlayers = [room.admin.name, ...room.users.map(u => u.name)];
-  
-  const updateData = { 
-    event: 'vote-status-update', 
-    voteCount, 
+
+  const updateData = {
+    event: "vote-status-update",
+    voteCount,
     totalPlayers,
     votedPlayers,
-    allPlayers
+    allPlayers: players,
   };
-  
-  console.log(`Sending vote status update to room ${roomId}:`, updateData);
-  
-  let sentCount = 0;
+
   wss.clients.forEach((c: CustomWebSocket) => {
     if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
       c.send(JSON.stringify(updateData));
-      sentCount++;
     }
   });
-  
-  console.log(`Vote status update sent to ${sentCount} clients in room ${roomId}`);
-  
+
   res.json({ success: true });
 });
 
 /**
- * POST /room/:roomId/reveal - Admin reveals all votes and shows results
+ * Admin-only: reveal votes
  */
-app.post('/room/:roomId/reveal', (req: Request, res: Response) => {
+app.post("/room/:roomId/reveal", (req: Request, res: Response) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  if (room.admin.ip !== (req.ip || 'unknown')) {
-    return res.status(403).json({ error: 'Only admin can reveal votes' });
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== (req.ip || "unknown")) {
+    return res.status(403).json({ error: "Only admin can reveal votes" });
   }
-  
+
   const votes = room.votes || {};
   if (Object.keys(votes).length === 0) {
-    return res.status(400).json({ error: 'No votes to reveal' });
+    return res.status(400).json({ error: "No votes to reveal" });
   }
-  
-  // Calculate statistics
+
   const results = calculateVoteResults(votes);
-  
-  console.log(`Admin revealed votes for room ${roomId}:`, results);
-  
-  // Save to history
-  const currentItem = room.items[0];
-  if (currentItem) {
-    if (!room.itemHistory) room.itemHistory = [];
+
+  // save history
+  const current = room.items[0];
+  if (current) {
     room.itemHistory.push({
-      item: currentItem,
+      item: current,
       average: results.average,
       votes: results.votes,
-      summary: results.summary
+      summary: results.summary,
     });
   }
-  
-  // Check if this is the last item
-  const isLastItem = room.items.length <= 1;
-  
-  // Send results to all participants via WebSocket
+
+  const isLast = room.items.length <= 1;
+
   wss.clients.forEach((c: CustomWebSocket) => {
     if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(JSON.stringify({ 
-        event: 'cards-revealed', 
-        results,
-        isLastItem
-      }));
+      c.send(
+        JSON.stringify({
+          event: "cards-revealed",
+          results,
+          isLastItem: isLast,
+        })
+      );
     }
   });
-  
+
+  // → VOTING → REVEALING
   room.status = RoomStatus.REVEALING;
-  
-  res.json({ success: true, results, isLastItem });
+
+  res.json({ success: true, results, isLastItem: isLast });
 });
 
 /**
- * POST /room/:roomId/next - Admin starts next item
+ * POST /room/:roomId/repeat — Admin repeats current voting
  */
-app.post('/room/:roomId/next', (req: Request, res: Response) => {
+app.post("/room/:roomId/repeat", (req: Request, res: Response) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  if (room.admin.ip !== (req.ip || 'unknown')) {
-    return res.status(403).json({ error: 'Only admin can start next item' });
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== (req.ip || "unknown")) {
+    return res.status(403).json({ error: "Only admin can repeat voting" });
   }
-  
-  // Remove first item and get next
+
+  const current = room.items[0];
+  if (!current) {
+    return res.status(400).json({ error: "No current item to repeat" });
+  }
+
+  // reset votes
+  room.votes = {};
+
+  // send the same “start” event back to everybody
+  const event = {
+    event: "start",
+    item: current,
+    options: [1, 2, 3, 5, 8, 13, 21],
+    totalPlayers: room.users.length + 1,
+    allPlayers: [room.admin.name, ...room.users.map((u) => u.name)],
+  };
+  wss.clients.forEach((c: CustomWebSocket) => {
+    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
+      c.send(JSON.stringify(event));
+    }
+  });
+
+  // move back into VOTING state
+  room.status = RoomStatus.VOTING;
+
+  res.json({ success: true, item: current });
+});
+
+/**
+ * Admin-only: next item
+ */
+app.post("/room/:roomId/next", (req: Request, res: Response) => {
+  const { roomId } = req.params;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== (req.ip || "unknown")) {
+    return res.status(403).json({ error: "Only admin can start next item" });
+  }
+
   if (room.items.length > 1) {
-    room.items.shift(); // Remove current item
-    const nextItem = room.items[0];
-    room.votes = {}; // Reset votes
-    
-    const event = { 
-      event: 'start', 
-      item: nextItem, 
+    room.items.shift();
+    const next = room.items[0];
+    room.votes = {};
+
+    const event = {
+      event: "start",
+      item: next,
       options: [1, 2, 3, 5, 8, 13, 21],
       totalPlayers: room.users.length + 1,
-      allPlayers: [room.admin.name, ...room.users.map(u => u.name)]
+      allPlayers: [room.admin.name, ...room.users.map((u) => u.name)],
     };
-    
-    console.log(`Next item started for room ${roomId}: ${nextItem}`);
-    
+
+    console.log(`Next item started for room ${roomId}: ${next}`);
     wss.clients.forEach((c: CustomWebSocket) => {
       if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
         c.send(JSON.stringify(event));
       }
     });
-    
+
+    // → REVEALING → VOTING
     room.status = RoomStatus.VOTING;
-    
-    res.json({ success: true, item: nextItem });
+
+    return res.json({ success: true, item: next });
   } else {
-    res.status(400).json({ error: 'No more items' });
+    return res.status(400).json({ error: "No more items" });
   }
 });
 
 /**
- * POST /room/:roomId/repeat - Admin repeats current voting
+ * Admin-only: show summary
  */
-app.post('/room/:roomId/repeat', (req: Request, res: Response) => {
+app.post("/room/:roomId/summary", (req: Request, res: Response) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  if (room.admin.ip !== (req.ip || 'unknown')) {
-    return res.status(403).json({ error: 'Only admin can repeat voting' });
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== (req.ip || "unknown")) {
+    return res.status(403).json({ error: "Only admin can show summary" });
   }
-  
-  const currentItem = room.items[0];
-  if (!currentItem) return res.status(400).json({ error: 'No current item' });
-  
-  room.votes = {}; // Reset votes
-  
-  const event = { 
-    event: 'start', 
-    item: currentItem, 
-    options: [1, 2, 3, 5, 8, 13, 21],
-    totalPlayers: room.users.length + 1,
-    allPlayers: [room.admin.name, ...room.users.map(u => u.name)]
-  };
-  
-  console.log(`Repeat voting for room ${roomId}: ${currentItem}`);
-  
-  wss.clients.forEach((c: CustomWebSocket) => {
-    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(JSON.stringify(event));
-    }
-  });
-  
-  res.json({ success: true, item: currentItem });
-});
 
-/**
- * POST /room/:roomId/summary - Admin shows final summary
- */
-app.post('/room/:roomId/summary', (req: Request, res: Response) => {
-  const { roomId } = req.params;
-  const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  if (room.admin.ip !== (req.ip || 'unknown')) {
-    return res.status(403).json({ error: 'Only admin can show summary' });
-  }
-  
-  const itemHistory = room.itemHistory || [];
-  const totalAverage = itemHistory.length > 0 
-    ? parseFloat((itemHistory.reduce((sum, item) => sum + item.average, 0) / itemHistory.length).toFixed(2))
-    : 0;
-  
+  const history = room.itemHistory;
+  const totalAvg = history.length > 0 ? parseFloat((history.reduce((sum, i) => sum + i.average, 0) / history.length).toFixed(2)) : 0;
+
   const summary: Summary = {
-    items: itemHistory,
-    totalAverage,
-    totalTasks: itemHistory.length
+    items: history,
+    totalAverage: totalAvg,
+    totalTasks: history.length,
   };
-  
-  console.log(`Summary requested for room ${roomId}:`, summary);
-  
-  // Send summary to all participants
+
   wss.clients.forEach((c: CustomWebSocket) => {
     if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(JSON.stringify({ 
-        event: 'show-summary', 
-        summary 
-      }));
+      c.send(JSON.stringify({ event: "show-summary", summary }));
     }
   });
-  
+
+  // → REVEALING → COMPLETED
   room.status = RoomStatus.COMPLETED;
-  
+
   res.json({ success: true, summary });
 });
 
 /**
- * Helper function to calculate vote statistics
- */
-function calculateVoteResults(votes: Record<string, string>): VoteResults {
-  const results: VoteResults = {
-    votes,                    // { "PlayerName": "3", "AdminName": "5" }
-    summary: {},              // { "1": 2, "3": 1, "5": 1 }
-    average: 0,               // 2.5
-    totalVotes: 0,            // 4
-    participants: []          // ["PlayerName", "AdminName"]
-  };
-  
-  const voteValues = Object.values(votes);
-  const voteEntries = Object.entries(votes);
-  
-  results.totalVotes = voteEntries.length;
-  results.participants = Object.keys(votes);
-  
-  // Count occurrences of each vote value
-  voteValues.forEach(vote => {
-    results.summary[vote] = (results.summary[vote] || 0) + 1;
-  });
-  
-  // Calculate average (only for numeric votes)
-  const numericVotes = voteValues
-    .map(vote => parseFloat(vote))
-    .filter(vote => !isNaN(vote));
-  
-  if (numericVotes.length > 0) {
-    const sum = numericVotes.reduce((acc, val) => acc + val, 0);
-    results.average = parseFloat((sum / numericVotes.length).toFixed(2));
-  }
-  
-  return results;
-}
-
-/**
  * GET /room/:roomId/participants
- * Returns list of participants (admin + users)
  */
-app.get('/room/:roomId/participants', (req: Request, res: Response) => {
+app.get("/room/:roomId/participants", (req, res) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  
-  // Build participants list (names only)
-  const participants = [
-    room.admin.name,
-    ...room.users.map(u => u.name)
-  ];
-  
-  console.log(`Participants for room ${roomId}:`, participants);
+  if (!room) return res.status(404).json({ error: "Room not found" });
+
+  const participants = [room.admin.name, ...room.users.map((u) => u.name)];
   res.json({ participants });
 });
 
 /**
  * GET /room/:roomId/vote-status
- * Returns current vote status for polling
  */
-app.get('/room/:roomId/vote-status', (req: Request, res: Response) => {
+app.get("/room/:roomId/vote-status", (req, res) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  
-  const voteCount = Object.keys(room.votes || {}).length;
-  const totalPlayers = room.users.length + 1; // +1 for admin
-  const votedPlayers = Object.keys(room.votes || {});
-  const allPlayers = [room.admin.name, ...room.users.map(u => u.name)];
-  
+  if (!room) return res.status(404).json({ error: "Room not found" });
+
+  const votes = room.votes || {};
   res.json({
-    voteCount,
-    totalPlayers,
-    votedPlayers,
-    allPlayers
+    voteCount: Object.keys(votes).length,
+    totalPlayers: room.users.length + 1,
+    votedPlayers: Object.keys(votes),
+    allPlayers: [room.admin.name, ...room.users.map((u) => u.name)],
   });
 });
 
 /**
  * GET /room/:roomId/status
- * Returns current room status and information
  */
-app.get('/room/:roomId/status', (req: Request, res: Response) => {
+app.get("/room/:roomId/status", (req, res) => {
   const { roomId } = req.params;
   const room = rooms.get(roomId);
-  
-  if (!room) return res.status(404).json({ error: 'Room not found' });
-  
+  if (!room) return res.status(404).json({ error: "Room not found" });
+
   res.json({
     status: room.status,
-    currentItem: room.items[0] || null,  // Direkt aus items[0]
+    currentItem: room.items[0] || null,
     itemsRemaining: room.items.length,
     votesCount: Object.keys(room.votes || {}).length,
     totalPlayers: room.users.length + 1,
-    completedItems: room.itemHistory.length
+    completedItems: room.itemHistory.length,
   });
 });
 
-wss.on('connection', (ws: CustomWebSocket, req: IncomingMessage) => {
-  console.log(`WS connected: ${req.socket.remoteAddress}`);
+wss.on("connection", (ws: CustomWebSocket, req: IncomingMessage) => {
   ws.isAlive = true;
-  ws.on('pong', () => { ws.isAlive = true; });
+  ws.on("pong", () => {
+    ws.isAlive = true;
+  });
 
-  ws.on('message', (data: Buffer) => {
+  ws.on("message", (data) => {
     const msg = data.toString();
     if (!ws.roomId) {
-      // Handle initial connection message
       try {
-        const parsed = JSON.parse(msg);
-        if (parsed.roomId) {
-          ws.roomId = parsed.roomId;
-          ws.role = parsed.role;
-          ws.playerName = parsed.payload?.name;
-          console.log(`Assigned ws: ${ws.playerName} (${ws.role}) to room ${ws.roomId}`);
+        const p = JSON.parse(msg);
+        if (p.roomId) {
+          ws.roomId = p.roomId;
+          ws.role = p.role;
+          ws.playerName = p.payload?.name;
         }
       } catch {
         ws.roomId = msg;
-        console.log(`Assigned ws to room ${ws.roomId}`);
       }
       return;
     }
-    
+
     let parsed: any;
-    try { 
-      parsed = JSON.parse(msg); 
-    } catch { 
-      return; 
+    try {
+      parsed = JSON.parse(msg);
+    } catch {
+      return;
     }
-    
-    // Handle vote messages
-    if (parsed.type === 'vote') {
+
+    if (parsed.type === "vote" && ws.playerName) {
       const room = rooms.get(ws.roomId);
-      if (room && ws.playerName) {
+      if (room) {
         if (!room.votes) room.votes = {};
         room.votes[ws.playerName] = parsed.value;
-        console.log(`Vote via WS from ${ws.playerName} in ${ws.roomId}: ${parsed.value}`);
       }
       return;
     }
-    
-    // Handle legacy messages
+
+    // legacy broadcast
     if (parsed.role && parsed.payload !== undefined) {
-      console.log(`Received from ${parsed.role}@${ws.roomId}:`, parsed.payload);
       wss.clients.forEach((c: CustomWebSocket) => {
         if (c !== ws && c.readyState === WebSocket.OPEN && c.roomId === ws.roomId) {
           c.send(JSON.stringify({ from: parsed.role, payload: parsed.payload }));
@@ -618,11 +528,35 @@ wss.on('connection', (ws: CustomWebSocket, req: IncomingMessage) => {
     }
   });
 
-  ws.on('close', () => console.log(`WS closed for room ${ws.roomId}`));
+  ws.on("close", () => {
+    /* noop */
+  });
 });
 
-// Ping/pong to keep alive
-const interval = setInterval(() => {
+// Ban-Endpoint
+app.post("/room/:roomId/ban", (req, res) => {
+  const { roomId } = req.params;
+  const { ip } = req.body as { ip?: string };
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== req.ip) return res.status(403).json({ error: "Forbidden" });
+  if (!ip) return res.status(400).json({ error: "IP is required" });
+  room.bannedIps.push(ip);
+  res.json({ success: true });
+});
+
+// Unban (optional)
+app.delete("/room/:roomId/ban/:ip", (req, res) => {
+  const { roomId, ip } = req.params;
+  const room = rooms.get(roomId);
+  if (!room) return res.status(404).json({ error: "Room not found" });
+  if (room.admin.ip !== req.ip) return res.status(403).json({ error: "Forbidden" });
+  room.bannedIps = room.bannedIps.filter((x) => x !== ip);
+  res.json({ success: true });
+});
+
+// keepalive
+setInterval(() => {
   wss.clients.forEach((ws: CustomWebSocket) => {
     if (!ws.isAlive) return ws.terminate();
     ws.isAlive = false;
@@ -630,9 +564,32 @@ const interval = setInterval(() => {
   });
 }, 30000);
 
-process.on('SIGTERM', () => { 
-  clearInterval(interval); 
-  server.close(); 
+process.on("SIGTERM", () => {
+  server.close();
 });
 
-export default server; 
+export default server;
+
+/**
+ * Helper: calculate vote statistics
+ */
+function calculateVoteResults(votes: Record<string, string>): VoteResults {
+  const summary: Record<string, number> = {};
+  const values = Object.values(votes)
+    .map((v) => parseFloat(v))
+    .filter((n) => !isNaN(n));
+
+  Object.values(votes).forEach((v) => {
+    summary[v] = (summary[v] || 0) + 1;
+  });
+
+  const avg = values.length ? parseFloat((values.reduce((a, b) => a + b, 0) / values.length).toFixed(2)) : 0;
+
+  return {
+    votes,
+    summary,
+    average: avg,
+    totalVotes: Object.keys(votes).length,
+    participants: Object.keys(votes),
+  };
+}

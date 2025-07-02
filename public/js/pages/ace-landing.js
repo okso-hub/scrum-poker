@@ -51,7 +51,7 @@ h2 {
 class AceLanding extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: "open" });
     this.shadowRoot.adoptedStyleSheets = [landingStyles];
   }
 
@@ -82,42 +82,46 @@ class AceLanding extends HTMLElement {
       </div>
     `;
 
-    const nameEl    = this.shadowRoot.getElementById('name');
-    const createBtn = this.shadowRoot.getElementById('create');
-    const joinBtn   = this.shadowRoot.getElementById('join');
-    const gameEl    = this.shadowRoot.getElementById('gameId');
+    const nameEl = this.shadowRoot.getElementById("name");
+    const createBtn = this.shadowRoot.getElementById("create");
+    const joinBtn = this.shadowRoot.getElementById("join");
+    const gameEl = this.shadowRoot.getElementById("gameId");
 
     createBtn.onclick = () => {
       const name = nameEl.value.trim();
       if (!name) {
-        alert('Bitte gib Deinen Namen ein.');
+        alert("Bitte gib Deinen Namen ein.");
         return;
       }
-      this.dispatchEvent(new CustomEvent('ace-create', {
-        detail: { name, wsUrl: this.getAttribute('ws-url') },
-        bubbles: true,
-        composed: true
-      }));
+      this.dispatchEvent(
+        new CustomEvent("ace-create", {
+          detail: { name, wsUrl: this.getAttribute("ws-url") },
+          bubbles: true,
+          composed: true,
+        })
+      );
     };
 
     joinBtn.onclick = () => {
-      const name   = nameEl.value.trim();
+      const name = nameEl.value.trim();
       const gameId = gameEl.value.trim();
       if (!name) {
-        alert('Bitte gib Deinen Namen ein.');
+        alert("Bitte gib Deinen Namen ein.");
         return;
       }
       if (!gameId) {
-        alert('Bitte gib die Spiel-ID ein.');
+        alert("Bitte gib die Spiel-ID ein.");
         return;
       }
-      this.dispatchEvent(new CustomEvent('ace-join', {
-        detail: { name, gameId, wsUrl: this.getAttribute('ws-url') },
-        bubbles: true,
-        composed: true
-      }));
+      this.dispatchEvent(
+        new CustomEvent("ace-join", {
+          detail: { name, gameId, wsUrl: this.getAttribute("ws-url") },
+          bubbles: true,
+          composed: true,
+        })
+      );
     };
   }
 }
 
-customElements.define('ace-landing', AceLanding);
+customElements.define("ace-landing", AceLanding);
