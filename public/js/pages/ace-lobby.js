@@ -72,7 +72,6 @@ class AceLobby extends HTMLElement {
     this._checkAdmin().then(() => {
       this._render();
       this._fetchParticipants();
-      this._setupWebSocket();
     });
   }
 
@@ -169,27 +168,6 @@ class AceLobby extends HTMLElement {
       alert(e.message);
       console.error('Ban error:', e);
     }
-  }
-
-  _setupWebSocket() {
-    const ws = new WebSocket(`${this._wsUrl}/ws`);
-    ws.onopen = () => ws.send(this._roomId);
-    ws.onmessage = ev => {
-      console.log('received event');
-      let msg;
-      try { msg = JSON.parse(ev.data); } catch { return; }
-
-      if (msg.event === 'start') {
-        this.dispatchEvent(new CustomEvent('ace-started', {
-          detail: { item: msg.item, options: msg.options },
-          bubbles: true,
-          composed: true
-        }));
-      } else {
-        this._fetchParticipants();
-      }
-    };
-    ws.onerror = e => console.error('Lobby WS Error:', e);
   }
 
   async _onStart() {
