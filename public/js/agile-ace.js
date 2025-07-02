@@ -97,6 +97,10 @@ class AgileAce extends HTMLElement {
     this._roomId = roomId;
     this._role = "admin";
 
+    const params = new URLSearchParams(window.location.search);
+    params.set('roomId', this._roomId);
+    window.history.replaceState({}, '', `${location.pathname}?${params}`);
+
     this._connectWS();
     this._renderItems();
     console.log(`Admin für Raum ${roomId}`);
@@ -120,6 +124,10 @@ class AgileAce extends HTMLElement {
     this._role = isAdmin ? "admin" : "player";
     this._status = roomState.status;
     this._item = roomState.currentItem;
+
+    const params = new URLSearchParams(window.location.search);
+    params.set('roomId', this._roomId);
+    window.history.replaceState({}, '', `${location.pathname}?${params}`);
 
     this._connectWS();
 
