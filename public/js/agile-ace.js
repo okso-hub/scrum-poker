@@ -19,11 +19,31 @@ class AgileAce extends HTMLElement {
     this.addEventListener("ace-join", (e) => this._onJoin(e.detail));
     this.addEventListener("ace-started", (e) => this._renderQuestion(e.detail));
     this.addEventListener("ace-vote", (e) => this._sendVote(e.detail.value));
+    this.addEventListener("ace-back-to-landing", () => this._goBackToLanding());
   }
 
   _renderLanding() {
     this.shadowRoot.innerHTML = "";
     this.shadowRoot.append(document.createElement("ace-landing"));
+  }
+
+  _goBackToLanding() {
+    // WebSocket-Verbindung schließen, falls vorhanden
+    if (this._ws) {
+      this._ws.close();
+      this._ws = null;
+    }
+    
+    // Alle Zustandsvariablen zurücksetzen
+    this._roomId = null;
+    this._name = null;
+    this._role = null;
+    this._status = null;
+    this._item = null;
+    this._allPlayers = null;
+    
+    // Zur Startseite navigieren
+    this._renderLanding();
   }
 
   _renderItems() {
