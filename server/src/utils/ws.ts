@@ -51,6 +51,19 @@ export function broadcast(roomId: string, payload: any) {
 }
 
 /**
+ * Trennt gezielt den Client mit `playerName` im `roomId`, z.B. beim Bannen.
+ * Sendet vorher ein `banned-by-admin`-Event.
+ */
+export function disconnectUser(roomId: string, playerName: string): void {
+  wss.clients.forEach((client: CustomWebSocket) => {
+    if (client.readyState === WebSocket.OPEN && client.roomId === roomId && client.playerName === playerName) {
+      client.send(JSON.stringify({ event: "banned-by-admin" }));
+      client.terminate();
+    }
+  });
+}
+
+/**
  * Beispiel eines Message-Handlers; kann in util/ws.ts bleiben
  * oder in eine eigene Datei ausgelagert werden. Eigentlich rufen wir aber nur API endpoints auf,
  * die dann Broadcasts an alle Clients im Raum machen.

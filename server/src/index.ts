@@ -4,7 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { v4 as uuidv4 } from "uuid";
 import { IncomingMessage } from "http";
-import { initWebSocket, broadcast } from "./utils/ws.js";
+import { initWebSocket, broadcast, disconnectUser } from "./utils/ws.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -126,6 +126,7 @@ app.post("/join", (req: Request, res: Response) => {
   // Admin rejoin
   if (room.admin.ip === ip) {
     console.log(`Admin ${room.admin.name} (${ip}) rejoined room ${roomId}`);
+    broadcast(roomId, { event: "user-joined", rejoin: true, user: name });
     return res.json({ success: true, isAdmin: true, name: room.admin.name, roomState });
   }
 
@@ -134,11 +135,11 @@ app.post("/join", (req: Request, res: Response) => {
   if (!existing) {
     room.users.push({ name, ip });
     console.log(`User ${name} (${ip}) joined room ${roomId}`);
-
-    broadcast(roomId, { event: "user-joined", rejoin: true, user: name });
+    broadcast(roomId, { event: "user-joined", rejoin: false, user: name });
     return res.json({ success: true, isAdmin: false, name, roomState });
   } else {
     console.log(`User ${existing.name} (${ip}) rejoined room ${roomId}`);
+    broadcast(roomId, { event: "user-joined", rejoin: true, user: name });
     return res.json({ success: true, isAdmin: false, name: existing.name, roomState });
   }
 });
@@ -216,11 +217,7 @@ app.post("/room/:roomId/start", (req: Request, res: Response) => {
   };
 
   console.log(`Starting room ${roomId} with item ${first}`);
-  wss.clients.forEach((c: CustomWebSocket) => {
-    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(JSON.stringify(event));
-    }
-  });
+  broadcast(roomId, event);
 
   // → ITEMS_SUBMITTED → VOTING
   room.status = RoomStatus.VOTING;
@@ -252,6 +249,7 @@ app.post("/room/:roomId/vote", (req: Request, res: Response) => {
   const totalPlayers = players.length;
   const votedPlayers = Object.keys(room.votes);
 
+  //generelle frage code review: immer daten wie allUsers mitschicken oder nicht
   const updateData = {
     event: "vote-status-update",
     voteCount,
@@ -260,11 +258,7 @@ app.post("/room/:roomId/vote", (req: Request, res: Response) => {
     allPlayers: players,
   };
 
-  wss.clients.forEach((c: CustomWebSocket) => {
-    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(JSON.stringify(updateData));
-    }
-  });
+  broadcast(roomId, updateData);
 
   res.json({ success: true });
 });
@@ -300,17 +294,7 @@ app.post("/room/:roomId/reveal", (req: Request, res: Response) => {
 
   const isLast = room.items.length <= 1;
 
-  wss.clients.forEach((c: CustomWebSocket) => {
-    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(
-        JSON.stringify({
-          event: "cards-revealed",
-          results,
-          isLastItem: isLast,
-        })
-      );
-    }
-  });
+  broadcast(roomId, { event: "cards-revealed", results, isLastItem: isLast });
 
   // → VOTING → REVEALING
   room.status = RoomStatus.REVEALING;
@@ -345,11 +329,8 @@ app.post("/room/:roomId/repeat", (req: Request, res: Response) => {
     totalPlayers: room.users.length + 1,
     allPlayers: [room.admin.name, ...room.users.map((u) => u.name)],
   };
-  wss.clients.forEach((c: CustomWebSocket) => {
-    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(JSON.stringify(event));
-    }
-  });
+
+  broadcast(roomId, event);
 
   // move back into VOTING state
   room.status = RoomStatus.VOTING;
@@ -382,11 +363,8 @@ app.post("/room/:roomId/next", (req: Request, res: Response) => {
     };
 
     console.log(`Next item started for room ${roomId}: ${next}`);
-    wss.clients.forEach((c: CustomWebSocket) => {
-      if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-        c.send(JSON.stringify(event));
-      }
-    });
+
+    broadcast(roomId, event);
 
     // → REVEALING → VOTING
     room.status = RoomStatus.VOTING;
@@ -417,11 +395,7 @@ app.post("/room/:roomId/summary", (req: Request, res: Response) => {
     totalTasks: history.length,
   };
 
-  wss.clients.forEach((c: CustomWebSocket) => {
-    if (c.readyState === WebSocket.OPEN && c.roomId === roomId) {
-      c.send(JSON.stringify({ event: "show-summary", summary }));
-    }
-  });
+  broadcast(roomId, { event: "show-summary", summary });
 
   // → REVEALING → COMPLETED
   room.status = RoomStatus.COMPLETED;
@@ -476,60 +450,45 @@ app.get("/room/:roomId/status", (req, res) => {
   });
 });
 
-wss.on("connection", (ws: CustomWebSocket, req: IncomingMessage) => {
-  ws.isAlive = true;
-  ws.on("pong", () => {
-    ws.isAlive = true;
-  });
-
-  ws.on("message", (data) => {
-    const msg = data.toString();
-    if (!ws.roomId) {
-      try {
-        const p = JSON.parse(msg);
-        if (p.roomId) {
-          ws.roomId = p.roomId;
-          ws.role = p.role;
-          ws.playerName = p.payload?.name;
-        }
-      } catch {
-        ws.roomId = msg;
-      }
-      return;
-    }
-
-    let parsed: any;
-    try {
-      parsed = JSON.parse(msg);
-    } catch {
-      return;
-    }
-
-    if (parsed.type === "vote" && ws.playerName) {
-      const room = rooms.get(ws.roomId);
-      if (room) {
-        if (!room.votes) room.votes = {};
-        room.votes[ws.playerName] = parsed.value;
-      }
-      return;
-    }
-  });
-
-  ws.on("close", () => {
-    /* noop */
-  });
-});
-
-// Ban-Endpoint
-app.post("/room/:roomId/ban", (req, res) => {
+// Ban-Endpoint nach Umbau
+app.post("/room/:roomId/ban", (req: Request, res: Response) => {
   const { roomId } = req.params;
-  const { ip } = req.body as { ip?: string };
+  const { userName }: { userName?: string } = req.body;
   const room = rooms.get(roomId);
-  if (!room) return res.status(404).json({ error: "Room not found" });
-  if (room.admin.ip !== req.ip) return res.status(403).json({ error: "Forbidden" });
-  if (!ip) return res.status(400).json({ error: "IP is required" });
-  room.bannedIps.push(ip);
-  res.json({ success: true });
+  if (!room) {
+    return res.status(404).json({ error: "Room not found" });
+  }
+  // Nur der Admin darf bannen
+  if (room.admin.ip !== req.ip) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  if (!userName) {
+    return res.status(400).json({ error: "userName is required" });
+  }
+
+  // Admin darf sich nicht selber bannen
+  if (userName === room.admin.name) {
+    return res.status(400).json({ error: "Cannot ban the admin" });
+  }
+
+  // Finde User im Raum
+  const user = room.users.find((u) => u.name === userName);
+  if (!user) {
+    return res.status(404).json({ error: "User not in room" });
+  }
+
+  // Ban-IP speichern
+  room.bannedIps.push(user.ip);
+
+  disconnectUser(roomId, userName);
+
+  // Broadcast an alle anderen Clients
+  broadcast(roomId, {
+    event: "user-banned",
+    user: userName,
+  });
+
+  return res.json({ success: true });
 });
 
 // Unban (optional)
@@ -541,15 +500,6 @@ app.delete("/room/:roomId/ban/:ip", (req, res) => {
   room.bannedIps = room.bannedIps.filter((x) => x !== ip);
   res.json({ success: true });
 });
-
-// keepalive
-setInterval(() => {
-  wss.clients.forEach((ws: CustomWebSocket) => {
-    if (!ws.isAlive) return ws.terminate();
-    ws.isAlive = false;
-    ws.ping();
-  });
-}, 30000);
 
 process.on("SIGTERM", () => {
   server.close();
