@@ -174,7 +174,6 @@ class AceNavbar extends HTMLElement {
   }
 
   _render() {
-    const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
     this.shadowRoot.innerHTML = `
       <div class="navbar">
         <div class="info">

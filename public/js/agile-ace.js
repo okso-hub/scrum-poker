@@ -1,7 +1,6 @@
 import "./pages/ace-landing.js";
 import "./pages/ace-items.js";
 import "./pages/ace-lobby.js";
-import "./pages/ace-question.js";
 import "./pages/ace-results.js";
 import "./pages/ace-voting.js";
 import "./pages/ace-summary.js";
@@ -17,7 +16,6 @@ class AgileAce extends HTMLElement {
   _bindEvents() {
     this.addEventListener("ace-create", (e) => this._onCreate(e.detail));
     this.addEventListener("ace-join", (e) => this._onJoin(e.detail));
-    this.addEventListener("ace-started", (e) => this._renderQuestion(e.detail));
     this.addEventListener("ace-vote", (e) => this._sendVote(e.detail.value));
     this.addEventListener("ace-back-to-landing", () => this._goBackToLanding());
   }
