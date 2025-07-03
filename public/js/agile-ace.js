@@ -50,7 +50,7 @@ class AgileAce extends HTMLElement {
     cmp.setAttribute("room-id", this._roomId);
     cmp.setAttribute("is-admin", this._role === "admin");
     cmp.addEventListener("ace-items-submitted", (e) => {
-      console.log("Items gespeichert:", e.detail.items);
+      console.log("Items saved:", e.detail.items);
       this._renderLobby();
     });
     this.shadowRoot.append(cmp);
@@ -107,7 +107,7 @@ class AgileAce extends HTMLElement {
     });
     if (!res.ok) {
       const err = await res.json();
-      return alert(err.error || "Fehler beim Erstellen");
+      return alert(err.error || "Error on game creation");
     }
     const { roomId } = await res.json();
 
@@ -121,7 +121,7 @@ class AgileAce extends HTMLElement {
 
     this._connectWS();
     this._renderItems();
-    console.log(`Admin für Raum ${roomId}`);
+    console.log(`Admin for room ${roomId}`);
   }
 
   async _onJoin({ name, gameId }) {
@@ -133,7 +133,7 @@ class AgileAce extends HTMLElement {
     });
     if (!res.ok) {
       const err = await res.json();
-      return alert(err.error || "Fehler beim Beitreten");
+      return alert(err.error || "Error on join");
     }
 
     const { isAdmin, name: serverName, roomState } = await res.json();
@@ -216,8 +216,8 @@ class AgileAce extends HTMLElement {
       }
     };
 
-    this._ws.onclose = () => console.log("WebSocket geschlossen");
-    this._ws.onerror = (e) => console.error("WS-Fehler", e);
+    this._ws.onclose = () => console.log("WebSocket closed");
+    this._ws.onerror = (e) => console.error("WebSocker errored", e);
   }
 }
 

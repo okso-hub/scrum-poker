@@ -74,21 +74,21 @@ class AceLanding extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <h2>AgileAce</h2>
       <div class="input-group">
-        <label for="name">Dein Name:</label>
-        <input id="name" type="text" placeholder="z. B. Anna Müller" />
+        <label for="name">Your Name:</label>
+        <input id="name" type="text" placeholder="z. B. Anna Mueller" />
       </div>
       <div class="actions">
         <div class="action create">
-          <h3>Spiel erstellen</h3>
-          <button id="create">Als Admin starten</button>
+          <h3>Create Game</h3>
+          <button id="create">Start Game as Admin</button>
         </div>
         <div class="action join">
-          <h3>Spiel beitreten</h3>
+          <h3>Join Game</h3>
           <div class="input-group">
-            <label for="gameId">Spiel-ID:</label>
+            <label for="gameId">Game-ID:</label>
             <input id="gameId" type="text" placeholder="z. B. ABC123" />
           </div>
-          <button id="join">Beitreten</button>
+          <button id="join">Join</button>
         </div>
       </div>
     `;
@@ -101,7 +101,7 @@ class AceLanding extends HTMLElement {
     createBtn.onclick = () => {
       const name = nameEl.value.trim();
       if (!name) {
-        alert("Bitte gib Deinen Namen ein.");
+        alert("Please enter your name.");
         return;
       }
       this.dispatchEvent(
@@ -117,11 +117,11 @@ class AceLanding extends HTMLElement {
       const name = nameEl.value.trim();
       const gameId = gameEl.value.trim();
       if (!name) {
-        alert("Bitte gib Deinen Namen ein.");
+        alert("Please enter your name.");
         return;
       }
       if (!gameId) {
-        alert("Bitte gib die Spiel-ID ein.");
+        alert("Please enter the Game-ID.");
         return;
       }
       this.dispatchEvent(

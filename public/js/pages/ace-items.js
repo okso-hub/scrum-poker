@@ -91,9 +91,9 @@ class AceItems extends HTMLElement {
   _render() {
     this.shadowRoot.innerHTML = `
       <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
-      <h2>Items hinzufügen</h2>
+      <h2>Add Items</h2>
       <div class="input-group">
-        <input id="itemInput" type="text" placeholder="Neues Item…" />
+        <input id="itemInput" type="text" placeholder="New Item…" />
         <button id="addBtn">Add</button>
       </div>
       <ul id="itemList"></ul>
@@ -127,7 +127,7 @@ class AceItems extends HTMLElement {
     const text = this._inputEl.value.trim();
     if (!text) return;
     if (this._items.some(item => item.toLowerCase() === text.toLowerCase())) {
-      alert("Dieses Item existiert bereits.");
+      alert("This item exists already.");
       this._inputEl.value = "";
       this._inputEl.focus();
       return;
@@ -143,7 +143,7 @@ class AceItems extends HTMLElement {
       .map((item, idx) => `
         <li>
           <span>${item}</span>
-          <span class="trash" data-idx="${idx}" title="Entfernen">🗑️</span>
+          <span class="trash" data-idx="${idx}" title="Remove">🗑️</span>
         </li>
       `)
       .join('');
@@ -159,7 +159,7 @@ class AceItems extends HTMLElement {
 
   async _onNext() {
     if (this._items.length === 0) {
-      alert("Bitte mindestens ein Item hinzufügen.");
+      alert("Please add at least one item.");
       return;
     }
     try {
@@ -168,7 +168,7 @@ class AceItems extends HTMLElement {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: this._items })
       });
-      if (!res.ok) throw new Error("Fehler beim Speichern der Items");
+      if (!res.ok) throw new Error("Error when saving items.");
       this.dispatchEvent(
         new CustomEvent("ace-items-submitted", {
           detail: { roomId: this._roomId, items: this._items },
