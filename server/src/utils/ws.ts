@@ -8,7 +8,7 @@ export interface CustomWebSocket extends WebSocket {
   isAlive?: boolean;
 }
 
-let wss: WebSocketServer;
+export let wss: WebSocketServer;
 
 export function initWebSocket(server: any, path = "/ws") {
   wss = new WebSocketServer({ server, path });
