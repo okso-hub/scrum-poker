@@ -74,9 +74,14 @@ router.post(
   requireAdminAccess,
   asyncHandler(async (req: Request, res: Response) => {
     const { roomId } = req.params;
-
     const gameEvent = gameService.showSummary(roomId);
+
     broadcast(roomId, gameEvent);
+
+    // we cant awawait the ws in the current implementation, so we close the room after a delay. This is completely fine, as the clients will receive the summary event before the room is closed or are offline.
+    setTimeout(() => {
+      roomService.deleteRoom(roomId);
+    }, 5000);
 
     res.json({ success: true, gameEvent });
   })

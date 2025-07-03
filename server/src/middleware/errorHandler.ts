@@ -4,6 +4,7 @@ import { AppError } from "../types/index.js";
 export function errorHandler(error: Error, req: Request, res: Response, next: NextFunction): void {
   console.error("Error:", error);
 
+  // our error
   if (error instanceof AppError) {
     res.status(error.statusCode).json({
       error: error.message,
@@ -12,7 +13,7 @@ export function errorHandler(error: Error, req: Request, res: Response, next: Ne
     return;
   }
 
-  // Unknown error
+  // unknown error
   res.status(500).json({
     error: "Internal server error",
     code: "INTERNAL_ERROR",

@@ -25,6 +25,15 @@ export class RoomService {
     return roomId;
   }
 
+  deleteRoom(roomId: string): void {
+    if (!this.rooms.has(roomId)) {
+      throw new NotFoundError("Room not found");
+    }
+    this.rooms.delete(roomId);
+    
+    console.log(`Room closed: ${roomId}`);
+  }
+
   generateUniqueRoomId(): string {
     const chars = "0123456789";
     const length = 6;
