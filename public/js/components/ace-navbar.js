@@ -1,5 +1,3 @@
-// public/js/components/ace-navbar.js
-
 const navbarStyles = new CSSStyleSheet();
 navbarStyles.replaceSync(`
 :host {
@@ -16,7 +14,12 @@ navbarStyles.replaceSync(`
   border-bottom: 1px solid #ddd;
 }
 .info {
-  font-size: 0.9rem;
+  font-size: 1rem;
+}
+.info span strong {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-left: 0.25rem;
 }
 button {
   font-size: 1rem;
@@ -80,14 +83,15 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 .settings-list li:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 .ban {
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -125,8 +129,8 @@ button {
 }
 .close-btn {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: 0.25rem;
+  right: 0.25rem;
   background: none;
   border: none;
   font-size: 1.5rem;
@@ -145,7 +149,7 @@ class AceNavbar extends HTMLElement {
   }
 
   connectedCallback() {
-    this._roomId  = this.getAttribute("room-id");
+    this._roomId = this.getAttribute("room-id");
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._render();
     this._wireUp();
@@ -177,7 +181,7 @@ class AceNavbar extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <div class="navbar">
         <div class="info">
-          <span>Game ID: ${this._roomId}</span>
+          <span>Game ID:<strong>${this._roomId}</strong></span>
         </div>
         <div>
           <button id="copyBtn">Copy URL</button>
@@ -186,7 +190,6 @@ class AceNavbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- Sidebar -->
       <div id="settingsSidebar">
         <div id="sidebarHeader">
           <h2>Settings</h2>
@@ -197,7 +200,6 @@ class AceNavbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- QR code popup -->
       <div id="qrPopup" class="popup hidden">
         <div class="popup-content">
           <button id="closeQr" class="close-btn" aria-label="Close">&times;</button>
@@ -209,14 +211,14 @@ class AceNavbar extends HTMLElement {
 
   _wireUp() {
     const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
-    const copyBtn    = this.shadowRoot.getElementById("copyBtn");
-    const qrBtn      = this.shadowRoot.getElementById("qrBtn");
-    const qrPopup    = this.shadowRoot.getElementById("qrPopup");
-    const closeQr    = this.shadowRoot.getElementById("closeQr");
-    const settingsBtn= this.shadowRoot.getElementById("settingsBtn");
-    const sidebar    = this.shadowRoot.getElementById("settingsSidebar");
+    const copyBtn = this.shadowRoot.getElementById("copyBtn");
+    const qrBtn = this.shadowRoot.getElementById("qrBtn");
+    const qrPopup = this.shadowRoot.getElementById("qrPopup");
+    const closeQr = this.shadowRoot.getElementById("closeQr");
+    const settingsBtn = this.shadowRoot.getElementById("settingsBtn");
+    const sidebar = this.shadowRoot.getElementById("settingsSidebar");
     const sidebarClose = this.shadowRoot.getElementById("sidebarClose");
-    const listEl     = this.shadowRoot.getElementById("settingsList");
+    const listEl = this.shadowRoot.getElementById("settingsList");
 
     // Copy URL
     copyBtn.addEventListener("click", () => {
@@ -239,7 +241,6 @@ class AceNavbar extends HTMLElement {
         });
     });
 
-    // QR code
     qrBtn.addEventListener("click", () => {
       this._loadQRScript().then(() => {
         qrPopup.classList.remove("hidden");
@@ -250,7 +251,13 @@ class AceNavbar extends HTMLElement {
     });
     closeQr.addEventListener("click", () => qrPopup.classList.add("hidden"));
 
-    // Settings sidebar
+    // hide QR popup when clicking the background
+    qrPopup.addEventListener('click', e => {
+      if (e.target === qrPopup) {
+        qrPopup.classList.add('hidden');
+      }
+    });
+
     if (this._isAdmin) {
       settingsBtn.addEventListener("click", async () => {
         if (!this._openSidebar) {
@@ -271,7 +278,6 @@ class AceNavbar extends HTMLElement {
       });
     }
 
-    // Escape closes
     this._escHandler = e => {
       if (e.key === 'Escape') {
         if (!qrPopup.classList.contains('hidden')) qrPopup.classList.add('hidden');
@@ -295,9 +301,7 @@ class AceNavbar extends HTMLElement {
         body: JSON.stringify({ name })
       });
       if (!res.ok) throw await res.json();
-      // refresh participant list
       await this._fetchParticipants();
-      // re-render sidebar
       const listEl = this.shadowRoot.getElementById("settingsList");
       listEl.innerHTML = this._participants.map(n =>
         `<li><span>${n}</span><button class=\"ban\" data-name=\"${n}\">🔨</button></li>`
