@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from "uuid";
 import { Room, User, RoomStatus, NotFoundError, ForbiddenError, BadRequestError } from "../types/index.js";
 
 export class RoomService {
