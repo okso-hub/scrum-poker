@@ -1,4 +1,4 @@
-import { Room, RoomStatus, VoteResults, ItemHistory, Summary, BadRequestError, GameEvent } from "../types/index.js";
+import { RoomStatus, VoteResults, Summary, BadRequestError, GameEvent } from "../types/index.js";
 import { RoomService } from "./RoomService.js";
 
 export class GameService {
