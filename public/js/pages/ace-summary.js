@@ -16,11 +16,19 @@ h2 {
   border: 1px solid #ddd;
   border-radius: 0.25rem;
 }
+#summaryList li.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  font-weight: bold;
+  background-color: #f9f9f9;
+  border-bottom: 1px solid #eee;
+}
 #summaryList li {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.5rem 1rem;
   border-bottom: 1px solid #eee;
 }
 #summaryList li:last-child {
@@ -62,6 +70,7 @@ class AceSummary extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <h2>Sprint Summary</h2>
       <ul id="summaryList">
+        <li class="header"><span>Item</span><span>Average Points</span></li>
         ${items.map(itemData => `
           <li>
             <span>${itemData.item}</span>
@@ -72,10 +81,10 @@ class AceSummary extends HTMLElement {
       <div class="total">
         ${totalTasks} Items • Average: ${totalAverage} • Total: ${sumOfAverages}
       </div>
-      <button class="back-button" id="backButton">Zurück zur Startseite</button>
+      <button class="back-button" id="backButton">Back to main page</button>
     `;
 
-    // Event Handler für den Button
+    // Event Handler for the button
     const backButton = this.shadowRoot.getElementById('backButton');
     backButton.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent('ace-back-to-landing', {

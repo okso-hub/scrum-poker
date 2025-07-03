@@ -1,5 +1,3 @@
-// public/js/components/ace-results.js
-
 const resultsStyles = new CSSStyleSheet();
 resultsStyles.replaceSync(`
 :host {
@@ -7,46 +5,55 @@ resultsStyles.replaceSync(`
   font-family: sans-serif;
   padding: 1rem;
 }
-h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-#resultsList {
-  margin-bottom: 1rem;
-  padding: 0;
-  list-style: none;
+/* Question Box */
+.question-box {
   border: 1px solid #ddd;
   border-radius: 0.25rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
-#resultsList li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-#resultsList li:last-child {
-  border-bottom: none;
-}
-.average {
+.question-box h1.question {
   text-align: center;
-  padding: 0.75rem;
+  font-size: 2.5rem;
+  margin: 0;
+}
+/* Average Box */
+.average-box {
+  border: 1px solid #ddd;
+  border-radius: 0.25rem;
+  padding: 1rem;
+  text-align: center;
   font-weight: bold;
-  font-size: 1.2rem;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  margin-bottom: 1rem;
+  font-size: 1.4rem;
+  margin-bottom: 1.5rem;
 }
+/* Actions */
 .actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  justify-content: center;
 }
+/* NEW BUTTONS */
+.actions button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 0.25rem;
+}
+.actions button:hover {
+  background-color: #0056b3;
+}
+/* OLD BUTTONS
 .actions button {
   flex: 1;
   padding: 0.75rem;
   font-size: 1rem;
   cursor: pointer;
 }
+*/
 `);
 
 class AceResults extends HTMLElement {
@@ -57,7 +64,17 @@ class AceResults extends HTMLElement {
   }
 
   connectedCallback() {
-    this._results = JSON.parse(this.getAttribute('results') || '{}');
+    const data = JSON.parse(this.getAttribute('results') || '{}');
+    const votes = data.votes || {};
+    const average = data.average || 0;
+    const summary = data.summary || {};
+    // Determine question/item text:
+    // 1) explicit attribute, 2) summary.item, 3) first key in votes
+    const voteEntries = Object.entries(votes);
+    this._question = this.getAttribute('question')
+      || summary.item
+      || (voteEntries.length > 0 ? voteEntries[0][0] : '');
+    this._average = average;
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._roomId = this.getAttribute('room-id') || '';
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
@@ -65,38 +82,25 @@ class AceResults extends HTMLElement {
   }
 
   _render() {
-    const { votes = {}, summary = {}, average = 0 } = this._results;
-
     this.shadowRoot.innerHTML = `
       <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
-      <h2>Results</h2>
-      <ul id="resultsList">
-        ${Object.entries(votes).map(([name, vote]) => `
-          <li>
-            <span>${name}</span>
-            <span>${vote}</span>
-          </li>
-        `).join('')}
-      </ul>
-      <div class="average">Average: ${average}</div>
+      <div class="question-box">
+        <h1 class="question">${this._question}</h1>
+      </div>
+      <div class="average-box">Average: ${this._average}</div>
       ${this._isAdmin ? `
         <div class="actions">
-          ${this._isLastItem ? 
-            '<button id="summaryBtn">Show Summary</button>' : 
-            '<button id="nextBtn">Next Item</button>'}
+          ${this._isLastItem
+            ? '<button id="summaryBtn">Show Summary</button>'
+            : '<button id="nextBtn">Next Item</button>'}
           <button id="repeatBtn">Repeat Voting</button>
         </div>
       ` : ''}
     `;
-
     if (this._isAdmin) {
-      const nextBtn = this.shadowRoot.getElementById('nextBtn');
-      const summaryBtn = this.shadowRoot.getElementById('summaryBtn');
-      const repeatBtn = this.shadowRoot.getElementById('repeatBtn');
-
-      if (nextBtn) nextBtn.onclick = () => this._nextItem();
-      if (summaryBtn) summaryBtn.onclick = () => this._showSummary();
-      if (repeatBtn) repeatBtn.onclick = () => this._repeatVoting();
+      this.shadowRoot.getElementById('nextBtn')?.addEventListener('click', () => this._nextItem());
+      this.shadowRoot.getElementById('summaryBtn')?.addEventListener('click', () => this._showSummary());
+      this.shadowRoot.getElementById('repeatBtn')?.addEventListener('click', () => this._repeatVoting());
     }
   }
 
