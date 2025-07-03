@@ -33,27 +33,12 @@ resultsStyles.replaceSync(`
   gap: 0.75rem;
   justify-content: center;
 }
-/* NEW BUTTONS */
-.actions button {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 0.25rem;
-}
-.actions button:hover {
-  background-color: #0056b3;
-}
-/* OLD BUTTONS
 .actions button {
   flex: 1;
   padding: 0.75rem;
   font-size: 1rem;
   cursor: pointer;
 }
-*/
 `);
 
 class AceResults extends HTMLElement {

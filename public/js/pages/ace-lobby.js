@@ -22,22 +22,31 @@ lobbyStyles.replaceSync(`
   margin-bottom: 0.5rem;
 }
 .participants ul {
-  max-height: 200px;
-  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
   padding: 0;
   list-style: none;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
+  margin: 0;
 }
+
 .participants li {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #eee;
+  justify-content: center;
+  padding: 0.75rem;
+  background: #fafafa;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+  text-align: center;
+  box-sizing: border-box;
+  /* ensure icons or names wrap as needed */
+  word-wrap: break-word;
 }
-.participants li:last-child {
-  border-bottom: none;
+.participants li span {
+  display: block;
+  margin-top: 0.5rem;
 }
 .ban {
   cursor: pointer;

@@ -1,3 +1,5 @@
+// public/js/components/ace-navbar.js
+
 const navbarStyles = new CSSStyleSheet();
 navbarStyles.replaceSync(`
 :host {
@@ -40,7 +42,7 @@ button {
   padding: 0.25rem 0.5rem;
   cursor: pointer;
 }
-#qrBtn, #copyBtn {
+#qrBtn, #copyBtn, #infoBtn {
   margin-right: 0.5rem;
 }
 #settingsBtn {
@@ -151,6 +153,33 @@ button {
   cursor: pointer;
   z-index: 1;
 }
+/* Info Popup overlay */
+#infoPopup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items:center;
+  justify-content:center;
+  z-index: 200;
+  transition: opacity 0.2s ease;
+}
+#infoPopup.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+#infoPopup .popup-content {
+  background: #fff;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80%;
+  overflow-y: auto;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  position: relative;
+}
 `);
 
 class AceNavbar extends HTMLElement {
@@ -159,7 +188,8 @@ class AceNavbar extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.shadowRoot.adoptedStyleSheets = [navbarStyles];
     this._openSidebar = false;
-    this._participants = [];
+    this._escHandler = null;
+    this._infoEsc = null;
   }
 
   connectedCallback() {
@@ -200,6 +230,7 @@ class AceNavbar extends HTMLElement {
         <div>
           <button id="copyBtn">Copy Join URL</button>
           <button id="qrBtn">Join via QR Code</button>
+          <button id="infoBtn" title="Info">ℹ️</button>
           ${this._isAdmin ? '<button id="settingsBtn" title="Settings">⚙️</button>' : ''}
         </div>
       </div>
@@ -220,39 +251,48 @@ class AceNavbar extends HTMLElement {
           <div id="qrcode"></div>
         </div>
       </div>
+
+      <div id="infoPopup" class="hidden">
+        <div class="popup-content">
+          <button id="closeInfo" class="close-btn" aria-label="Close">&times;</button>
+          <h2>About This Game</h2>
+          <p>Welcome to AgileAce! Please read through the instructions below.</p>
+          <ul>
+            <li><strong>Item 1:</strong> Bla bla</li>
+            <li><strong>Item 2:</strong> Bla bla</li>
+          </ul>
+        </div>
+      </div>
     `;
   }
 
   _wireUp() {
     const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
     const copyIdBtn = this.shadowRoot.getElementById("copyIdBtn");
-    const copyBtn = this.shadowRoot.getElementById("copyBtn");
-    const qrBtn = this.shadowRoot.getElementById("qrBtn");
-    const qrPopup = this.shadowRoot.getElementById("qrPopup");
-    const closeQr = this.shadowRoot.getElementById("closeQr");
+    const copyBtn   = this.shadowRoot.getElementById("copyBtn");
+    const qrBtn     = this.shadowRoot.getElementById("qrBtn");
+    const qrPopup   = this.shadowRoot.getElementById("qrPopup");
+    const closeQr   = this.shadowRoot.getElementById("closeQr");
+    const infoBtn   = this.shadowRoot.getElementById("infoBtn");
+    const infoPopup = this.shadowRoot.getElementById("infoPopup");
+    const closeInfo = this.shadowRoot.getElementById("closeInfo");
     const settingsBtn = this.shadowRoot.getElementById("settingsBtn");
-    const sidebar = this.shadowRoot.getElementById("settingsSidebar");
+    const sidebar     = this.shadowRoot.getElementById("settingsSidebar");
     const sidebarClose = this.shadowRoot.getElementById("sidebarClose");
-    const listEl = this.shadowRoot.getElementById("settingsList");
+    const listEl      = this.shadowRoot.getElementById("settingsList");
 
-    // Copy Game ID with visual emoji feedback
+    // Copy Game ID
     copyIdBtn.addEventListener("click", () => {
       navigator.clipboard.writeText(this._roomId)
         .then(() => {
           copyIdBtn.textContent = '✅';
           copyIdBtn.style.transform = 'scale(1.2)';
-          setTimeout(() => {
-            copyIdBtn.textContent = '📋';
-            copyIdBtn.style.transform = '';
-          }, 1000);
+          setTimeout(() => { copyIdBtn.textContent = '📋'; copyIdBtn.style.transform = ''; }, 1000);
         })
         .catch(() => {
           copyIdBtn.textContent = '❌';
           copyIdBtn.style.transform = 'scale(1.2)';
-          setTimeout(() => {
-            copyIdBtn.textContent = '📋';
-            copyIdBtn.style.transform = '';
-          }, 1000);
+          setTimeout(() => { copyIdBtn.textContent = '📋'; copyIdBtn.style.transform = ''; }, 1000);
         });
     });
 
@@ -262,35 +302,34 @@ class AceNavbar extends HTMLElement {
         .then(() => {
           copyBtn.textContent = "Copied!";
           copyBtn.style.color = "green";
-          setTimeout(() => {
-            copyBtn.textContent = "Copy URL";
-            copyBtn.style.color = "";
-          }, 2000);
+          setTimeout(() => { copyBtn.textContent = "Copy Join URL"; copyBtn.style.color = ""; }, 2000);
         })
         .catch(() => {
           copyBtn.textContent = "Copy failed";
           copyBtn.style.color = "red";
-          setTimeout(() => {
-            copyBtn.textContent = "Copy URL";
-            copyBtn.style.color = "";
-          }, 2000);
+          setTimeout(() => { copyBtn.textContent = "Copy Join URL"; copyBtn.style.color = ""; }, 2000);
         });
     });
 
+    // QR Code Popup
     qrBtn.addEventListener("click", () => {
       this._loadQRScript().then(() => {
         qrPopup.classList.remove("hidden");
         const container = this.shadowRoot.getElementById("qrcode");
         container.innerHTML = "";
-        new QRCode(container, { text: joinUrl, width:200, height:200, colorDark:"#000", colorLight:"#fff", correctLevel:QRCode.CorrectLevel.H });
+        new QRCode(container, { text: joinUrl, width:200, height:200, correctLevel: QRCode.CorrectLevel.H });
       });
     });
     closeQr.addEventListener("click", () => qrPopup.classList.add("hidden"));
-    qrPopup.addEventListener('click', e => {
-      if (e.target === qrPopup) qrPopup.classList.add('hidden');
-    });
+    qrPopup.addEventListener('click', e => { if (e.target === qrPopup) qrPopup.classList.add('hidden'); });
 
-    if (this._isAdmin) {
+    // Info Popup
+    infoBtn.addEventListener("click", () => infoPopup.classList.remove("hidden"));
+    closeInfo.addEventListener("click", () => infoPopup.classList.add("hidden"));
+    infoPopup.addEventListener("click", e => { if (e.target === infoPopup) infoPopup.classList.add("hidden"); });
+
+    // Settings Sidebar (admin only)
+    if (this._isAdmin && settingsBtn) {
       settingsBtn.addEventListener("click", async () => {
         if (!this._openSidebar) {
           await this._fetchParticipants();
@@ -310,17 +349,24 @@ class AceNavbar extends HTMLElement {
       });
     }
 
+    // Escape key handler for QR, Sidebar, Info
     this._escHandler = e => {
       if (e.key === 'Escape') {
         if (!qrPopup.classList.contains('hidden')) qrPopup.classList.add('hidden');
         if (this._openSidebar) { this._openSidebar = false; sidebar.classList.remove('open'); }
       }
     };
+    this._infoEsc = e => {
+      if (e.key === 'Escape' && !infoPopup.classList.contains('hidden'))
+        infoPopup.classList.add('hidden');
+    };
     document.addEventListener('keydown', this._escHandler);
+    document.addEventListener('keydown', this._infoEsc);
   }
 
   disconnectedCallback() {
     document.removeEventListener('keydown', this._escHandler);
+    document.removeEventListener('keydown', this._infoEsc);
   }
 
   async _onBan(name) {
