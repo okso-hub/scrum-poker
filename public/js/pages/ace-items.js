@@ -105,10 +105,16 @@ class AceItems extends HTMLElement {
     this._listEl = this.shadowRoot.getElementById("itemList");
     this._nextBtn = this.shadowRoot.getElementById("nextBtn");
 
+    // Pressing Enter: if input has text, add; if empty, proceed to next
     this._inputEl.addEventListener("keydown", e => {
       if (e.key === "Enter") {
         e.preventDefault();
-        this._onAdd();
+        const text = this._inputEl.value.trim();
+        if (text) {
+          this._onAdd();
+        } else {
+          this._onNext();
+        }
       }
     });
     this._addBtn.addEventListener("click", () => this._onAdd());

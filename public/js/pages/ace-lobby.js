@@ -3,7 +3,15 @@
 const lobbyStyles = new CSSStyleSheet();
 lobbyStyles.replaceSync(`
 :host {
-  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
   font-family: sans-serif;
   padding: 1rem;
 }
@@ -31,7 +39,6 @@ lobbyStyles.replaceSync(`
 .participants li:last-child {
   border-bottom: none;
 }
-/* Ban hammer styled as a button */
 .ban {
   cursor: pointer;
   display: inline-flex;
@@ -55,6 +62,28 @@ button#startBtn {
   font-size: 1rem;
   cursor: pointer;
 }
+.items {
+  margin-top: auto;
+  overflow-y: auto;
+  max-height: 40vh;
+}
+.items h3 {
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+.items table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.items th,
+.items td {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  text-align: left;
+}
+.items th {
+  background: #f5f5f5;
+}
 `);
 
 class AceLobby extends HTMLElement {
@@ -62,23 +91,35 @@ class AceLobby extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     this.shadowRoot.adoptedStyleSheets = [lobbyStyles];
-    this._participants = [];   // will be normalized to { name, ip? }
+    this._participants = [];
+    this._items = [];
     this._isAdmin = false;
   }
 
   connectedCallback() {
     this._roomId = this.getAttribute('room-id');
     this._wsUrl  = this.getAttribute('ws-url');
-    this._checkAdmin().then(() => {
-      this._render();
-      this._fetchParticipants();
-    });
+    // Render immediately so list element exists
+    this._render();
+
+    // After rendering, element references are available
+    this._listEl      = this.shadowRoot.getElementById('list');
+    this._startBtn    = this.shadowRoot.getElementById('startBtn');
+    this._itemsTable  = this.shadowRoot.getElementById('itemsTable');
+    this._itemsBody   = this._itemsTable.querySelector('tbody');
+
+    this._startBtn.addEventListener('click', () => this._onStart());
+
+    // Check admin status and then fetch data
+    this._checkAdmin()
+      .then(() => Promise.all([this._fetchParticipants(), this._fetchItems()]))
+      .catch(e => console.error(e));
   }
 
   _render() {
     this.shadowRoot.innerHTML = `
-      <ace-navbar 
-        room-id="${this._roomId}" 
+      <ace-navbar
+        room-id="${this._roomId}"
         is-admin="${this._isAdmin}"
       ></ace-navbar>
       <div class="participants">
@@ -86,10 +127,16 @@ class AceLobby extends HTMLElement {
         <ul id="list"></ul>
       </div>
       <button id="startBtn">Start Game</button>
+      <div class="items">
+        <h3>Today's Items</h3>
+        <table id="itemsTable">
+          <thead>
+            <tr><th>ID</th><th>Item</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     `;
-    this._listEl   = this.shadowRoot.getElementById('list');
-    this._startBtn = this.shadowRoot.getElementById('startBtn');
-    this._startBtn.addEventListener('click', () => this._onStart());
   }
 
   async _fetchParticipants() {
@@ -97,18 +144,24 @@ class AceLobby extends HTMLElement {
       const res = await fetch(`/room/${this._roomId}/participants`);
       if (!res.ok) throw await res.json();
       let { participants } = await res.json();
-
-      // Normalize array items to objects with a .name property
       this._participants = participants.map(p =>
-        typeof p === 'string'
-          ? { name: p }
-          : ('name' in p ? p : { name: String(p) })
+        typeof p === 'string' ? { name: p } : ('name' in p ? p : { name: String(p) })
       );
-
-      console.log('Loaded participants:', this._participants);
       this._updateList();
     } catch (e) {
       console.error('Failed to load participants:', e);
+    }
+  }
+
+  async _fetchItems() {
+    try {
+      const res = await fetch(`/room/${this._roomId}/items`);
+      if (!res.ok) throw await res.json();
+      const { items } = await res.json();
+      this._items = items;
+      this._updateItems();
+    } catch (e) {
+      console.error('Failed to load items:', e);
     }
   }
 
@@ -118,6 +171,7 @@ class AceLobby extends HTMLElement {
       if (!res.ok) throw await res.json();
       const { isAdmin } = await res.json();
       this._isAdmin = isAdmin;
+      // update list button rendering if participants already loaded
       this._updateList();
     } catch (e) {
       console.error('Admin check failed:', e);
@@ -125,6 +179,9 @@ class AceLobby extends HTMLElement {
   }
 
   _updateList() {
+    // guard: ensure list element exists
+    if (!this._listEl) return;
+
     this._listEl.innerHTML = this._participants
       .map(p => `
         <li>
@@ -139,18 +196,20 @@ class AceLobby extends HTMLElement {
       this.shadowRoot.querySelectorAll('.ban').forEach(btn => {
         btn.addEventListener('click', e => {
           const name = e.currentTarget.getAttribute('data-name');
-          console.log('Ban button clicked for:', name);
           this._onBan(name);
         });
       });
     }
   }
 
+  _updateItems() {
+    this._itemsBody.innerHTML = this._items
+      .map((item, idx) => `<tr><td>${idx + 1}</td><td>${item}</td></tr>`) 
+      .join('');
+  }
+
   async _onBan(name) {
-    if (!name) {
-      console.error('No name passed to _onBan');
-      return;
-    }
+    if (!name) return;
     if (!confirm(`Really ban user "${name}"?`)) return;
     try {
       const res = await fetch(`/room/${this._roomId}/ban`, {
@@ -163,7 +222,6 @@ class AceLobby extends HTMLElement {
         throw new Error(err.error || 'Ban failed');
       }
       await this._fetchParticipants();
-      console.log(`Banned ${name}`);
     } catch (e) {
       alert(e.message);
       console.error('Ban error:', e);

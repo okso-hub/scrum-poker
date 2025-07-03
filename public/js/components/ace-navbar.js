@@ -15,11 +15,25 @@ navbarStyles.replaceSync(`
 }
 .info {
   font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+.info span {
+  display: inline-flex;
+  align-items: center;
 }
 .info span strong {
   font-weight: bold;
   font-size: 1.1rem;
   margin-left: 0.25rem;
+}
+#copyIdBtn {
+  margin-left: 0.25rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 button {
   font-size: 1rem;
@@ -181,11 +195,11 @@ class AceNavbar extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <div class="navbar">
         <div class="info">
-          <span>Game ID:<strong>${this._roomId}</strong></span>
+          <span>Game ID:<strong>${this._roomId}</strong><button id="copyIdBtn" title="Copy Game ID">📋</button></span>
         </div>
         <div>
-          <button id="copyBtn">Copy URL</button>
-          <button id="qrBtn">Show QR Code</button>
+          <button id="copyBtn">Copy Join URL</button>
+          <button id="qrBtn">Join via QR Code</button>
           ${this._isAdmin ? '<button id="settingsBtn" title="Settings">⚙️</button>' : ''}
         </div>
       </div>
@@ -211,6 +225,7 @@ class AceNavbar extends HTMLElement {
 
   _wireUp() {
     const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
+    const copyIdBtn = this.shadowRoot.getElementById("copyIdBtn");
     const copyBtn = this.shadowRoot.getElementById("copyBtn");
     const qrBtn = this.shadowRoot.getElementById("qrBtn");
     const qrPopup = this.shadowRoot.getElementById("qrPopup");
@@ -219,6 +234,27 @@ class AceNavbar extends HTMLElement {
     const sidebar = this.shadowRoot.getElementById("settingsSidebar");
     const sidebarClose = this.shadowRoot.getElementById("sidebarClose");
     const listEl = this.shadowRoot.getElementById("settingsList");
+
+    // Copy Game ID with visual emoji feedback
+    copyIdBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(this._roomId)
+        .then(() => {
+          copyIdBtn.textContent = '✅';
+          copyIdBtn.style.transform = 'scale(1.2)';
+          setTimeout(() => {
+            copyIdBtn.textContent = '📋';
+            copyIdBtn.style.transform = '';
+          }, 1000);
+        })
+        .catch(() => {
+          copyIdBtn.textContent = '❌';
+          copyIdBtn.style.transform = 'scale(1.2)';
+          setTimeout(() => {
+            copyIdBtn.textContent = '📋';
+            copyIdBtn.style.transform = '';
+          }, 1000);
+        });
+    });
 
     // Copy URL
     copyBtn.addEventListener("click", () => {
@@ -250,12 +286,8 @@ class AceNavbar extends HTMLElement {
       });
     });
     closeQr.addEventListener("click", () => qrPopup.classList.add("hidden"));
-
-    // hide QR popup when clicking the background
     qrPopup.addEventListener('click', e => {
-      if (e.target === qrPopup) {
-        qrPopup.classList.add('hidden');
-      }
+      if (e.target === qrPopup) qrPopup.classList.add('hidden');
     });
 
     if (this._isAdmin) {
