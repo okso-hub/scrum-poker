@@ -1,128 +1,37 @@
 // public/js/components/ace-lobby.js
-
-const lobbyStyles = new CSSStyleSheet();
-lobbyStyles.replaceSync(`
-:host {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  overflow: hidden;
-  font-family: sans-serif;
-  padding: 1rem;
-}
-.participants {
-  text-align: center;
-}
-.participants h3 {
-  margin-bottom: 0.5rem;
-}
-.participants ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.75rem;
-  padding: 0;
-  list-style: none;
-  margin: 0;
-}
-
-.participants li {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 0.75rem;
-  background: #fafafa;
-  border: 1px solid #ddd;
-  border-radius: 0.5rem;
-  text-align: center;
-  box-sizing: border-box;
-  /* ensure icons or names wrap as needed */
-  word-wrap: break-word;
-}
-.participants li span {
-  display: block;
-  margin-top: 0.5rem;
-}
-.ban {
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 0.5rem;
-  padding: 0.25rem;
-  font-size: 1.1rem;
-  border: 1px solid #ccc;
-  border-radius: 0.25rem;
-  background: #f9f9f9;
-  transition: background 0.1s ease;
-}
-.ban:hover {
-  background: #efefef;
-}
-button#startBtn {
-  display: block;
-  margin: 1rem auto 0;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-.items {
-  margin-top: auto;
-  overflow-y: auto;
-  max-height: 40vh;
-}
-.items h3 {
-  text-align: center;
-  margin-bottom: 0.5rem;
-}
-.items table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.items th,
-.items td {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  text-align: left;
-}
-.items th {
-  background: #f5f5f5;
-}
-`);
+import "../components/ace-navbar.js";
+import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 
 class AceLobby extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.adoptedStyleSheets = [lobbyStyles];
     this._participants = [];
     this._items = [];
     this._isAdmin = false;
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    const lobbyStyles = await loadStylesheet('/css/lobby.css');
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(lobbyStyles);
+    
     this._roomId = this.getAttribute('room-id');
     this._wsUrl  = this.getAttribute('ws-url');
-    // Render immediately so list element exists
-    this._render();
-
-    // After rendering, element references are available
-    this._listEl      = this.shadowRoot.getElementById('list');
-    this._startBtn    = this.shadowRoot.getElementById('startBtn');
-    this._itemsTable  = this.shadowRoot.getElementById('itemsTable');
-    this._itemsBody   = this._itemsTable.querySelector('tbody');
-
+    
+    // ERST Admin-Status prüfen, DANN rendern
+    await this._checkAdmin();
+    this._render();  // ← Jetzt mit korrektem Admin-Status
+    
+    // Element-Referenzen nach dem Rendern
+    this._listEl = this.shadowRoot.getElementById('list');
+    this._startBtn = this.shadowRoot.getElementById('startBtn');
+    this._itemsTable = this.shadowRoot.getElementById('itemsTable');
+    this._itemsBody = this._itemsTable.querySelector('tbody');
+    
     this._startBtn.addEventListener('click', () => this._onStart());
-
-    // Check admin status and then fetch data
-    this._checkAdmin()
-      .then(() => Promise.all([this._fetchParticipants(), this._fetchItems()]))
-      .catch(e => console.error(e));
+    
+    // Daten laden
+    await Promise.all([this._fetchParticipants(), this._fetchItems()]);
   }
 
   _render() {
@@ -135,10 +44,10 @@ class AceLobby extends HTMLElement {
         <h3>Participants</h3>
         <ul id="list"></ul>
       </div>
-      <button id="startBtn">Start Game</button>
+      <button id="startBtn" class="horizontal">Start Game</button>
       <div class="items">
         <h3>Today's Items</h3>
-        <table id="itemsTable">
+        <table id="itemsTable" class="left">
           <thead>
             <tr><th>ID</th><th>Item</th></tr>
           </thead>
@@ -196,7 +105,7 @@ class AceLobby extends HTMLElement {
         <li>
           <span>${p.name}</span>
           ${this._isAdmin
-            ? `<span class="ban" data-name="${p.name}" title="Ban">🔨</span>`
+            ? `<span class="icon-button" data-name="${p.name}" title="Ban">🔨</span>`
             : ''}
         </li>
       `).join('');

@@ -1,198 +1,19 @@
-// public/js/components/ace-navbar.js
-
-const navbarStyles = new CSSStyleSheet();
-navbarStyles.replaceSync(`
-:host {
-  position: relative;
-  display: block;
-  font-family: sans-serif;
-}
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background: #fff;
-  border-bottom: 1px solid #ddd;
-}
-.info {
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-}
-.info span {
-  display: inline-flex;
-  align-items: center;
-}
-.info span strong {
-  font-weight: bold;
-  font-size: 1.1rem;
-  margin-left: 0.25rem;
-}
-#copyIdBtn {
-  margin-left: 0.25rem;
-  font-size: 1.2rem;
-  cursor: pointer;
-  background: none;
-  border: none;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-button {
-  font-size: 1rem;
-  padding: 0.25rem 0.5rem;
-  cursor: pointer;
-}
-#qrBtn, #copyBtn, #infoBtn {
-  margin-right: 0.5rem;
-}
-#settingsBtn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-}
-/* Sidebar */
-#settingsSidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 300px;
-  height: 100%;
-  background: #fff;
-  box-shadow: -2px 0 6px rgba(0,0,0,0.1);
-  z-index: 150;
-  transform: translateX(100%);
-  transition: transform 0.3s ease;
-  display: flex;
-  flex-direction: column;
-}
-#settingsSidebar.open {
-  transform: translateX(0);
-}
-#sidebarHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: 1px solid #ddd;
-}
-#sidebarHeader h2 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-#sidebarClose {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-}
-.settings-list {
-  padding: 1rem;
-  overflow-y: auto;
-  flex: 1;
-}
-.settings-list ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.settings-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  margin-bottom: 0.5rem;
-}
-.settings-list li:last-child {
-  margin-bottom: 0;
-}
-.ban {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.25rem;
-  font-size: 1.2rem;
-  border: 1px solid #ccc;
-  border-radius: 0.25rem;
-  background: #f9f9f9;
-  transition: background 0.1s ease;
-}
-.ban:hover {
-  background: #efefef;
-}
-/* QR Popup overlay */
-.popup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width:100%; height:100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items:center;
-  justify-content:center;
-  z-index: 200;
-}
-.popup.hidden {
-  display: none;
-}
-.popup-content {
-  position: relative;
-  background: #fff;
-  padding: 2rem 1rem 1rem;
-  border-radius: 0.25rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
-.close-btn {
-  position: absolute;
-  top: 0.25rem;
-  right: 0.25rem;
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  z-index: 1;
-}
-/* Info Popup overlay */
-#infoPopup {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width:100%; height:100%;
-  background: rgba(0,0,0,0.5);
-  display: flex;
-  align-items:center;
-  justify-content:center;
-  z-index: 200;
-  transition: opacity 0.2s ease;
-}
-#infoPopup.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-#infoPopup .popup-content {
-  background: #fff;
-  max-width: 600px;
-  width: 90%;
-  max-height: 80%;
-  overflow-y: auto;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  position: relative;
-}
-`);
+import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 
 class AceNavbar extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.shadowRoot.adoptedStyleSheets = [navbarStyles];
     this._openSidebar = false;
     this._escHandler = null;
     this._infoEsc = null;
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    /* Globale Styles + spezifische Navbar-Styles laden */
+    const navbarStyles = await loadStylesheet('/css/navbar.css');
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(navbarStyles);
+    
     this._roomId = this.getAttribute("room-id");
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._render();
@@ -225,41 +46,52 @@ class AceNavbar extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <div class="navbar">
         <div class="info">
-          <span>Game ID:<strong>${this._roomId}</strong><button id="copyIdBtn" title="Copy Game ID">📋</button></span>
+          <span>Room: <strong>${this._roomId}</strong></span>
+          <button id="copyIdBtn" class="copy-id-btn" title="Copy Room ID">📋</button>
         </div>
-        <div>
-          <button id="copyBtn">Copy Join URL</button>
-          <button id="qrBtn">Join via QR Code</button>
-          <button id="infoBtn" title="Info">ℹ️</button>
-          ${this._isAdmin ? '<button id="settingsBtn" title="Settings">⚙️</button>' : ''}
+        <div class="action-buttons">
+          <button id="qrBtn">QR</button>
+          <button id="copyBtn">Copy Link</button>
+          <button id="infoBtn">Info</button>
+          <button id="settingsBtn" class="settings-btn">⚙️</button>
         </div>
       </div>
 
-      <div id="settingsSidebar">
-        <div id="sidebarHeader">
+      <div id="settingsSidebar" class="settings-sidebar">
+        <div class="sidebar-header">
           <h2>Settings</h2>
-          <button id="sidebarClose" aria-label="Close sidebar">&times;</button>
+          <button id="sidebarClose" class="sidebar-close">×</button>
         </div>
         <div class="settings-list">
-          <ul id="settingsList"></ul>
+          <ul id="participantsList"></ul>
         </div>
       </div>
 
       <div id="qrPopup" class="popup hidden">
         <div class="popup-content">
-          <button id="closeQr" class="close-btn" aria-label="Close">&times;</button>
+          <button class="close-btn" id="qrClose">×</button>
           <div id="qrcode"></div>
         </div>
       </div>
 
-      <div id="infoPopup" class="hidden">
+      <div id="infoPopup" class="info-popup hidden">
         <div class="popup-content">
-          <button id="closeInfo" class="close-btn" aria-label="Close">&times;</button>
-          <h2>About This Game</h2>
-          <p>Welcome to AgileAce! Please read through the instructions below.</p>
+          <button class="close-btn" id="infoClose">×</button>
+          <h2>How to Play</h2>
+          <p>This is a Planning Poker game for agile teams.</p>
+          <h3>Steps:</h3>
+          <ol>
+            <li>The admin creates items to estimate</li>
+            <li>All players vote on each item</li>
+            <li>Votes are revealed and discussed</li>
+            <li>Continue until all items are estimated</li>
+          </ol>
+          <h3>Voting Values:</h3>
+          <p>Use the Fibonacci sequence: 1, 2, 3, 5, 8, 13, 21</p>
           <ul>
-            <li><strong>Item 1:</strong> Bla bla</li>
-            <li><strong>Item 2:</strong> Bla bla</li>
+            <li><strong>1-3:</strong> Small tasks</li>
+            <li><strong>5-8:</strong> Medium tasks</li>
+            <li><strong>13-21:</strong> Large tasks</li>
           </ul>
         </div>
       </div>
@@ -272,14 +104,14 @@ class AceNavbar extends HTMLElement {
     const copyBtn   = this.shadowRoot.getElementById("copyBtn");
     const qrBtn     = this.shadowRoot.getElementById("qrBtn");
     const qrPopup   = this.shadowRoot.getElementById("qrPopup");
-    const closeQr   = this.shadowRoot.getElementById("closeQr");
+    const closeQr   = this.shadowRoot.getElementById("qrClose");
     const infoBtn   = this.shadowRoot.getElementById("infoBtn");
     const infoPopup = this.shadowRoot.getElementById("infoPopup");
-    const closeInfo = this.shadowRoot.getElementById("closeInfo");
+    const closeInfo = this.shadowRoot.getElementById("infoClose");
     const settingsBtn = this.shadowRoot.getElementById("settingsBtn");
     const sidebar     = this.shadowRoot.getElementById("settingsSidebar");
     const sidebarClose = this.shadowRoot.getElementById("sidebarClose");
-    const listEl      = this.shadowRoot.getElementById("settingsList");
+    const listEl      = this.shadowRoot.getElementById("participantsList");
 
     // Copy Game ID
     copyIdBtn.addEventListener("click", () => {
@@ -380,7 +212,7 @@ class AceNavbar extends HTMLElement {
       });
       if (!res.ok) throw await res.json();
       await this._fetchParticipants();
-      const listEl = this.shadowRoot.getElementById("settingsList");
+      const listEl = this.shadowRoot.getElementById("participantsList");
       listEl.innerHTML = this._participants.map(n =>
         `<li><span>${n}</span><button class=\"ban\" data-name=\"${n}\">🔨</button></li>`
       ).join('');

@@ -1,62 +1,17 @@
 // public/js/components/ace-landing.js
-
-const landingStyles = new CSSStyleSheet();
-landingStyles.replaceSync(`
-:host {
-  display: block;
-  font-family: sans-serif;
-  padding: 1rem;
-}
-h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-.input-group {
-  margin-bottom: 1rem;
-  display: flex;
-  flex-direction: column;
-}
-.input-group label {
-  margin-bottom: .25rem;
-}
-.input-group input {
-  padding: .5rem;
-  font-size: 1rem;
-}
-.actions {
-  display: flex;
-  gap: 1rem;
-}
-.action {
-  flex: 1;
-  border: 1px solid #ccc;
-  border-radius: .5rem;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.action h3 {
-  margin-top: 0;
-  margin-bottom: .5rem;
-  font-size: 1.1rem;
-  text-align: center;
-}
-.action button {
-  width: 100%;
-  padding: .75rem;
-  font-size: 1rem;
-  cursor: pointer;
-  margin-top: .5rem;
-}
-`);
+import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 
 class AceLanding extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.shadowRoot.adoptedStyleSheets = [landingStyles];
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    /* Globale Styles + spezifische Landing-Styles laden */
+    const landingStyles = await loadStylesheet('/css/landing.css');
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(landingStyles);
+    
     this._render();
     this._prefillRoomId();
   }
@@ -78,11 +33,11 @@ class AceLanding extends HTMLElement {
         <input id="name" type="text" placeholder="z. B. Anna Mueller" />
       </div>
       <div class="actions">
-        <div class="action create">
+        <div class="action card">
           <h3>Create Game</h3>
           <button id="create">Start Game as Admin</button>
         </div>
-        <div class="action join">
+        <div class="action card">
           <h3>Join Game</h3>
           <div class="input-group">
             <label for="gameId">Game-ID:</label>

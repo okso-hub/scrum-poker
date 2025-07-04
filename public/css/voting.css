@@ -1,0 +1,68 @@
+/* Voting Page spezifische Styles */
+@layer pages {
+  .voting-page {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 100svh;
+    padding: 1rem;
+    box-sizing: border-box;
+    
+    & .question-section {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      flex: 1;
+      min-block-size: 0;
+      
+      & .question {
+        text-align: center;
+        font-size: clamp(1.5rem, 6vw, 3rem);
+        margin-block-end: 1.5rem;
+        transition: all 0.6s ease;
+        line-height: 1.2;
+        
+        &.positioned {
+          font-size: clamp(1.25rem, 3vw, 1.5rem);
+          margin-block-end: 1rem;
+        }
+      }
+      
+      & .voting-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        opacity: 0;
+        transition: opacity 0.4s ease 0.2s;
+        flex-wrap: wrap;
+        
+        &.visible {
+          opacity: 1;
+        }
+        
+        & button {
+          padding: 0.75rem 1rem;
+          font-size: 1rem;
+          line-height: 1.5;
+          min-inline-size: 3rem;
+          
+          &.selected {
+            font-weight: 700;
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+          }
+        }
+      }
+    }
+    
+    & .bottom-section {
+      flex-shrink: 0;
+      
+      & .admin-controls {
+        text-align: center;
+        margin-block-end: 0.5rem
+      }
+    }
+  }
+} 

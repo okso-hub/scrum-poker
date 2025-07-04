@@ -1,75 +1,20 @@
 import "../components/ace-navbar.js";
-
-const itemsStyles = new CSSStyleSheet();
-itemsStyles.replaceSync(`
-:host {
-  display: block;
-  font-family: sans-serif;
-  padding: 1rem;
-  position: relative;
-}
-h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-.input-group {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.input-group input {
-  flex: 1;
-  padding: 0.5rem;
-  font-size: 1rem;
-}
-.input-group button {
-  padding: 0.5rem 1rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-#itemList {
-  max-height: 50vh;
-  overflow-y: auto;
-  margin-bottom: 1rem;
-  padding: 0;
-  list-style: none;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-}
-#itemList li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-#itemList li:last-child {
-  border-bottom: none;
-}
-.trash {
-  cursor: pointer;
-  margin-left: 0.5rem;
-  font-size: 1.1rem;
-}
-button#nextBtn {
-  width: 100%;
-  padding: 0.75rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-`);
+import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 
 class AceItems extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.shadowRoot.adoptedStyleSheets = [itemsStyles];
     this._items = [];
     this._roomId = "";
     this._isAdmin = false;
   }
 
   async connectedCallback() {
+    /* Globale Styles + spezifische Items-Styles laden */
+    const itemsStyles = await loadStylesheet('/css/items.css');
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(itemsStyles);
+    
     this._roomId = this.getAttribute("room-id") || "";
     this._isAdmin = this.getAttribute("is-admin") === "true";
     await this._loadItems();
@@ -92,12 +37,12 @@ class AceItems extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
       <h2>Add Items</h2>
-      <div class="input-group">
+      <div class="input-group horizontal">
         <input id="itemInput" type="text" placeholder="New Item…" />
         <button id="addBtn">Add</button>
       </div>
-      <ul id="itemList"></ul>
-      <button id="nextBtn">Next</button>
+      <ul id="itemList" class="item-list"></ul>
+      <button id="nextBtn" class="horizontal">Next</button>
     `;
 
     this._inputEl = this.shadowRoot.getElementById("itemInput");
@@ -141,7 +86,7 @@ class AceItems extends HTMLElement {
   _updateList() {
     this._listEl.innerHTML = this._items
       .map((item, idx) => `
-        <li>
+        <li class="list-item">
           <span>${item}</span>
           <span class="trash" data-idx="${idx}" title="Remove">🗑️</span>
         </li>

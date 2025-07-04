@@ -1,112 +1,20 @@
 // public/js/components/ace-voting.js
 
-const votingStyles = new CSSStyleSheet();
-votingStyles.replaceSync(`
-.voting-page {
-  display: flex;
-  flex-direction: column;
-  min-block-size: 100svh;
-  font-family: system-ui, sans-serif;
-  padding: 1rem;
-  box-sizing: border-box;
-  
-  & .question-section {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex: 1;
-    min-height: 0;
-    
-    & .question {
-      text-align: center;
-      font-size: 3rem;
-      margin-block-end: 1.5rem;
-      transition: all 0.6s ease;
-      line-height: 1.2;
-      
-      &.positioned {
-        font-size: 1.5rem;
-        margin-block-end: 1rem;
-      }
-    }
-    
-    & .voting-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      opacity: 0;
-      transition: opacity 0.4s ease 0.2s;
-      
-      &.visible {
-        opacity: 1;
-      }
-      
-      & button {
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        cursor: pointer;
-        
-        &.selected {
-          font-weight: 700;
-        }
-      }
-    }
-  }
-  
-  & .bottom-section {
-    flex-shrink: 0;
-    
-    & .admin-controls {
-      text-align: center;
-      margin-block-end: 0.5rem;
-      
-      & button {
-        padding: 0.5rem 1rem;
-        font-size: 1rem;
-        line-height: 1.5;
-        cursor: pointer;
-      }
-    }
-    
-    & .players-table {
-      width: 100%;
-      border-collapse: collapse;
-      border: 1px solid #ddd;
-      border-radius: 0.25rem;
-      
-      & th,
-      & td {
-        padding: 0.5rem;
-        text-align: left;
-        border-bottom: 1px solid #eee;
-        line-height: 1.5;
-      }
-      
-      & th {
-        font-weight: 700;
-        background-color: #f9f9f9;
-      }
-      
-      & tr:last-child td {
-        border-bottom: none;
-      }
-    }
-  }
-}
-`);
+import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 
 class AceVoting extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.adoptedStyleSheets = [votingStyles];
     this._pollInterval = null;
     this._revealed = false;
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    /* Globale Styles + spezifische Voting-Styles laden */
+    const votingStyles = await loadStylesheet('/css/voting.css');
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(votingStyles);
+    
     this._item = this.getAttribute('item') || '';
     this._options = JSON.parse(this.getAttribute('options') || '[1,2,3,5,8,13,21]');
     this._roomId = this.getAttribute('room-id') || '';

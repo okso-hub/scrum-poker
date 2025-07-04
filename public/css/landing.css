@@ -1,0 +1,23 @@
+/* Landing Page spezifische Styles */
+@layer pages {
+  .actions {
+    display: flex;
+    gap: 1rem;
+    
+    & .action {
+      flex: 1;
+      
+      & button {
+        inline-size: 100%;
+        margin-block-start: 0.5rem;
+      }
+    }
+  }
+  .card {
+    border: 0.0625rem solid #ccc;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+  }
+} 

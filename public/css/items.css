@@ -1,0 +1,28 @@
+/* Items Page spezifische Styles */
+@layer pages {
+  .item-list {
+    padding-left: 0;
+    border: 0.0625rem solid #ddd;
+    border-radius: 0.25rem;
+    
+    & .list-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem;
+      border-block-end: 0.0625rem solid #eee;
+  
+      & .trash {
+        cursor: pointer;
+        margin-inline-start: 0.5rem;
+        padding: 0.25rem;
+        border-radius: 0.25rem;
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+          background-color: #f8f9fa;
+        }
+      }
+    }
+  }
+} 
