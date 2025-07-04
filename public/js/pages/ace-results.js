@@ -1,54 +1,16 @@
-const resultsStyles = new CSSStyleSheet();
-resultsStyles.replaceSync(`
-:host {
-  display: block;
-  font-family: sans-serif;
-  padding: 1rem;
-}
-/* Question Box */
-.question-box {
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-}
-.question-box h1.question {
-  text-align: center;
-  font-size: 2.5rem;
-  margin: 0;
-}
-/* Average Box */
-.average-box {
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  padding: 1rem;
-  text-align: center;
-  font-weight: bold;
-  font-size: 1.4rem;
-  margin-bottom: 1.5rem;
-}
-/* Actions */
-.actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: center;
-}
-.actions button {
-  flex: 1;
-  padding: 0.75rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-`);
+import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 
 class AceResults extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.adoptedStyleSheets = [resultsStyles];
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    /* Globale Styles + spezifische Results-Styles laden */
+    const resultsStyles = await loadStylesheet('/css/results.css');
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(resultsStyles);
+    
     const data = JSON.parse(this.getAttribute('results') || '{}');
     const votes = data.votes || {};
     const average = data.average || 0;
@@ -76,9 +38,9 @@ class AceResults extends HTMLElement {
       ${this._isAdmin ? `
         <div class="actions">
           ${this._isLastItem
-            ? '<button id="summaryBtn">Show Summary</button>'
-            : '<button id="nextBtn">Next Item</button>'}
-          <button id="repeatBtn">Repeat Voting</button>
+            ? '<button id="summaryBtn" class="primary">Show Summary</button>'
+            : '<button id="nextBtn" class="primary">Next Item</button>'}
+          <button id="repeatBtn" class="secondary">Repeat Voting</button>
         </div>
       ` : ''}
     `;

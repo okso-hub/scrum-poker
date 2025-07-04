@@ -1,63 +1,16 @@
-const summaryStyles = new CSSStyleSheet();
-summaryStyles.replaceSync(`
-:host {
-  display: block;
-  font-family: sans-serif;
-  padding: 1rem;
-}
-h2 {
-  text-align: center;
-  margin-bottom: 1rem;
-}
-#summaryList {
-  margin-bottom: 1rem;
-  padding: 0;
-  list-style: none;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-}
-#summaryList li.header {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 1rem;
-  font-weight: bold;
-  background-color: #f9f9f9;
-  border-bottom: 1px solid #eee;
-}
-#summaryList li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  border-bottom: 1px solid #eee;
-}
-#summaryList li:last-child {
-  border-bottom: none;
-}
-.total {
-  text-align: center;
-  padding: 0.75rem;
-  font-weight: bold;
-  border: 1px solid #ddd;
-  border-radius: 0.25rem;
-  margin-bottom: 1rem;
-}
-.back-button {
-  width: 100%;
-  padding: 0.75rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-`);
+import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 
 class AceSummary extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this.shadowRoot.adoptedStyleSheets = [summaryStyles];
   }
 
-  connectedCallback() {
+  async connectedCallback() {
+    /* Globale Styles + spezifische Summary-Styles laden */
+    const summaryStyles = await loadStylesheet('/css/summary.css');
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(summaryStyles);
+    
     this._summary = JSON.parse(this.getAttribute('summary') || '{}');
     this._render();
   }
@@ -69,10 +22,10 @@ class AceSummary extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <h2>Sprint Summary</h2>
-      <ul id="summaryList">
+      <ul id="summaryList" class="summary-list">
         <li class="header"><span>Item</span><span>Average Points</span></li>
         ${items.map(itemData => `
-          <li>
+          <li class="list-item">
             <span>${itemData.item}</span>
             <span>${itemData.average}</span>
           </li>
@@ -81,7 +34,7 @@ class AceSummary extends HTMLElement {
       <div class="total">
         ${totalTasks} Items • Average: ${totalAverage} • Total: ${sumOfAverages}
       </div>
-      <button class="back-button" id="backButton">Back to main page</button>
+      <button class="horizontal" id="backButton">Back to main page</button>
     `;
 
     // Event Handler for the button
