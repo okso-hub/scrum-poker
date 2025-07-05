@@ -31,7 +31,7 @@ class AgileAce extends HTMLElement {
       this._ws.close();
       this._ws = null;
     }
-    
+
     // Alle Zustandsvariablen zurücksetzen
     this._roomId = null;
     this._name = null;
@@ -39,7 +39,7 @@ class AgileAce extends HTMLElement {
     this._status = null;
     this._item = null;
     this._allPlayers = null;
-    
+
     // Zur Startseite navigieren
     this._renderLanding();
   }
@@ -67,7 +67,7 @@ class AgileAce extends HTMLElement {
   _renderQuestion({ item, options }) {
     this.shadowRoot.innerHTML = "";
     const comp = document.createElement("ace-voting");
-    console.log('rendering question, admin?', this._role === "admin")
+    console.log("rendering question, admin?", this._role === "admin");
     comp.setAttribute("item", item);
     comp.setAttribute("options", JSON.stringify(options));
     comp.setAttribute("room-id", this._roomId);
@@ -116,8 +116,8 @@ class AgileAce extends HTMLElement {
     this._role = "admin";
 
     const params = new URLSearchParams(window.location.search);
-    params.set('roomId', this._roomId);
-    window.history.replaceState({}, '', `${location.pathname}?${params}`);
+    params.set("roomId", this._roomId);
+    window.history.replaceState({}, "", `${location.pathname}?${params}`);
 
     this._connectWS();
     this._renderItems();
@@ -144,8 +144,8 @@ class AgileAce extends HTMLElement {
     this._item = roomState.currentItem;
 
     const params = new URLSearchParams(window.location.search);
-    params.set('roomId', this._roomId);
-    window.history.replaceState({}, '', `${location.pathname}?${params}`);
+    params.set("roomId", this._roomId);
+    window.history.replaceState({}, "", `${location.pathname}?${params}`);
 
     this._connectWS();
 
@@ -203,7 +203,7 @@ class AgileAce extends HTMLElement {
       const msg = JSON.parse(event.data);
       if (msg.event === "cards-revealed") {
         this._showResults(msg.results, msg.isLastItem);
-      } else if (msg.event === "start") {
+      } else if (msg.event === "reveal-item") {
         this._allPlayers = msg.allPlayers;
         this._renderQuestion(msg);
       } else if (msg.event === "show-summary") {

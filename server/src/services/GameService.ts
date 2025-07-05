@@ -21,7 +21,7 @@ export class GameService {
     const participants = this.roomService.getParticipants(roomId);
 
     return {
-      event: "start",
+      event: "reveal-item",
       item: first,
       options: this.VOTING_OPTIONS,
       totalPlayers: participants.length,
@@ -109,8 +109,12 @@ export class GameService {
 
     const participants = this.roomService.getParticipants(roomId);
 
+    room.itemHistory = room.itemHistory.filter((entry) => entry.item !== current);
+
+    // console.log(`itemHistory after repeat:`, room.itemHistory);
+
     return {
-      event: "start",
+      event: "reveal-item",
       item: current,
       options: this.VOTING_OPTIONS,
       totalPlayers: participants.length,
@@ -135,7 +139,7 @@ export class GameService {
     const participants = this.roomService.getParticipants(roomId);
 
     return {
-      event: "start",
+      event: "reveal-item",
       item: next,
       options: this.VOTING_OPTIONS,
       totalPlayers: participants.length,
