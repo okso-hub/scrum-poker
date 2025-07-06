@@ -35,7 +35,7 @@ class AceSummary extends HTMLElement {
     this.shadowRoot.innerHTML = html;
 
     // Items dynamisch einfügen
-    const summaryList = this.shadowRoot.getElementById('summaryList');
+    const summaryList = this.shadowRoot.getElementById('summary-list');
     const itemsHtml = items.map(itemData => `
       <li class="list-item">
         <span>${itemData.item}</span>
@@ -45,7 +45,7 @@ class AceSummary extends HTMLElement {
     summaryList.innerHTML += itemsHtml;
 
     // Event Handler for the button
-    const backButton = this.shadowRoot.getElementById('backButton');
+    const backButton = this.shadowRoot.getElementById('back-button');
     backButton.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent('ace-back-to-landing', {
         bubbles: true,

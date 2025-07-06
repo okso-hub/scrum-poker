@@ -29,12 +29,40 @@ class AceResults extends HTMLElement {
   }
 
   _render() {
+    const data = JSON.parse(this.getAttribute('results') || '{}');
+    const votes = data.votes || {};
+    const voteEntries = Object.entries(votes);
+    
+    // Vote-Übersicht erstellen
+    const voteOverview = voteEntries.length > 0 ? `
+      <div class="vote-overview">
+        <h3>Vote Details</h3>
+        <table class="vote-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Vote</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${voteEntries.map(([player, vote]) => `
+              <tr>
+                <td>${player}</td>
+                <td class="vote-value">${vote}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : '';
+
     this.shadowRoot.innerHTML = `
       <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
       <div class="question-box">
         <h1 class="question">${this._question}</h1>
       </div>
       <div class="average-box">Average: ${this._average}</div>
+      ${voteOverview}
       ${this._isAdmin ? `
         <div class="actions">
           ${this._isLastItem

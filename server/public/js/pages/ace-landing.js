@@ -1,6 +1,7 @@
 // public/js/components/ace-landing.js
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
+import { setupInputValidation, validateAndAlert } from '../utils/validation.js';
 
 class AceLanding extends HTMLElement {
   constructor() {
@@ -26,7 +27,7 @@ class AceLanding extends HTMLElement {
     const params = new URLSearchParams(window.location.search);
     const roomId = params.get('roomId') || params.get('gameId');
     if (roomId) {
-      const gameEl = this.shadowRoot.getElementById("gameId");
+      const gameEl = this.shadowRoot.getElementById("game-id-input");
       if (gameEl) gameEl.value = roomId;
     }
   }
@@ -36,17 +37,25 @@ class AceLanding extends HTMLElement {
     
     this.shadowRoot.innerHTML = html;
 
-    const nameEl = this.shadowRoot.getElementById("name");
-    const createBtn = this.shadowRoot.getElementById("create");
-    const joinBtn = this.shadowRoot.getElementById("join");
-    const gameEl = this.shadowRoot.getElementById("gameId");
+    const nameEl = this.shadowRoot.getElementById("user-name");
+    const createBtn = this.shadowRoot.getElementById("create-game-button");
+    const joinBtn = this.shadowRoot.getElementById("join-game-button");
+    const gameEl = this.shadowRoot.getElementById("game-id-input");
+
+    // Set up real-time validation using utility function
+    setupInputValidation(nameEl, [createBtn, joinBtn], {
+      allowEmpty: false,
+      invalidMessage: 'Name contains invalid characters: < > &'
+    });
 
     createBtn.onclick = () => {
       const name = nameEl.value.trim();
-      if (!name) {
-        alert("Please enter your name.");
+      
+      // Validate name using utility function
+      if (!validateAndAlert(name, "Name")) {
         return;
       }
+      
       this.dispatchEvent(
         new CustomEvent("ace-create", {
           detail: { name },
@@ -59,10 +68,12 @@ class AceLanding extends HTMLElement {
     joinBtn.onclick = () => {
       const name = nameEl.value.trim();
       const gameId = gameEl.value.trim();
-      if (!name) {
-        alert("Please enter your name.");
+      
+      // Validate name using utility function
+      if (!validateAndAlert(name, "Name")) {
         return;
       }
+      
       if (!gameId) {
         alert("Please enter the Game-ID.");
         return;

@@ -1,6 +1,7 @@
 import "../components/ace-navbar.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
+import { setupInputValidation, validateAndAlert, hasDangerousCharacters } from '../utils/validation.js';
 
 class AceItems extends HTMLElement {
   constructor() {
@@ -47,19 +48,25 @@ class AceItems extends HTMLElement {
     
     this.shadowRoot.innerHTML = html;
 
-    this._inputEl = this.shadowRoot.getElementById("itemInput");
-    this._addBtn = this.shadowRoot.getElementById("addBtn");
-    this._listEl = this.shadowRoot.getElementById("itemList");
-    this._nextBtn = this.shadowRoot.getElementById("nextBtn");
+    this._inputEl = this.shadowRoot.getElementById("item-input");
+    this._addBtn = this.shadowRoot.getElementById("add-item-button");
+    this._listEl = this.shadowRoot.getElementById("item-list");
+    this._nextBtn = this.shadowRoot.getElementById("next-button");
+
+    // Set up real-time validation using utility function
+    setupInputValidation(this._inputEl, this._addBtn, {
+      allowEmpty: false,
+      invalidMessage: 'Item contains invalid characters: < > &'
+    });
 
     // Pressing Enter: if input has text, add; if empty, proceed to next
     this._inputEl.addEventListener("keydown", e => {
       if (e.key === "Enter") {
         e.preventDefault();
         const text = this._inputEl.value.trim();
-        if (text) {
+        if (text && !hasDangerousCharacters(text)) {
           this._onAdd();
-        } else {
+        } else if (!text) {
           this._onNext();
         }
       }
@@ -72,7 +79,12 @@ class AceItems extends HTMLElement {
 
   _onAdd() {
     const text = this._inputEl.value.trim();
-    if (!text) return;
+    
+    // Validate text using utility function
+    if (!validateAndAlert(text, "Item")) {
+      return;
+    }
+    
     if (this._items.some(item => item.toLowerCase() === text.toLowerCase())) {
       alert("This item exists already.");
       this._inputEl.value = "";
