@@ -8,7 +8,7 @@ describe("GameService", () => {
   let mockRoomService: Partial<RoomService>;
   let svc: GameService;
   let fakeRoom: any;
-  let participants: string[];
+  let participants: { name: string; isAdmin: boolean }[];
 
   beforeEach(() => {
     // reset fake room & participants
@@ -18,7 +18,11 @@ describe("GameService", () => {
       itemHistory: [],
       status: RoomStatus.SETUP,
     };
-    participants = ["alice", "bob", "cj"];
+    participants = [
+      { name: "alice", isAdmin: true },
+      { name: "bob", isAdmin: false },
+      { name: "cj", isAdmin: false }
+    ];
 
     // mock out RoomService
     mockRoomService = {

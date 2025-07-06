@@ -132,4 +132,19 @@
             }
         }
     }
+
+    /* Admin-Hervorhebung für Participants und Players */
+    .admin-user {
+        background: #fff3cd !important;
+        border-color: #ffc107 !important;
+        
+        & .participant-name,
+        & .player-name {
+            font-weight: bold;
+        }
+    }
+    
+    .regular-user {
+        background: var(--color-background) !important;
+    }
 }

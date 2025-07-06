@@ -1,4 +1,4 @@
-import { Room, User, RoomStatus, NotFoundError, ForbiddenError, BadRequestError } from "../types/index.js";
+import { Room, User, RoomStatus, NotFoundError, ForbiddenError, BadRequestError, Participant } from "../types/index.js";
 
 export class RoomService {
   private rooms = new Map<string, Room>();
@@ -6,6 +6,10 @@ export class RoomService {
   createRoom(adminName: string, adminIp: string): string {
     if (!adminName) {
       throw new BadRequestError("Name is required");
+    }
+
+    if(!adminName.match(/^[^<>&]{0,100}$/)) {
+      throw new BadRequestError("Username contains invalid characters");
     }
 
     const roomId = this.generateUniqueRoomId();
@@ -68,6 +72,10 @@ export class RoomService {
       throw new BadRequestError("Name and roomId are required");
     }
 
+    if(!userName.match(/^[^<>&]{0,100}$/)) {
+      throw new BadRequestError("Username contains invalid characters");
+    }
+
     const room = this.getRoom(roomId);
 
     if (room.bannedIps.includes(userIp)) {
@@ -123,9 +131,12 @@ export class RoomService {
     };
   }
 
-  getParticipants(roomId: string): string[] {
+  getParticipants(roomId: string): Participant[] {
     const room = this.getRoom(roomId);
-    return [room.admin.name, ...room.users.map((u) => u.name)];
+    return [
+      { name: room.admin.name, isAdmin: true },
+      ...room.users.map((u) => ({ name: u.name, isAdmin: false }))
+    ];
   }
 
   validatePlayerInRoom(room: Room, playerName: string): void {

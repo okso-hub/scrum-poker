@@ -37,7 +37,18 @@ describe('Vote Routes', () => {
     const VOTE = '5';
 
     it('broadcasts the event string and returns success when not complete', async () => {
-      vi.spyOn(gameService, 'vote').mockReturnValue({ event: 'vote-status-update' } as any);
+      const voteEvent = {
+        event: 'vote-status-update',
+        voteCount: 1,
+        totalPlayers: 3,
+        votedPlayers: ['alice'],
+        allPlayers: [
+          { name: 'alice', isAdmin: true },
+          { name: 'bob', isAdmin: false },
+          { name: 'charlie', isAdmin: false }
+        ]
+      };
+      vi.spyOn(gameService, 'vote').mockReturnValue(voteEvent as any);
       vi.spyOn(gameService, 'isVoteComplete').mockReturnValue(false);
       const bc = vi.spyOn(wsUtils, 'broadcast').mockImplementation(() => {});
 
@@ -48,7 +59,7 @@ describe('Vote Routes', () => {
 
       expect(res.body).toEqual({ success: true });
       expect(gameService.vote).toHaveBeenCalledWith(ROOM, PLAYER, VOTE);
-      expect(bc).toHaveBeenCalledWith(ROOM, 'vote-status-update');
+      expect(bc).toHaveBeenCalledWith(ROOM, voteEvent);
       expect(gameService.isVoteComplete).toHaveBeenCalledWith(ROOM);
     });
 
@@ -92,7 +103,10 @@ describe('Vote Routes', () => {
         voteCount: 1,
         totalPlayers: 2,
         votedPlayers: ['alice'],
-        allPlayers: ['alice', 'bob'],
+        allPlayers: [
+          { name: 'alice', isAdmin: true },
+          { name: 'bob', isAdmin: false }
+        ],
       };
       vi.spyOn(gameService, 'getVoteStatus').mockReturnValue(fakeStatus);
 

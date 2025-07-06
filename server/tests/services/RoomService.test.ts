@@ -151,7 +151,10 @@ describe('RoomService', () => {
     });
 
     it('returns admin + users', () => {
-      expect(svc.getParticipants(ROOM_ID)).toEqual(['alice', 'bob']);
+      expect(svc.getParticipants(ROOM_ID)).toEqual([
+        { name: 'alice', isAdmin: true },
+        { name: 'bob', isAdmin: false }
+      ]);
     });
 
     it('validatePlayerInRoom throws for unknown', () => {

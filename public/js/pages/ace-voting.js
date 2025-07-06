@@ -94,8 +94,14 @@ class AceVoting extends HTMLElement {
 
   async _revealVotes() {
     try {
-      await fetch(`/room/${this._roomId}/reveal`, { method: 'POST' });
+      const resReveal = await fetch(`/room/${this._roomId}/reveal`, { method: 'POST' });
       this._revealed = true;
+      if(!resReveal.ok) {
+        const jsonRes = await resReveal.json();
+        alert(jsonRes.error);
+        console.error('Failed to reveal votes:', resReveal);
+        return;
+      }
       // Immediately fetch updated vote-status with actual vote values
       const res = await fetch(`/room/${this._roomId}/vote-status`);
       if (res.ok) {
@@ -121,15 +127,17 @@ class AceVoting extends HTMLElement {
   _initializeVoteStatus() {
     const body = this.shadowRoot.querySelector('.players-table-body');
     body.innerHTML = this._allPlayers.map(player => `
-      <tr>
-        <td>${player}</td>
-        <td class="status-${player}">Waiting...</td>
+      <tr class="${player.isAdmin ? 'admin-user' : 'regular-user'}">
+        <td class="player-name">
+          ${player.name}
+        </td>
+        <td class="status-${player.name}">Waiting...</td>
       </tr>
     `).join('');
   }
 
-  _updateStatus(player, text) {
-    const el = this.shadowRoot.querySelector(`.status-${player}`);
+  _updateStatus(playerName, text) {
+    const el = this.shadowRoot.querySelector(`.status-${playerName}`);
     if (el) el.textContent = text;
   }
 
@@ -141,16 +149,16 @@ class AceVoting extends HTMLElement {
 
     this._allPlayers.forEach(player => {
       if (this._revealed && votes) {
-        this._updateStatus(player, votes[player] ?? '-');
+        this._updateStatus(player.name, votes[player.name] ?? '-');
       } else {
-        this._updateStatus(player, votedPlayers?.includes(player) ? 'Voted' : 'Waiting...');
+        this._updateStatus(player.name, votedPlayers?.includes(player.name) ? 'Voted' : 'Waiting...');
       }
     });
   }
 
   _onVoteReceived(votedPlayers) {
-    votedPlayers.forEach(player => {
-      this._updateStatus(player, 'Voted');
+    votedPlayers.forEach(playerName => {
+      this._updateStatus(playerName, 'Voted');
     });
   }
 }

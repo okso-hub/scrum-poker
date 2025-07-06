@@ -232,7 +232,6 @@ class AgileAce extends HTMLElement {
       console.log("received message", msg);
       if (msg.event === "cards-revealed") {
         this._showResults(msg.results, msg.isLastItem);
-        this._showToast("Karten wurden aufgedeckt!", "info", 3000);
       } else if (msg.event === "reveal-item") {
         this._allPlayers = msg.allPlayers;
         this._renderQuestion(msg);
@@ -262,7 +261,7 @@ class AgileAce extends HTMLElement {
       this._showToast("Verbindung getrennt", "warning", 3000);
     };
     this._ws.onerror = (e) => {
-      console.error("WebSocker errored", e);
+      console.error("WebSocket errored", e);
       this._showToast("Verbindungsfehler", "error", 4000);
     };
   }

@@ -8,6 +8,11 @@ export interface Admin {
   ip: string;
 }
 
+export interface Participant {
+  name: string;
+  isAdmin: boolean;
+}
+
 export interface VoteResults {
   votes: Record<string, string>;
   summary: Record<string, number>;
@@ -59,7 +64,7 @@ export interface GameEvent {
   item?: string;
   options?: number[];
   totalPlayers?: number;
-  allPlayers?: string[];
+  allPlayers?: Participant[];
   results?: VoteResults;
   isLastItem?: boolean;
   summary?: Summary;
