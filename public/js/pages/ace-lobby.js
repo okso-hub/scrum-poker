@@ -1,6 +1,7 @@
 // public/js/components/ace-lobby.js
 import "../components/ace-navbar.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceLobby extends HTMLElement {
   constructor() {
@@ -12,8 +13,14 @@ class AceLobby extends HTMLElement {
   }
 
   async connectedCallback() {
-    const lobbyStyles = await loadStylesheet('/css/lobby.css');
+    // Styles und Template parallel laden
+    const [lobbyStyles, lobbyTemplate] = await Promise.all([
+      loadStylesheet('/css/lobby.css'),
+      loadTemplate('/html/ace-lobby.html')
+    ]);
+    
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(lobbyStyles);
+    this._template = lobbyTemplate;
     
     this._roomId = this.getAttribute('room-id');
     this._wsUrl  = this.getAttribute('ws-url');
@@ -35,26 +42,12 @@ class AceLobby extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <ace-navbar
-        room-id="${this._roomId}"
-        is-admin="${this._isAdmin}"
-      ></ace-navbar>
-      <div class="participants">
-        <h3>Participants</h3>
-        <ul id="list"></ul>
-      </div>
-      <button id="startBtn" class="horizontal">Start Game</button>
-      <div class="items">
-        <h3>Today's Items</h3>
-        <table id="itemsTable" class="left">
-          <thead>
-            <tr><th>ID</th><th>Item</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    `;
+    const html = interpolateTemplate(this._template, {
+      roomId: this._roomId,
+      isAdmin: this._isAdmin
+    });
+    
+    this.shadowRoot.innerHTML = html;
   }
 
   async _fetchParticipants() {

@@ -1,5 +1,6 @@
 // public/js/components/ace-landing.js
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceLanding extends HTMLElement {
   constructor() {
@@ -9,8 +10,13 @@ class AceLanding extends HTMLElement {
 
   async connectedCallback() {
     /* Globale Styles + spezifische Landing-Styles laden */
-    const landingStyles = await loadStylesheet('/css/landing.css');
+    const [landingStyles, landingTemplate] = await Promise.all([
+      loadStylesheet('/css/landing.css'),
+      loadTemplate('/html/ace-landing.html')
+    ]);
+    
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(landingStyles);
+    this._template = landingTemplate;
     
     this._render();
     this._prefillRoomId();
@@ -26,27 +32,9 @@ class AceLanding extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <h2>AgileAce</h2>
-      <div class="input-group">
-        <label for="name">Your Name:</label>
-        <input id="name" type="text" placeholder="z. B. Anna Mueller" />
-      </div>
-      <div class="actions">
-        <div class="action card">
-          <h3>Create Game</h3>
-          <button id="create">Start Game as Admin</button>
-        </div>
-        <div class="action card">
-          <h3>Join Game</h3>
-          <div class="input-group">
-            <label for="gameId">Game-ID:</label>
-            <input id="gameId" type="text" placeholder="z. B. ABC123" />
-          </div>
-          <button id="join">Join</button>
-        </div>
-      </div>
-    `;
+    const html = interpolateTemplate(this._template, {});
+    
+    this.shadowRoot.innerHTML = html;
 
     const nameEl = this.shadowRoot.getElementById("name");
     const createBtn = this.shadowRoot.getElementById("create");
