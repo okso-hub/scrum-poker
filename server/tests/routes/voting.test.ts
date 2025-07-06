@@ -4,8 +4,8 @@ import express, { Express } from 'express';
 import request from 'supertest';
 
 // 1) Mock only asyncHandler, keep the real errorHandler
-vi.mock('../src/middleware/errorHandler.js', async () => {
-  const mod = await vi.importActual<any>('../src/middleware/errorHandler.js');
+vi.mock('../../src/middleware/errorHandler.js', async () => {
+  const mod = await vi.importActual<any>('../../src/middleware/errorHandler.js');
   return {
     ...mod,
     asyncHandler: (fn: any) => fn,
