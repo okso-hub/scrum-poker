@@ -4,8 +4,8 @@ import express, { Express } from 'express';
 import request from 'supertest';
 
 // 1) Mock only asyncHandler, keep the real errorHandler
-vi.mock('../src/middleware/errorHandler.js', async () => {
-  const mod = await vi.importActual<any>('../src/middleware/errorHandler.js');
+vi.mock('../../src/middleware/errorHandler.js', async () => {
+  const mod = await vi.importActual<any>('../../src/middleware/errorHandler.js');
   return {
     ...mod,
     asyncHandler: (fn: any) => fn,
@@ -37,7 +37,8 @@ describe('Vote Routes', () => {
     const VOTE = '5';
 
     it('broadcasts the event string and returns success when not complete', async () => {
-      vi.spyOn(gameService, 'vote').mockReturnValue({ event: 'vote-status-update' } as any);
+      const result = { event: 'vote-status-update' } as any;
+      vi.spyOn(gameService, 'vote').mockReturnValue(result);
       vi.spyOn(gameService, 'isVoteComplete').mockReturnValue(false);
       const bc = vi.spyOn(wsUtils, 'broadcast').mockImplementation(() => {});
 
@@ -48,7 +49,8 @@ describe('Vote Routes', () => {
 
       expect(res.body).toEqual({ success: true });
       expect(gameService.vote).toHaveBeenCalledWith(ROOM, PLAYER, VOTE);
-      expect(bc).toHaveBeenCalledWith(ROOM, 'vote-status-update');
+      // now expect full result object rather than only the event string
+      expect(bc).toHaveBeenCalledWith(ROOM, result);
       expect(gameService.isVoteComplete).toHaveBeenCalledWith(ROOM);
     });
 
