@@ -1,64 +1,95 @@
-/* Minimale globale CSS-Basis mit Layers */
-@layer base, components;
+@layer base, components, tokens;
+
+@layer tokens {
+    :host {
+        --color-primary: #cccccc;
+        --color-hover: #878787;
+        --color-border: #ccc;
+        --color-background: #f9f9f9;
+        --color-selected: #007bff;
+        
+        --radius-sm: 0.25rem;
+        --radius-md: 0.5rem;
+        --radius-lg: 0.75rem;
+        --radius-xl: 1rem;
+        
+        --font-size-heading: 1.5rem;
+        --font-size-subheading: 1.25rem;
+        --font-size-body: 1rem;
+        
+        --transition: all 0.2s ease;
+        
+        --spacing-sm: 0.25rem;
+        --spacing-md: 0.5rem;
+        --spacing-lg: 1rem;
+        
+        --border-width: 0.0625rem;
+        --border: var(--border-width) solid var(--color-border);
+    }
+}
 
 @layer base {
     :host {
         display: block;
         font-family: system-ui, sans-serif;
         box-sizing: border-box;
-        padding: 1rem;
+        padding: var(--spacing-lg);
+    }
+
+    h1, h2, h3 {
+        text-align: center;
+        margin-block-end: var(--spacing-lg);
     }
 
     button {
-        padding: 0.5rem;
-        font-size: 1rem;
+        padding: var(--spacing-md);
+        font-size: var(--font-size-body);
         line-height: 1.5;
         cursor: pointer;
-        border: 0.0625rem solid #ccc;
-        border-radius: 0.5rem;
-        background-color: #cccccc;
-        transition: all 0.2s ease;
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-md);
+        background-color: var(--color-primary);
+        transition: var(--transition);
 
         &:hover {
-            background-color: #f5f5f5;
-            border-color: #999;
+            background-color: var(--color-hover);
         }
 
         &:focus {
-            outline: 0.125rem solid #007bff;
+            outline: solid var(--color-selected);
         }
     }
 
     input {
-        padding: 0.5rem;
-        font-size: 1rem;
+        padding: var(--spacing-md);
+        font-size: var(--font-size-body);
         line-height: 1.5;
-        border: 0.0625rem solid #ccc;
-        border-radius: 0.25rem;
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-sm);
 
         &:focus {
-            outline: 0.125rem solid #007bff;
-            border-color: #007bff;
-        }
+            outline: solid var(--color-selected);
+            border-color: var(--color-selected);
+        }   
     }
 
     table {
         inline-size: 100%;
         border-collapse: collapse;
-        border: 0.0625rem solid #ddd;
-        border-radius: 0.25rem;
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-sm);
 
         & th,
         & td {
-            padding: 0.5rem;
+            padding: var(--spacing-md);
             text-align: start;
-            border-block-end: 0.0625rem solid #eee;
+            border-block-end: var(--border-width) solid var(--color-border);
             line-height: 1.5;
         }
 
         & th {
             font-weight: 700;
-            background-color: #f9f9f9;
+            background-color: var(--color-background);
         }
 
         & tr:last-child td {
@@ -83,18 +114,18 @@
     }
 
     .input-group {
-        margin-block-end: 1rem;
+        margin-block-end: var(--spacing-lg);
         display: flex;
         flex-direction: column;
 
         & label {
-            margin-block-end: 0.25rem;
+            margin-block-end: var(--spacing-sm);
             font-weight: 500;
         }
 
         &.horizontal {
             flex-direction: row;
-            gap: 0.5rem;
+            gap: var(--spacing-md);
 
             & input {
                 flex: 1;

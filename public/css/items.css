@@ -2,25 +2,25 @@
 @layer pages {
   .item-list {
     padding-left: 0;
-    border: 0.0625rem solid #ddd;
-    border-radius: 0.25rem;
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-sm);
     
     & .list-item {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0.5rem;
-      border-block-end: 0.0625rem solid #eee;
+      padding: var(--spacing-md);
+      border-block-end: var(--border-width) solid var(--color-border);
   
       & .trash {
         cursor: pointer;
-        margin-inline-start: 0.5rem;
-        padding: 0.25rem;
-        border-radius: 0.25rem;
-        transition: background-color 0.2s ease;
+        margin-inline-start: var(--spacing-md);
+        padding: var(--spacing-sm);
+        border-radius: var(--radius-sm);
+        transition: var(--transition);
         
         &:hover {
-          background-color: #f8f9fa;
+          background-color: var(--color-background);
         }
       }
     }

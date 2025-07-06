@@ -1,23 +1,31 @@
 /* Landing Page spezifische Styles */
 @layer pages {
+
   .actions {
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-lg);
     
     & .action {
       flex: 1;
       
       & button {
         inline-size: 100%;
-        margin-block-start: 0.5rem;
+        margin-block-start: var(--spacing-md);
       }
     }
   }
   .card {
-    border: 0.0625rem solid #ccc;
-    border-radius: 0.5rem;
-    padding: 1rem;
-    box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1);
+    border: var(--border-width) solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    
     background-color: #fff;
+    
+    & h3 {
+      text-align: center;
+      
+      margin-block-end: var(--spacing-md);
+      font-size: var(--font-size-subheading);
+    }
   }
 } 

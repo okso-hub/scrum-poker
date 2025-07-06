@@ -27,20 +27,22 @@
     
     & .popup-content {
       background: #fff;
-      border-radius: 0.5rem;
+      border-radius: var(--radius-md);
       box-shadow: 0 0.0625rem 0.1875rem rgba(0, 0, 0, 0.1);
       padding: 2rem;
       position: relative;
       max-inline-size: 90vw;
       max-block-size: 90vh;
       overflow-y: auto;
-      border: 0.0625rem solid #ccc;
+      border: var(--border-width) solid var(--color-border);
     }
     
     & .close-btn {
       position: absolute;
-      inset-block-start: 0.5rem;
-      inset-inline-end: 0.5rem;
+      inset-block-start: var(--spacing-md);
+      inset-inline-end: var(--spacing-md);
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
     }
   }
 
@@ -53,10 +55,10 @@
     box-shadow: -0.0625rem 0 0.1875rem rgba(0, 0, 0, 0.1);
     z-index: 150;
     transform: translateX(100%);
-    transition: transform 0.3s ease;
+    transition: var(--transition);
     display: flex;
     flex-direction: column;
-    border-inline-start: 0.0625rem solid #ddd;
+    border-inline-start: var(--border-width) solid var(--color-border);
     
     &.open {
       transform: translateX(0);
@@ -66,13 +68,15 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 1rem;
-      border-block-end: 0.0625rem solid #ddd;
-      background: #fafafa;
+      padding: var(--spacing-lg);
+      border-block-end: var(--border-width) solid var(--color-border);
+      background: var(--color-background);
+      font-size: var(--font-size-subheading);
+      font-weight: 600;
     }
     
     & .settings-list {
-      padding: 1rem;
+      padding: var(--spacing-lg);
       overflow-y: auto;
       flex: 1;
       
@@ -87,10 +91,12 @@
         justify-content: space-between;
         align-items: center;
         padding: 0.75rem;
-        background: #fafafa;
-        border: 0.0625rem solid #ddd;
-        border-radius: 0.5rem;
-        margin-block-end: 0.5rem;
+        background: var(--color-background);
+        border: var(--border-width) solid var(--color-border);
+        border-radius: var(--radius-md);
+        margin-block-end: var(--spacing-md);
+        font-size: var(--font-size-body);
+        transition: var(--transition);
       }
     }
   }
