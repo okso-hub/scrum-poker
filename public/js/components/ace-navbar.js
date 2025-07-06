@@ -165,8 +165,13 @@ class AceNavbar extends HTMLElement {
       settingsBtn.addEventListener("click", async () => {
         if (!this._openSidebar) {
           await this._fetchParticipants();
-          listEl.innerHTML = this._participants.map(name =>
-            `<li><span>${name}</span><button class=\"ban\" data-name=\"${name}\">🔨</button></li>`
+          listEl.innerHTML = this._participants.map(p =>
+            `<li class="${p.isAdmin ? 'admin-user' : 'regular-user'}">
+              <span class="participant-name">
+                ${p.name}
+              </span>
+              ${!p.isAdmin ? `<button class="ban" data-name="${p.name}" title="Ban User">🔨</button>` : ''}
+            </li>`
           ).join('');
           this.shadowRoot.querySelectorAll('button.ban').forEach(btn => {
             btn.addEventListener('click', e => this._onBan(e.currentTarget.dataset.name));
@@ -213,8 +218,13 @@ class AceNavbar extends HTMLElement {
       if (!res.ok) throw await res.json();
       await this._fetchParticipants();
       const listEl = this.shadowRoot.getElementById("participantsList");
-      listEl.innerHTML = this._participants.map(n =>
-        `<li><span>${n}</span><button class=\"ban\" data-name=\"${n}\">🔨</button></li>`
+      listEl.innerHTML = this._participants.map(p =>
+        `<li class="${p.isAdmin ? 'admin-user' : 'regular-user'}">
+          <span class="participant-name">
+            ${p.name}
+          </span>
+          ${!p.isAdmin ? `<button class="ban" data-name="${p.name}" title="Ban User">🔨</button>` : ''}
+        </li>`
       ).join('');
       this.shadowRoot.querySelectorAll('button.ban').forEach(btn => {
         btn.addEventListener('click', e => this._onBan(e.currentTarget.dataset.name));

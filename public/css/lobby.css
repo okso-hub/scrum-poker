@@ -44,6 +44,20 @@
         display: block;
         margin-block-start: var(--spacing-md);
       }
+      
+      /* Admin-Hervorhebung */
+      &.admin-participant {
+        background: #fff3cd;
+        border-color: #ffc107;
+        
+        & .participant-name {
+          font-weight: bold;
+        }
+      }
+      
+      &.regular-participant {
+        background: var(--color-background);
+      }
     }
   }
 
