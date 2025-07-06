@@ -11,7 +11,6 @@ const PORT = parseInt(process.env.PORT ?? "3000", 10);
 const app = express();
 
 // 1) Compute your public directory based on the working-dir
-//    (this avoids brittle relative paths from __dirname in dist/)
 const publicDir = path.resolve(process.cwd(), "public");
 console.log("🗂️  Serving static files from:", publicDir);
 
