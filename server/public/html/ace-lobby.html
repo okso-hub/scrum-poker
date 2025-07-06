@@ -1,18 +1,38 @@
-<ace-navbar
-  room-id="${roomId}"
-  is-admin="${isAdmin}"
-></ace-navbar>
-<div class="participants">
-  <h1>Participants</h1>
-  <ul id="list"></ul>
-</div>
-<button id="startBtn" class="horizontal">Start Game</button>
-<div class="items">
-  <h3>Today's Items</h3>
-  <table id="itemsTable" class="left">
-    <thead>
-      <tr><th>ID</th><th>Item</th></tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+<ace-navbar 
+  room-id="${roomId}" 
+  is-admin="${isAdmin}">
+</ace-navbar>
+
+<main class="lobby-content">
+  <section class="participants">
+    <h3>Participants</h3>
+    <ul id="participants-list" role="list">
+      <!-- Participants will be populated dynamically -->
+    </ul>
+  </section>
+  
+  <section class="game-controls">
+    <button 
+      id="start-game-button" 
+      type="button"
+      class="horizontal"
+      aria-label="Start the estimation game">
+      Start Game
+    </button>
+  </section>
+  
+  <section class="items">
+    <h3>Today's Items</h3>
+    <table id="items-table" class="left">
+      <thead>
+        <tr>
+          <th scope="col">ID</th>
+          <th scope="col">Item</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Items will be populated dynamically -->
+      </tbody>
+    </table>
+  </section>
+</main>

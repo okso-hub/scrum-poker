@@ -1,19 +1,31 @@
-<div class="voting-page">
-  <ace-navbar room-id="${roomId}" is-admin="${isAdmin}"></ace-navbar>
-  <div class="question-section">
+<main class="voting-page">
+  <ace-navbar 
+    room-id="${roomId}" 
+    is-admin="${isAdmin}">
+  </ace-navbar>
+  
+  <section class="question-section">
     <h1 class="question">${item}</h1>
-    <div class="voting-buttons"></div>
-  </div>
-  <div class="bottom-section">
-    <div class="admin-controls"></div>
+    <div class="voting-buttons" role="group" aria-label="Voting options">
+      <!-- Voting buttons will be populated dynamically -->
+    </div>
+  </section>
+  
+  <section class="bottom-section">
+    <div class="admin-controls" role="group" aria-label="Admin controls">
+      <!-- Admin controls will be populated dynamically -->
+    </div>
+    
     <table class="players-table">
       <thead>
         <tr>
-          <th>Player</th>
-          <th>Status</th>
+          <th scope="col">Player</th>
+          <th scope="col">Status</th>
         </tr>
       </thead>
-      <tbody class="players-table-body"></tbody>
+      <tbody class="players-table-body">
+        <!-- Player status will be populated dynamically -->
+      </tbody>
     </table>
-  </div>
-</div>
+  </section>
+</main>
