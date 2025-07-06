@@ -45,7 +45,7 @@ jobs:
       - name: Build and tag image
         run: |
           docker build \
-            --file Dockerfile \
+            --file ./server/Dockerfile \
             --tag ghcr.io/${{ github.repository_owner }}/agileace:${{ github.sha }} \
             --tag ghcr.io/${{ github.repository_owner }}/agileace:latest \
             .
