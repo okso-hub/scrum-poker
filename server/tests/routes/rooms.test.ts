@@ -101,11 +101,17 @@ describe('Public Routes', () => {
 
   describe('GET /room/:roomId/participants', () => {
     it('returns participants array', async () => {
-      vi.spyOn(roomService, 'getParticipants').mockReturnValue(['alice', 'bob']);
+      vi.spyOn(roomService, 'getParticipants').mockReturnValue([
+        { name: 'alice', isAdmin: true },
+        { name: 'bob', isAdmin: false }
+      ]);
       const res = await request(app)
         .get('/room/R3/participants')
         .expect(200);
-      expect(res.body).toEqual({ participants: ['alice', 'bob'] });
+      expect(res.body).toEqual({ participants: [
+        { name: 'alice', isAdmin: true },
+        { name: 'bob', isAdmin: false }
+      ] });
       expect(roomService.getParticipants).toHaveBeenCalledWith('R3');
     });
   });

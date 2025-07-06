@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { roomService, gameService } from "../services/index.js";
 import { asyncHandler, requireAdminAccess } from "../middleware/index.js";
 import { broadcast, disconnectUser } from "../utils/ws.js";
+import { BadRequestError } from "../types/index.js";
 
 const router = Router();
 
@@ -11,6 +12,11 @@ router.post(
   asyncHandler(async (req: Request, res: Response) => {
     const { roomId } = req.params;
     const { items }: { items?: string[] } = req.body;
+
+    // check if items contain forbidden characters
+    if(!items?.every(item => item.match(/^[^<>&]{0,100}$/))) {
+      throw new BadRequestError("Items contain invalid characters");
+    }
 
     roomService.setItems(roomId, items!);
     res.json({ success: true });
