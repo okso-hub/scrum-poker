@@ -1,19 +1,46 @@
-<h2>AgileAce</h2>
-<div class="input-group">
-  <label for="name">Your Name:</label>
-  <input id="name" type="text" placeholder="z. B. Anna Mueller" />
-</div>
-<div class="actions">
-  <div class="action card">
-    <h3>Create Game</h3>
-    <button id="create">Start Game as Admin</button>
-  </div>
-  <div class="action card">
-    <h3>Join Game</h3>
-    <div class="input-group">
-      <label for="gameId">Game-ID:</label>
-      <input id="gameId" type="text" placeholder="z. B. ABC123" />
-    </div>
-    <button id="join">Join</button>
-  </div>
-</div>
+<main>
+  <h2>AgileAce</h2>
+  <section class="input-group">
+    <label for="user-name">Your Name:</label>
+    <input 
+      id="user-name" 
+      type="text" 
+      name="userName"
+      placeholder="z. B. Anna Mueller"
+      pattern="[^<>&]{0,100}"
+      required>
+    </input>
+  </section>
+  
+  <section class="actions">
+    <article class="action card">
+      <h3>Create Game</h3>
+      <button 
+        id="create-game-button" 
+        type="button"
+        aria-label="Start game as admin">
+        Start Game as Admin
+      </button>
+    </article>
+    
+    <article class="action card">
+      <h3>Join Game</h3>
+      <div class="input-group">
+        <label for="game-id-input">Game-ID:</label>
+        <input 
+          id="game-id-input" 
+          type="text" 
+          name="gameId"
+          placeholder="z. B. ABC123"
+          pattern="[A-Za-z0-9]{3,}">
+        </input>
+      </div>
+      <button 
+        id="join-game-button" 
+        type="button"
+        aria-label="Join existing game">
+        Join
+      </button>
+    </article>
+  </section>
+</main>

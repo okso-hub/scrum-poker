@@ -1,9 +1,28 @@
-<h2>Sprint Summary</h2>
-<ul id="summaryList" class="summary-list">
-  <li class="header"><span>Item</span><span>Average Points</span></li>
-  <!-- Items werden dynamisch eingefügt -->
-</ul>
-<div class="total">
-  ${totalTasks} Items • Average: ${totalAverage} • Total: ${sumOfAverages}
-</div>
-<button class="horizontal" id="backButton">Back to main page</button>
+<main class="summary-page">
+  <header>
+    <h2>Sprint Summary</h2>
+  </header>
+  
+  <section class="summary-content">
+    <ul id="summary-list" class="summary-list">
+      <li class="header"><span>Item</span><span>Average Points</span></li>
+      <!-- Items werden dynamisch eingefügt -->
+    </ul>
+  </section>
+  
+  <section class="summary-totals">
+    <div class="total">
+      ${totalTasks} Items • Average: ${totalAverage} • Total: ${sumOfAverages}
+    </div>
+  </section>
+  
+  <section class="navigation">
+    <button 
+      id="back-button" 
+      type="button"
+      class="horizontal"
+      aria-label="Return to main page">
+      Back to main page
+    </button>
+  </section>
+</main>

@@ -30,9 +30,9 @@ class AceLobby extends HTMLElement {
     this._render();  // ← Jetzt mit korrektem Admin-Status
     
     // Element-Referenzen nach dem Rendern
-    this._listEl = this.shadowRoot.getElementById('list');
-    this._startBtn = this.shadowRoot.getElementById('startBtn');
-    this._itemsTable = this.shadowRoot.getElementById('itemsTable');
+    this._listEl = this.shadowRoot.getElementById('participants-list');
+    this._startBtn = this.shadowRoot.getElementById('start-game-button');
+    this._itemsTable = this.shadowRoot.getElementById('items-table');
     this._itemsBody = this._itemsTable.querySelector('tbody');
     
     this._startBtn.addEventListener('click', () => this._onStart());

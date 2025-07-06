@@ -1,8 +1,45 @@
-<ace-navbar room-id="${roomId}" is-admin="${isAdmin}"></ace-navbar>
-<h2>Add Items</h2>
-<div class="input-group horizontal">
-  <input id="itemInput" type="text" placeholder="New Item…" />
-  <button id="addBtn">Add</button>
-</div>
-<ul id="itemList" class="item-list"></ul>
-<button id="nextBtn" class="horizontal">Next</button>
+<ace-navbar 
+  room-id="${roomId}" 
+  is-admin="${isAdmin}">
+</ace-navbar>
+
+<main class="items-management">
+  <header>
+    <h2>Add Items</h2>
+  </header>
+  
+  <section class="input-section">
+    <div class="input-group horizontal">
+      <input 
+        id="item-input" 
+        type="text" 
+        name="newItem"
+        placeholder="New Item…"
+        pattern="[^<>&]{0,100}"
+        aria-label="New item to add">
+      </input>
+      <button 
+        id="add-item-button" 
+        type="button"
+        aria-label="Add item to list">
+        Add
+      </button>
+    </div>
+  </section>
+  
+  <section class="items-list">
+    <ul id="item-list" class="item-list" role="list">
+      <!-- Items will be populated dynamically -->
+    </ul>
+  </section>
+  
+  <section class="navigation">
+    <button 
+      id="next-button" 
+      type="button"
+      class="horizontal"
+      aria-label="Proceed to next step">
+      Next
+    </button>
+  </section>
+</main>

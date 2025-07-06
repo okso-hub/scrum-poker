@@ -1,4 +1,5 @@
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceNavbar extends HTMLElement {
   constructor() {
@@ -11,8 +12,13 @@ class AceNavbar extends HTMLElement {
 
   async connectedCallback() {
     /* Globale Styles + spezifische Navbar-Styles laden */
-    const navbarStyles = await loadStylesheet('/css/navbar.css');
+    const [navbarStyles, navbarTemplate] = await Promise.all([
+      loadStylesheet('/css/navbar.css'),
+      loadTemplate('/html/ace-navbar.html')
+    ]);
+    
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(navbarStyles);
+    this._template = navbarTemplate;
     
     this._roomId = this.getAttribute("room-id");
     this._isAdmin = this.getAttribute("is-admin") === "true";
@@ -43,75 +49,32 @@ class AceNavbar extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <div class="navbar">
-        <div class="info">
-          <span>Room: <strong>${this._roomId}</strong></span>
-          <button id="copyIdBtn" class="copy-id-btn" title="Copy Room ID">📋</button>
-        </div>
-        <div class="action-buttons">
-          <button id="qrBtn">QR</button>
-          <button id="copyBtn">Copy Link</button>
-          <button id="infoBtn">Info</button>
-          <button id="settingsBtn" class="settings-btn">⚙️</button>
-        </div>
-      </div>
-
-      <div id="settingsSidebar" class="settings-sidebar">
-        <div class="sidebar-header">
-          <h2>Settings</h2>
-          <button id="sidebarClose" class="sidebar-close">×</button>
-        </div>
-        <div class="settings-list">
-          <ul id="participantsList"></ul>
-        </div>
-      </div>
-
-      <div id="qrPopup" class="popup hidden">
-        <div class="popup-content">
-          <button class="close-btn" id="qrClose">×</button>
-          <div id="qrcode"></div>
-        </div>
-      </div>
-
-      <div id="infoPopup" class="info-popup hidden">
-        <div class="popup-content">
-          <button class="close-btn" id="infoClose">×</button>
-          <h2>How to Play</h2>
-          <p>This is a Planning Poker game for agile teams.</p>
-          <h3>Steps:</h3>
-          <ol>
-            <li>The admin creates items to estimate</li>
-            <li>All players vote on each item</li>
-            <li>Votes are revealed and discussed</li>
-            <li>Continue until all items are estimated</li>
-          </ol>
-          <h3>Voting Values:</h3>
-          <p>Use the Fibonacci sequence: 1, 2, 3, 5, 8, 13, 21</p>
-          <ul>
-            <li><strong>1-3:</strong> Small tasks</li>
-            <li><strong>5-8:</strong> Medium tasks</li>
-            <li><strong>13-21:</strong> Large tasks</li>
-          </ul>
-        </div>
-      </div>
-    `;
+    // Template laden und Room ID einsetzen
+    const templateContent = this._template.content.cloneNode(true);
+    
+    // Room ID in das Template einsetzen
+    const roomIdElement = templateContent.querySelector('.room-id');
+    roomIdElement.textContent = this._roomId;
+    
+    // Template in Shadow DOM einsetzen
+    this.shadowRoot.innerHTML = '';
+    this.shadowRoot.appendChild(templateContent);
   }
 
   _wireUp() {
     const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
-    const copyIdBtn = this.shadowRoot.getElementById("copyIdBtn");
-    const copyBtn   = this.shadowRoot.getElementById("copyBtn");
-    const qrBtn     = this.shadowRoot.getElementById("qrBtn");
-    const qrPopup   = this.shadowRoot.getElementById("qrPopup");
-    const closeQr   = this.shadowRoot.getElementById("qrClose");
-    const infoBtn   = this.shadowRoot.getElementById("infoBtn");
-    const infoPopup = this.shadowRoot.getElementById("infoPopup");
-    const closeInfo = this.shadowRoot.getElementById("infoClose");
-    const settingsBtn = this.shadowRoot.getElementById("settingsBtn");
-    const sidebar     = this.shadowRoot.getElementById("settingsSidebar");
-    const sidebarClose = this.shadowRoot.getElementById("sidebarClose");
-    const listEl      = this.shadowRoot.getElementById("participantsList");
+    const copyIdBtn = this.shadowRoot.getElementById("copy-id-btn");
+    const copyBtn   = this.shadowRoot.getElementById("copy-btn");
+    const qrBtn     = this.shadowRoot.getElementById("qr-btn");
+    const qrPopup   = this.shadowRoot.getElementById("qr-popup");
+    const closeQr   = this.shadowRoot.getElementById("qr-close");
+    const infoBtn   = this.shadowRoot.getElementById("info-btn");
+    const infoPopup = this.shadowRoot.getElementById("info-popup");
+    const closeInfo = this.shadowRoot.getElementById("info-close");
+    const settingsBtn = this.shadowRoot.getElementById("settings-btn");
+    const sidebar     = this.shadowRoot.getElementById("settings-sidebar");
+    const sidebarClose = this.shadowRoot.getElementById("sidebar-close");
+    const listEl      = this.shadowRoot.getElementById("participants-list");
 
     // Copy Game ID
     copyIdBtn.addEventListener("click", () => {
@@ -212,7 +175,7 @@ class AceNavbar extends HTMLElement {
       });
       if (!res.ok) throw await res.json();
       await this._fetchParticipants();
-      const listEl = this.shadowRoot.getElementById("participantsList");
+      const listEl = this.shadowRoot.getElementById("participants-list");
       listEl.innerHTML = this._participants.map(n =>
         `<li><span>${n}</span><button class=\"ban\" data-name=\"${n}\">🔨</button></li>`
       ).join('');
