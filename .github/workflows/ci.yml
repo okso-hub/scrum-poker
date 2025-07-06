@@ -43,9 +43,10 @@ jobs:
           password: ${{ secrets.GH_PAT }}
 
       - name: Build and tag image
+        working-directory: server
         run: |
           docker build \
-            --file ./server/Dockerfile \
+            --file Dockerfile \
             --tag ghcr.io/${{ github.repository_owner }}/agileace:${{ github.sha }} \
             --tag ghcr.io/${{ github.repository_owner }}/agileace:latest \
             .
