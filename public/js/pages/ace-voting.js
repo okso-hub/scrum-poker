@@ -1,6 +1,7 @@
 // public/js/components/ace-voting.js
 
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceVoting extends HTMLElement {
   constructor() {
@@ -12,8 +13,13 @@ class AceVoting extends HTMLElement {
 
   async connectedCallback() {
     /* Globale Styles + spezifische Voting-Styles laden */
-    const votingStyles = await loadStylesheet('/css/voting.css');
+    const [votingStyles, votingTemplate] = await Promise.all([
+      loadStylesheet('/css/voting.css'),
+      loadTemplate('/html/ace-voting.html')
+    ]);
+    
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(votingStyles);
+    this._template = votingTemplate;
     
     this._item = this.getAttribute('item') || '';
     this._options = JSON.parse(this.getAttribute('options') || '[1,2,3,5,8,13,21]');
@@ -30,27 +36,13 @@ class AceVoting extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <div class="voting-page">
-        <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
-        <div class="question-section">
-          <h1 class="question">${this._item}</h1>
-          <div class="voting-buttons"></div>
-        </div>
-        <div class="bottom-section">
-          <div class="admin-controls"></div>
-          <table class="players-table">
-            <thead>
-              <tr>
-                <th>Player</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody class="players-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    `;
+    const html = interpolateTemplate(this._template, {
+      roomId: this._roomId,
+      isAdmin: this._isAdmin,
+      item: this._item
+    });
+    
+    this.shadowRoot.innerHTML = html;
 
     this._initializeVoteStatus();
     setTimeout(() => this._showButtons(), 2000);

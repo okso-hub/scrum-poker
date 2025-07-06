@@ -1,5 +1,6 @@
 import "../components/ace-navbar.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceItems extends HTMLElement {
   constructor() {
@@ -12,8 +13,13 @@ class AceItems extends HTMLElement {
 
   async connectedCallback() {
     /* Globale Styles + spezifische Items-Styles laden */
-    const itemsStyles = await loadStylesheet('/css/items.css');
+    const [itemsStyles, itemsTemplate] = await Promise.all([
+      loadStylesheet('/css/items.css'),
+      loadTemplate('/html/ace-items.html')
+    ]);
+    
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(itemsStyles);
+    this._template = itemsTemplate;
     
     this._roomId = this.getAttribute("room-id") || "";
     this._isAdmin = this.getAttribute("is-admin") === "true";
@@ -34,16 +40,12 @@ class AceItems extends HTMLElement {
   }
 
   _render() {
-    this.shadowRoot.innerHTML = `
-      <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
-      <h2>Add Items</h2>
-      <div class="input-group horizontal">
-        <input id="itemInput" type="text" placeholder="New Item…" />
-        <button id="addBtn">Add</button>
-      </div>
-      <ul id="itemList" class="item-list"></ul>
-      <button id="nextBtn" class="horizontal">Next</button>
-    `;
+    const html = interpolateTemplate(this._template, {
+      roomId: this._roomId,
+      isAdmin: this._isAdmin
+    });
+    
+    this.shadowRoot.innerHTML = html;
 
     this._inputEl = this.shadowRoot.getElementById("itemInput");
     this._addBtn = this.shadowRoot.getElementById("addBtn");

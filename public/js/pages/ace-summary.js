@@ -1,4 +1,5 @@
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceSummary extends HTMLElement {
   constructor() {
@@ -8,8 +9,13 @@ class AceSummary extends HTMLElement {
 
   async connectedCallback() {
     /* Globale Styles + spezifische Summary-Styles laden */
-    const summaryStyles = await loadStylesheet('/css/summary.css');
+    const [summaryStyles, summaryTemplate] = await Promise.all([
+      loadStylesheet('/css/summary.css'),
+      loadTemplate('/html/ace-summary.html')
+    ]);
+    
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(summaryStyles);
+    this._template = summaryTemplate;
     
     this._summary = JSON.parse(this.getAttribute('summary') || '{}');
     this._render();
@@ -20,22 +26,23 @@ class AceSummary extends HTMLElement {
     // calculate sum of all averages
     const sumOfAverages = items.reduce((acc, item) => acc + Number(item.average), 0);
 
-    this.shadowRoot.innerHTML = `
-      <h2>Sprint Summary</h2>
-      <ul id="summaryList" class="summary-list">
-        <li class="header"><span>Item</span><span>Average Points</span></li>
-        ${items.map(itemData => `
-          <li class="list-item">
-            <span>${itemData.item}</span>
-            <span>${itemData.average}</span>
-          </li>
-        `).join('')}
-      </ul>
-      <div class="total">
-        ${totalTasks} Items • Average: ${totalAverage} • Total: ${sumOfAverages}
-      </div>
-      <button class="horizontal" id="backButton">Back to main page</button>
-    `;
+    const html = interpolateTemplate(this._template, {
+      totalTasks,
+      totalAverage,
+      sumOfAverages
+    });
+    
+    this.shadowRoot.innerHTML = html;
+
+    // Items dynamisch einfügen
+    const summaryList = this.shadowRoot.getElementById('summaryList');
+    const itemsHtml = items.map(itemData => `
+      <li class="list-item">
+        <span>${itemData.item}</span>
+        <span>${itemData.average}</span>
+      </li>
+    `).join('');
+    summaryList.innerHTML += itemsHtml;
 
     // Event Handler for the button
     const backButton = this.shadowRoot.getElementById('backButton');
