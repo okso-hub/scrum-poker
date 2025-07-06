@@ -1,35 +1,38 @@
 import express from "express";
 import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 import { initWebSocket } from "./utils/ws.js";
 import router from "./routes/index.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Ensure HOST is a string, PORT a number
+const HOST = process.env.HOST || "localhost";
+const PORT = parseInt(process.env.PORT ?? "3000", 10);
+
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// nur für testing
+// 1) Compute your public directory based on the working-dir
+//    (this avoids brittle relative paths from __dirname in dist/)
+const publicDir = path.resolve(process.cwd(), "public");
+console.log("🗂️  Serving static files from:", publicDir);
+
+// 2) Middleware
 app.set("trust proxy", true);
-
-// Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../../public")));
+app.use(express.static(publicDir));
 
-// Routes
+// 3) Your API routes
 app.use(router);
 
-// Start HTTP + WS servers
-const server = app.listen(PORT, () => console.log(`HTTP on http://localhost:${PORT}`));
-const wss = initWebSocket(server);
-
-// Error handling middleware
+// 5) Error handler
 app.use(errorHandler);
 
-process.on("SIGTERM", () => {
-  server.close();
+// 6) Start HTTP + WebSocket
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 HTTP on http://${HOST}:${PORT}`);
 });
+initWebSocket(server);
+
+// 7) Graceful shutdown
+process.on("SIGTERM", () => server.close());
 
 export default server;
