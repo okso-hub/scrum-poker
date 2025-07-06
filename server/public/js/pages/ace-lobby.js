@@ -54,10 +54,8 @@ class AceLobby extends HTMLElement {
     try {
       const res = await fetch(`/room/${this._roomId}/participants`);
       if (!res.ok) throw await res.json();
-      let { participants } = await res.json();
-      this._participants = participants.map(p =>
-        typeof p === 'string' ? { name: p } : ('name' in p ? p : { name: String(p) })
-      );
+      const { participants } = await res.json();
+      this._participants = participants; // Direkt verwenden, da Backend neue Struktur sendet
       this._updateList();
     } catch (e) {
       console.error('Failed to load participants:', e);
@@ -90,22 +88,23 @@ class AceLobby extends HTMLElement {
   }
 
   _updateList() {
-    // guard: ensure list element exists
-    if (!this._listEl) return;
-
+    if(!this._listEl) return;
     this._listEl.innerHTML = this._participants
       .map(p => `
-        <li>
-          <span>${p.name}</span>
-          ${this._isAdmin
-            ? `<span class="icon-button" data-name="${p.name}" title="Ban">🔨</span>`
+        <li class="${p.isAdmin ? 'admin-user' : 'regular-user'}">
+          <span class="participant-name">
+            ${p.name}
+          </span>
+          ${this._isAdmin && !p.isAdmin
+            ? `<button class="ban-btn" data-name="${p.name}" title="Ban User">🔨</button>`
             : ''}
         </li>
       `).join('');
 
+    // Event-Listener nach dem Rendern hinzufügen
     if (this._isAdmin) {
-      this.shadowRoot.querySelectorAll('.ban').forEach(btn => {
-        btn.addEventListener('click', e => {
+      this.shadowRoot.querySelectorAll('.ban-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
           const name = e.currentTarget.getAttribute('data-name');
           this._onBan(name);
         });
@@ -137,6 +136,19 @@ class AceLobby extends HTMLElement {
       alert(e.message);
       console.error('Ban error:', e);
     }
+  }
+
+  async _onUserJoined(user) {
+    console.log('User joined:', user);
+    const userObj = { name: user, isAdmin: false }; // Neue User sind nie Admin
+    this._participants.push(userObj);
+    this._updateList();
+  }
+
+  async _onUserBanned(user) {
+      console.log('User left:', user);
+      this._participants = this._participants.filter(p => p.name !== user);
+      this._updateList();
   }
 
   async _onStart() {

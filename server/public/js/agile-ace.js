@@ -4,12 +4,14 @@ import "./pages/ace-lobby.js";
 import "./pages/ace-results.js";
 import "./pages/ace-voting.js";
 import "./pages/ace-summary.js";
+import { createToastHost, showToastInShadow, toast } from "./utils/shadow-toast.js";
 
 class AgileAce extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
     this._bindEvents();
+    this._initializeToastHost();
     this._renderLanding();
   }
 
@@ -18,6 +20,13 @@ class AgileAce extends HTMLElement {
     this.addEventListener("ace-join", (e) => this._onJoin(e.detail));
     this.addEventListener("ace-vote", (e) => this._sendVote(e.detail.value));
     this.addEventListener("ace-back-to-landing", () => this._goBackToLanding());
+  }
+
+  _initializeToastHost() {
+    // Toast-Host für Shadow DOM initialisieren
+    if (this.shadowRoot) {
+      createToastHost(this.shadowRoot);
+    }
   }
 
   _renderLanding() {
@@ -39,7 +48,8 @@ class AgileAce extends HTMLElement {
     this._status = null;
     this._item = null;
     this._allPlayers = null;
-
+    this._currentLobby = null;
+    this._currentVoting = null;
     // Zur Startseite navigieren
     this._renderLanding();
   }
@@ -62,6 +72,7 @@ class AgileAce extends HTMLElement {
     lobby.setAttribute("room-id", this._roomId);
     lobby.setAttribute("ws-url", this.getAttribute("ws-url"));
     this.shadowRoot.append(lobby);
+    this._currentLobby = lobby;
   }
 
   _renderQuestion({ item, options }) {
@@ -75,10 +86,24 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("is-admin", this._role === "admin");
     comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
     this.shadowRoot.append(comp);
+    this._currentVoting = comp;
+    this._currentLobby = null;
   }
 
   async _revealVotes() {
     await fetch(`/room/${this._roomId}/reveal`, { method: "POST" });
+  }
+
+  _showToast(message, type = 'info', duration = 5000) {
+    console.log("Showing toast:", message, type, duration);
+    
+    // Shadow DOM Toast verwenden
+    if (this.shadowRoot) {
+      showToastInShadow(this.shadowRoot, message, duration, type);
+      console.log("Toast shown in shadow DOM");
+    } else {
+      console.log(`Toast (shadowRoot nicht verfügbar): ${message} (${type})`);
+    }
   }
 
   _showResults(results, isLastItem = false) {
@@ -89,6 +114,8 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("room-id", this._roomId);
     comp.setAttribute("is-last-item", isLastItem);
     this.shadowRoot.append(comp);
+    this._currentLobby = null;
+    this._currentVoting = null;
   }
 
   _renderSummary(summary) {
@@ -197,10 +224,12 @@ class AgileAce extends HTMLElement {
           payload: { name: this._name },
         })
       );
+      this._showToast("Verbindung hergestellt", "success", 2000);
     };
 
     this._ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
+      console.log("received message", msg);
       if (msg.event === "cards-revealed") {
         this._showResults(msg.results, msg.isLastItem);
       } else if (msg.event === "reveal-item") {
@@ -209,15 +238,32 @@ class AgileAce extends HTMLElement {
       } else if (msg.event === "show-summary") {
         this._renderSummary(msg.summary);
       } else if (msg.event === "vote-status-update") {
-        console.log("Vote status update received, but handled by ace-voting component");
+        this._currentVoting._onVoteReceived(msg.votedPlayers);
+        
+      } else if (msg.event === "user-joined") {
+        if(this._currentLobby !== null) {
+          this._currentLobby._onUserJoined(msg.user);
+        }
+        this._showToast(`${msg.user} ist dem Spiel beigetreten`, "success", 3000);
+      } else if (msg.event === "user-banned") {
+        if(this._currentLobby !== null) {
+          this._currentLobby._onUserBanned(msg.user);
+        }
+        this._showToast(`${msg.user} wurde vom Spiel ausgeschlossen`, "warning", 4000);
       } else {
         const { from, payload } = msg;
         console.log(`WS ← ${from}:`, payload);
       }
     };
 
-    this._ws.onclose = () => console.log("WebSocket closed");
-    this._ws.onerror = (e) => console.error("WebSocker errored", e);
+    this._ws.onclose = () => {
+      console.log("WebSocket closed");
+      this._showToast("Verbindung getrennt", "warning", 3000);
+    };
+    this._ws.onerror = (e) => {
+      console.error("WebSocket errored", e);
+      this._showToast("Verbindungsfehler", "error", 4000);
+    };
   }
 }
 

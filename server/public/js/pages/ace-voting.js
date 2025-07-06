@@ -28,11 +28,6 @@ class AceVoting extends HTMLElement {
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');
     this._render();
-    this._startVoteStatusPolling();
-  }
-
-  disconnectedCallback() {
-    this._stopVoteStatusPolling();
   }
 
   _render() {
@@ -87,7 +82,7 @@ class AceVoting extends HTMLElement {
       if (response.ok) {
         this._currentVote = value;
         this._updateButtonSelection(value);
-        this._updateStatus(this._playerName, this._revealed ? value : 'Voted');
+        //this._updateStatus(this._playerName, this._revealed ? value : 'Voted');
       } else {
         throw new Error('Failed to send vote');
       }
@@ -99,8 +94,14 @@ class AceVoting extends HTMLElement {
 
   async _revealVotes() {
     try {
-      await fetch(`/room/${this._roomId}/reveal`, { method: 'POST' });
+      const resReveal = await fetch(`/room/${this._roomId}/reveal`, { method: 'POST' });
       this._revealed = true;
+      if(!resReveal.ok) {
+        const jsonRes = await resReveal.json();
+        alert(jsonRes.error);
+        console.error('Failed to reveal votes:', resReveal);
+        return;
+      }
       // Immediately fetch updated vote-status with actual vote values
       const res = await fetch(`/room/${this._roomId}/vote-status`);
       if (res.ok) {
@@ -123,36 +124,20 @@ class AceVoting extends HTMLElement {
     });
   }
 
-  _startVoteStatusPolling() {
-    this._pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`/room/${this._roomId}/vote-status`);
-        if (response.ok) {
-          const data = await response.json();
-          this._updateVoteStatus(data);
-        }
-      } catch (error) {
-        console.error('Error polling vote status:', error);
-      }
-    }, 2000);
-  }
-
-  _stopVoteStatusPolling() {
-    if (this._pollInterval) clearInterval(this._pollInterval);
-  }
-
   _initializeVoteStatus() {
     const body = this.shadowRoot.querySelector('.players-table-body');
     body.innerHTML = this._allPlayers.map(player => `
-      <tr>
-        <td>${player}</td>
-        <td class="status-${player}">Waiting...</td>
+      <tr class="${player.isAdmin ? 'admin-user' : 'regular-user'}">
+        <td class="player-name">
+          ${player.name}
+        </td>
+        <td class="status-${player.name}">Waiting...</td>
       </tr>
     `).join('');
   }
 
-  _updateStatus(player, text) {
-    const el = this.shadowRoot.querySelector(`.status-${player}`);
+  _updateStatus(playerName, text) {
+    const el = this.shadowRoot.querySelector(`.status-${playerName}`);
     if (el) el.textContent = text;
   }
 
@@ -164,10 +149,16 @@ class AceVoting extends HTMLElement {
 
     this._allPlayers.forEach(player => {
       if (this._revealed && votes) {
-        this._updateStatus(player, votes[player] ?? '-');
+        this._updateStatus(player.name, votes[player.name] ?? '-');
       } else {
-        this._updateStatus(player, votedPlayers?.includes(player) ? 'Voted' : 'Waiting...');
+        this._updateStatus(player.name, votedPlayers?.includes(player.name) ? 'Voted' : 'Waiting...');
       }
+    });
+  }
+
+  _onVoteReceived(votedPlayers) {
+    votedPlayers.forEach(playerName => {
+      this._updateStatus(playerName, 'Voted');
     });
   }
 }
