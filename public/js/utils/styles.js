@@ -1,5 +1,3 @@
-/* Minimale CSS-Utility für Web Components */
-
 let globalStyles = null;
 
 async function loadGlobalStyles() {
@@ -30,7 +28,6 @@ export async function loadStylesheet(cssPath) {
     return stylesheet;
   } catch (error) {
     console.warn(`Could not load ${cssPath}:`, error);
-    /* Leeres Stylesheet als Fallback */
     return new CSSStyleSheet();
   }
 }

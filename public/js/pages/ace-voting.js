@@ -28,11 +28,6 @@ class AceVoting extends HTMLElement {
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');
     this._render();
-    this._startVoteStatusPolling();
-  }
-
-  disconnectedCallback() {
-    this._stopVoteStatusPolling();
   }
 
   _render() {
@@ -87,7 +82,7 @@ class AceVoting extends HTMLElement {
       if (response.ok) {
         this._currentVote = value;
         this._updateButtonSelection(value);
-        this._updateStatus(this._playerName, this._revealed ? value : 'Voted');
+        //this._updateStatus(this._playerName, this._revealed ? value : 'Voted');
       } else {
         throw new Error('Failed to send vote');
       }
@@ -123,24 +118,6 @@ class AceVoting extends HTMLElement {
     });
   }
 
-  _startVoteStatusPolling() {
-    this._pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch(`/room/${this._roomId}/vote-status`);
-        if (response.ok) {
-          const data = await response.json();
-          this._updateVoteStatus(data);
-        }
-      } catch (error) {
-        console.error('Error polling vote status:', error);
-      }
-    }, 2000);
-  }
-
-  _stopVoteStatusPolling() {
-    if (this._pollInterval) clearInterval(this._pollInterval);
-  }
-
   _initializeVoteStatus() {
     const body = this.shadowRoot.querySelector('.players-table-body');
     body.innerHTML = this._allPlayers.map(player => `
@@ -168,6 +145,12 @@ class AceVoting extends HTMLElement {
       } else {
         this._updateStatus(player, votedPlayers?.includes(player) ? 'Voted' : 'Waiting...');
       }
+    });
+  }
+
+  _onVoteReceived(votedPlayers) {
+    votedPlayers.forEach(player => {
+      this._updateStatus(player, 'Voted');
     });
   }
 }

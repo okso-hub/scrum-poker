@@ -11,7 +11,7 @@ router.post(
     const { roomId } = req.params;
     const { vote, playerName }: { vote?: string; playerName?: string } = req.body;
 
-    const { event } = gameService.vote(roomId, playerName!, vote!);
+    const gameEvent = gameService.vote(roomId, playerName!, vote!);
 
     if (gameService.isVoteComplete(roomId)) {
       console.log(`All players voted in ${roomId}, auto-revealing votes`);
@@ -20,7 +20,7 @@ router.post(
       return res.json({ success: true, gameEvent });
     }
 
-    broadcast(roomId, event);
+    broadcast(roomId, gameEvent);
 
     res.json({ success: true });
   })

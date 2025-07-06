@@ -139,6 +139,19 @@ class AceLobby extends HTMLElement {
     }
   }
 
+  async _onUserJoined(user) {
+    console.log('User joined:', user);
+    const userObj = { name: user };
+    this._participants.push(userObj);
+    this._updateList();
+  }
+
+  async _onUserBanned(user) {
+      console.log('User left:', user);
+      this._participants = this._participants.filter(p => p.name !== user);
+      this._updateList();
+  }
+
   async _onStart() {
     try {
       const res = await fetch(`/room/${this._roomId}/start`, { method: 'POST' });
