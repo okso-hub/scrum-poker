@@ -45,7 +45,6 @@
         margin-block-start: var(--spacing-md);
       }
       
-      /* Admin-Hervorhebung */
       &.admin-participant {
         background: #fff3cd;
         border-color: #ffc107;

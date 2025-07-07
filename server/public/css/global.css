@@ -2,36 +2,38 @@
 
 @layer tokens {
     :host {
-        --color-primary: #cccccc;
-        --color-hover: #878787;
-        --color-border: #ccc;
-        --color-background: #f9f9f9;
-        --color-selected: #007bff;
+        --font-size-body: var(--agile-ace-font-size, 1rem);
+        --font-size-heading: var(--agile-ace-font-size-heading, 1.5rem);
+        --font-size-subheading: var(--agile-ace-font-size-subheading, 1.25rem);
         
-        --radius-sm: 0.25rem;
-        --radius-md: 0.5rem;
-        --radius-lg: 0.75rem;
-        --radius-xl: 1rem;
+        --color-primary: var(--agile-ace-primary-color, #cccccc);
+        --color-hover: var(--agile-ace-hover-color, #878787);
+        --color-border: var(--agile-ace-border-color, #ccc);
+        --color-background: var(--agile-ace-background-color, #f9f9f9);
+        --color-selected: var(--agile-ace-selected-color, #007bff);
         
-        --font-size-heading: 1.5rem;
-        --font-size-subheading: 1.25rem;
-        --font-size-body: 1rem;
+        --radius-sm: var(--agile-ace-border-radius-sm, 0.25rem);
+        --radius-md: var(--agile-ace-border-radius-md, 0.5rem);
+        --radius-lg: var(--agile-ace-border-radius-lg, 0.75rem);
+        --radius-xl: var(--agile-ace-border-radius-xl, 1rem);
+        
+        --spacing-sm: var(--agile-ace-spacing-sm, 0.25rem);
+        --spacing-md: var(--agile-ace-spacing-md, 0.5rem);
+        --spacing-lg: var(--agile-ace-spacing-lg, 1rem);
         
         --transition: all 0.2s ease;
-        
-        --spacing-sm: 0.25rem;
-        --spacing-md: 0.5rem;
-        --spacing-lg: 1rem;
-        
         --border-width: 0.0625rem;
         --border: var(--border-width) solid var(--color-border);
+        
+        --border-radius: var(--agile-ace-border-radius, var(--radius-md));
+        --spacing: var(--agile-ace-spacing, var(--spacing-md));
     }
 }
 
 @layer base {
     :host {
         display: block;
-        font-family: system-ui, sans-serif;
+        font-size: var(--font-size-body);
         box-sizing: border-box;
         padding: var(--spacing-lg);
     }
@@ -53,10 +55,20 @@
 
         &:hover {
             background-color: var(--color-hover);
+
+            &:disabled {
+                background-color: var(--color-primary);
+            }
         }
 
         &:focus {
             outline: solid var(--color-selected);
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+            pointer-events: none;
+            opacity: 0.6;
         }
     }
 
