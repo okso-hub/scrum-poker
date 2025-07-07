@@ -24,13 +24,14 @@ class AceItems extends HTMLElement {
     
     this._roomId = this.getAttribute("room-id") || "";
     this._isAdmin = this.getAttribute("is-admin") === "true";
+    this._backendUrl = this.getAttribute("backend-url");
     await this._loadItems();
     this._render();
   }
 
   async _loadItems() {
     try {
-      const res = await fetch(`/room/${this._roomId}/items`);
+      const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`);
       if (res.ok) {
         const { items } = await res.json();
         this._items = items;
@@ -43,7 +44,8 @@ class AceItems extends HTMLElement {
   _render() {
     const html = interpolateTemplate(this._template, {
       roomId: this._roomId,
-      isAdmin: this._isAdmin
+      isAdmin: this._isAdmin,
+      backendUrl: this._backendUrl
     });
     
     this.shadowRoot.innerHTML = html;
@@ -122,7 +124,7 @@ class AceItems extends HTMLElement {
       return;
     }
     try {
-      const res = await fetch(`/room/${this._roomId}/items`, {
+      const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: this._items })

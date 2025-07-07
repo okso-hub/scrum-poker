@@ -23,6 +23,7 @@ class AceLobby extends HTMLElement {
     this._template = lobbyTemplate;
     
     this._roomId = this.getAttribute('room-id');
+    this._backendUrl = this.getAttribute("backend-url")
     
     // ERST Admin-Status prüfen, DANN rendern
     await this._checkAdmin();
@@ -43,7 +44,8 @@ class AceLobby extends HTMLElement {
   _render() {
     const html = interpolateTemplate(this._template, {
       roomId: this._roomId,
-      isAdmin: this._isAdmin
+      isAdmin: this._isAdmin,
+      backendUrl: this._backendUrl
     });
     
     this.shadowRoot.innerHTML = html;
@@ -51,7 +53,7 @@ class AceLobby extends HTMLElement {
 
   async _fetchParticipants() {
     try {
-      const res = await fetch(`/room/${this._roomId}/participants`);
+      const res = await fetch(this._backendUrl + `/room/${this._roomId}/participants`);
       if (!res.ok) throw await res.json();
       const { participants } = await res.json();
       this._participants = participants; // Direkt verwenden, da Backend neue Struktur sendet
@@ -63,7 +65,7 @@ class AceLobby extends HTMLElement {
 
   async _fetchItems() {
     try {
-      const res = await fetch(`/room/${this._roomId}/items`);
+      const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`);
       if (!res.ok) throw await res.json();
       const { items } = await res.json();
       this._items = items;
@@ -75,7 +77,7 @@ class AceLobby extends HTMLElement {
 
   async _checkAdmin() {
     try {
-      const res = await fetch(`/is-admin?roomId=${this._roomId}`);
+      const res = await fetch(this._backendUrl + `/is-admin?roomId=${this._roomId}`);
       if (!res.ok) throw await res.json();
       const { isAdmin } = await res.json();
       this._isAdmin = isAdmin;

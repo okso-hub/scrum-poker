@@ -14,8 +14,7 @@ class AgileAce extends HTMLElement {
     this._initializeToastHost();
     this._renderLanding();
 
-    const wsProtocol = (window.location.protocol === 'https:') ? 'wss:' : 'ws:';
-    this._wsUrl = wsProtocol + "//" + window.location.host;
+    this._backendUrl = this.getAttribute("backend-url");
   }
 
   _bindEvents() {
@@ -62,6 +61,7 @@ class AgileAce extends HTMLElement {
     const cmp = document.createElement("ace-items");
     cmp.setAttribute("room-id", this._roomId);
     cmp.setAttribute("is-admin", this._role === "admin");
+    cmp.setAttribute("backend-url", this._backendUrl);
     cmp.addEventListener("ace-items-submitted", (e) => {
       console.log("Items saved:", e.detail.items);
       this._renderLobby();
@@ -73,7 +73,7 @@ class AgileAce extends HTMLElement {
     this.shadowRoot.innerHTML = "";
     const lobby = document.createElement("ace-lobby");
     lobby.setAttribute("room-id", this._roomId);
-    lobby.setAttribute("ws-url", this._wsUrl);
+    lobby.setAttribute("backend-url", this._backendUrl);
     this.shadowRoot.append(lobby);
     this._currentLobby = lobby;
   }
@@ -88,13 +88,14 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("player-name", this._name);
     comp.setAttribute("is-admin", this._role === "admin");
     comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
+    comp.setAttribute("backend-url", this._backendUrl);
     this.shadowRoot.append(comp);
     this._currentVoting = comp;
     this._currentLobby = null;
   }
 
   async _revealVotes() {
-    await fetch(`/room/${this._roomId}/reveal`, { method: "POST" });
+    await fetch(this._backendUrl + `/room/${this._roomId}/reveal`, { method: "POST" });
   }
 
   _showToast(message, type = 'info', duration = 5000) {
@@ -116,6 +117,7 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("is-admin", this._role === "admin");
     comp.setAttribute("room-id", this._roomId);
     comp.setAttribute("is-last-item", isLastItem);
+    comp.setAttribute("backend-url", this._backendUrl);
     this.shadowRoot.append(comp);
     this._currentLobby = null;
     this._currentVoting = null;
@@ -125,12 +127,13 @@ class AgileAce extends HTMLElement {
     this.shadowRoot.innerHTML = "";
     const comp = document.createElement("ace-summary");
     comp.setAttribute("summary", JSON.stringify(summary));
+    comp.setAttribute("backend-url", this._backendUrl);
     this.shadowRoot.append(comp);
   }
 
   async _onCreate({ name }) {
     console.log("Creating room with name:", name);
-    const res = await fetch("/create", {
+    const res = await fetch(this._backendUrl + "/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
@@ -156,7 +159,7 @@ class AgileAce extends HTMLElement {
 
   async _onJoin({ name, gameId }) {
     console.log("Joining room with name:", name, "and gameId:", gameId);
-    const res = await fetch("/join", {
+    const res = await fetch(this._backendUrl + "/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, roomId: gameId }),
@@ -201,7 +204,7 @@ class AgileAce extends HTMLElement {
 
       case "completed":
         {
-          const sumRes = await fetch(`/room/${this._roomId}/summary`, { method: "POST" });
+          const sumRes = await fetch(this._backendUrl + `/room/${this._roomId}/summary`, { method: "POST" });
           const { summary } = await sumRes.json();
           this._renderSummary(summary);
         }
@@ -216,7 +219,7 @@ class AgileAce extends HTMLElement {
   }
 
   _connectWS() {
-    const url = this._wsUrl + "/ws";
+    const url = this.getAttribute("backend-url") + "/ws";
     this._ws = new WebSocket(url);
 
     this._ws.onopen = () => {

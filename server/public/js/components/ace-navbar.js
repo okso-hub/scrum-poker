@@ -22,6 +22,7 @@ class AceNavbar extends HTMLElement {
     
     this._roomId = this.getAttribute("room-id");
     this._isAdmin = this.getAttribute("is-admin") === "true";
+    this._backendUrl = this.getAttribute("backend-url");
     this._render();
     this._wireUp();
   }
@@ -38,7 +39,7 @@ class AceNavbar extends HTMLElement {
 
   async _fetchParticipants() {
     try {
-      const res = await fetch(`/room/${this._roomId}/participants`);
+      const res = await fetch(this._backendUrl + `/room/${this._roomId}/participants`);
       if (!res.ok) throw new Error('Fetch failed');
       const { participants } = await res.json();
       this._participants = participants;
@@ -173,7 +174,7 @@ class AceNavbar extends HTMLElement {
     if (!name) return;
     if (!confirm(`Really ban "${name}"?`)) return;
     try {
-      const res = await fetch(`/room/${this._roomId}/ban`, {
+      const res = await fetch(this._backendUrl + `/room/${this._roomId}/ban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })

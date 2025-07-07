@@ -25,6 +25,7 @@ class AceResults extends HTMLElement {
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._roomId = this.getAttribute('room-id') || '';
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
+    this._backendUrl = this.getAttribute("backend-url");
     this._render();
   }
 
@@ -81,7 +82,7 @@ class AceResults extends HTMLElement {
 
   async _nextItem() {
     try {
-      await fetch(`/room/${this._roomId}/next`, { method: 'POST' });
+      await fetch(this._backendUrl + `/room/${this._roomId}/next`, { method: 'POST' });
     } catch (error) {
       console.error('Error starting next item:', error);
     }
@@ -89,7 +90,7 @@ class AceResults extends HTMLElement {
 
   async _repeatVoting() {
     try {
-      await fetch(`/room/${this._roomId}/repeat`, { method: 'POST' });
+      await fetch(this._backendUrl + `/room/${this._roomId}/repeat`, { method: 'POST' });
     } catch (error) {
       console.error('Error repeating voting:', error);
     }
@@ -97,7 +98,7 @@ class AceResults extends HTMLElement {
 
   async _showSummary() {
     try {
-      await fetch(`/room/${this._roomId}/summary`, { method: 'POST' });
+      await fetch(this._backendUrl + `/room/${this._roomId}/summary`, { method: 'POST' });
     } catch (error) {
       console.error('Error showing summary:', error);
     }
