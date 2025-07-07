@@ -61,6 +61,10 @@ export class GameService {
   revealVotes(roomId: number): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
+    if (room.status !== RoomStatus.VOTING) {
+      throw new BadRequestError("Votes already revealed");
+    }
+
     const votes = room.votes || {};
     if (Object.keys(votes).length === 0) {
       throw new BadRequestError("No votes to reveal");
@@ -94,6 +98,11 @@ export class GameService {
     const players = this.roomService.getParticipants(roomId);
 
     return Object.keys(votes).length === players.length;
+  }
+
+  canRevealVotes(roomId: number): boolean {
+    const room = this.roomService.getRoom(roomId);
+    return room.status === RoomStatus.VOTING;
   }
 
   repeatVoting(roomId: number): GameEvent {

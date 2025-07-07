@@ -85,11 +85,12 @@ router.post(
 
     const gameEvent = gameService.vote(roomId, playerName!, vote!);
 
-    if (gameService.isVoteComplete(roomId)) {
+    if (gameService.isVoteComplete(roomId) && gameService.canRevealVotes(roomId)) {
       console.log(`All players voted in ${roomId}, auto-revealing votes`);
-      const gameEvent = gameService.revealVotes(roomId);
-      broadcast(roomId, gameEvent);
-      return res.json({ success: true, gameEvent });
+
+      const revealEvent = gameService.revealVotes(roomId);
+      broadcast(roomId, revealEvent);
+      return res.json({ success: true, gameEvent: revealEvent });
     }
 
     broadcast(roomId, gameEvent);
