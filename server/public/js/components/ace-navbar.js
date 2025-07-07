@@ -60,6 +60,17 @@ class AceNavbar extends HTMLElement {
     // Template in Shadow DOM einsetzen
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(templateContent);
+
+    if (this._isAdmin) {
+      const actionButtonsEl = this.shadowRoot.querySelector('.action-buttons');
+      const settingsBtn = document.createElement('button');
+      settingsBtn.textContent = '⚙️';
+      settingsBtn.type = 'button';
+      settingsBtn.id = 'settings-btn';
+      settingsBtn.className = 'settings-btn';
+      settingsBtn.setAttribute('aria-label', 'open settings');
+      actionButtonsEl.appendChild(settingsBtn);
+    }
   }
 
   _wireUp() {
