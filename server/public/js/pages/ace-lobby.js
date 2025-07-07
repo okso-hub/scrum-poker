@@ -31,11 +31,32 @@ class AceLobby extends HTMLElement {
     
     // Element-Referenzen nach dem Rendern
     this._listEl = this.shadowRoot.getElementById('participants-list');
-    this._startBtn = this.shadowRoot.getElementById('start-game-button');
     this._itemsTable = this.shadowRoot.getElementById('items-table');
     this._itemsBody = this._itemsTable.querySelector('tbody');
-    
-    this._startBtn.addEventListener('click', () => this._onStart());
+    this._startGameControls = this.shadowRoot.getElementById('game-controls')
+
+    if (this._isAdmin) {
+      // Show "Start Game" button
+      const startGameBtn = document.createElement('button');
+      startGameBtn.textContent = 'Start Game';
+      startGameBtn.type = 'button';
+      startGameBtn.id = 'start-game-button';
+      startGameBtn.className = 'horizontal';
+      startGameBtn.setAttribute('aria-label', 'Start the estimation game');
+      this._startGameControls.appendChild(startGameBtn);
+
+      startGameBtn.addEventListener('click', () => this._onStart());
+    } else {
+      // Show "Waiting for admin to start game..." text
+      // ToDo: CSS for this text
+      const startInfoText = document.createElement('p');
+      startInfoText.textContent = 'Waiting for admin to start game...';
+      startInfoText.type = 'p';
+      startInfoText.id = 'waiting-game-info-text';
+      startInfoText.className = 'horizontal';
+      startInfoText.setAttribute('aria-label', 'Waiting for admin to start game...');
+      this._startGameControls.appendChild(startInfoText);
+    }
     
     // Daten laden
     await Promise.all([this._fetchParticipants(), this._fetchItems()]);
