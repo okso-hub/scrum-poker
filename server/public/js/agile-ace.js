@@ -13,6 +13,9 @@ class AgileAce extends HTMLElement {
     this._bindEvents();
     this._initializeToastHost();
     this._renderLanding();
+
+    const wsProtocol = (window.location.protocol === 'https:') ? 'wss:' : 'ws:';
+    this._wsUrl = wsProtocol + "//" + window.location.host;
   }
 
   _bindEvents() {
@@ -70,7 +73,7 @@ class AgileAce extends HTMLElement {
     this.shadowRoot.innerHTML = "";
     const lobby = document.createElement("ace-lobby");
     lobby.setAttribute("room-id", this._roomId);
-    lobby.setAttribute("ws-url", this.getAttribute("ws-url"));
+    lobby.setAttribute("ws-url", this._wsUrl);
     this.shadowRoot.append(lobby);
     this._currentLobby = lobby;
   }
@@ -213,7 +216,7 @@ class AgileAce extends HTMLElement {
   }
 
   _connectWS() {
-    const url = this.getAttribute("ws-url") + "/ws";
+    const url = this._wsUrl + "/ws";
     this._ws = new WebSocket(url);
 
     this._ws.onopen = () => {

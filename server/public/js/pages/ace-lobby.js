@@ -23,7 +23,6 @@ class AceLobby extends HTMLElement {
     this._template = lobbyTemplate;
     
     this._roomId = this.getAttribute('room-id');
-    this._wsUrl  = this.getAttribute('ws-url');
     
     // ERST Admin-Status prüfen, DANN rendern
     await this._checkAdmin();
