@@ -117,6 +117,7 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("is-admin", this._role === "admin");
     comp.setAttribute("room-id", this._roomId);
     comp.setAttribute("is-last-item", isLastItem);
+    comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
     comp.setAttribute("backend-url", this._backendUrl);
     this.shadowRoot.append(comp);
     this._currentLobby = null;

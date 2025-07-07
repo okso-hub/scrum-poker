@@ -30,4 +30,26 @@
       transition: var(--transition);
     }
   }
+
+  .players-table {
+    max-block-size: 30vh;
+    overflow-y: auto;
+    margin-block-start: var(--spacing-md);
+    
+    & thead th {
+      position: sticky;
+      top: 0;
+      background-color: var(--color-background);
+      z-index: 1;
+    }
+    
+    & tbody tr:hover {
+      background-color: var(--color-background);
+    }
+    
+    & td:last-child {
+      text-align: center;
+      font-weight: 500;
+    }
+  }
 } 

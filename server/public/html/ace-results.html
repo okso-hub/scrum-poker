@@ -15,14 +15,14 @@
     
     <article class="vote-details" id="vote-overview-section">
       <h3>Vote Details</h3>
-      <table class="vote-table">
+      <table class="players-table">
         <thead>
           <tr>
             <th scope="col">Player</th>
             <th scope="col">Vote</th>
           </tr>
         </thead>
-        <tbody id="vote-table-body">
+        <tbody class="players-table-body" id="vote-table-body">
           <!-- Vote entries will be populated dynamically -->
         </tbody>
       </table>
@@ -33,22 +33,19 @@
     <button 
       id="next-button" 
       type="button"
-      class="primary"
-      aria-label="Proceed to next item">
+      class="primary">
       Next Item
     </button>
     <button 
       id="summary-button" 
       type="button"
-      class="primary"
-      aria-label="Show voting summary">
+      class="primary">
       Show Summary
     </button>
     <button 
       id="repeat-button" 
       type="button"
-      class="secondary"
-      aria-label="Repeat voting for current item">
+      class="secondary">
       Repeat Voting
     </button>
   </section>

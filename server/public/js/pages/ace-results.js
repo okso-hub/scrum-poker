@@ -30,6 +30,7 @@ class AceResults extends HTMLElement {
     this._average = average;
     this._votes = votes;
     this._isAdmin = this.getAttribute('is-admin') === 'true';
+    this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');
     this._roomId = this.getAttribute('room-id') || '';
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
     this._backendUrl = this.getAttribute("backend-url");
@@ -62,12 +63,20 @@ class AceResults extends HTMLElement {
     }
     
     voteTableBody.innerHTML = voteEntries
-      .map(([player, vote]) => `
-        <tr>
-          <td>${player}</td>
-          <td class="vote-value">${vote}</td>
-        </tr>
-      `)
+      .map(([playerName, vote]) => {
+        // Find player in allPlayers array to get isAdmin status
+        const player = this._allPlayers.find(p => p.name === playerName);
+        const isAdmin = player ? player.isAdmin : false;
+        
+        console.log(`Player: ${playerName}, isAdmin: ${isAdmin}`, player);
+        
+        return `
+          <tr class="${isAdmin ? 'admin-user' : 'regular-user'}">
+            <td class="player-name">${playerName}</td>
+            <td class="vote-value">${vote}</td>
+          </tr>
+        `;
+      })
       .join('');
   }
 
