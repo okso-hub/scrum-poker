@@ -23,7 +23,8 @@ class AceLobby extends HTMLElement {
     this._template = lobbyTemplate;
     
     this._roomId = this.getAttribute('room-id');
-    this._backendUrl = this.getAttribute("backend-url")
+    this._backendUrl = this.getAttribute("backend-url");
+    this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
     
     // ERST Admin-Status prüfen, DANN rendern
     await this._checkAdmin();
@@ -33,7 +34,7 @@ class AceLobby extends HTMLElement {
     this._listEl = this.shadowRoot.getElementById('participants-list');
     this._itemsTable = this.shadowRoot.getElementById('items-table');
     this._itemsBody = this._itemsTable.querySelector('tbody');
-    this._startGameControls = this.shadowRoot.getElementById('game-controls')
+    this._startGameControls = this.shadowRoot.getElementById('game-controls');
 
     if (this._isAdmin) {
       // Show "Start Game" button
@@ -66,10 +67,19 @@ class AceLobby extends HTMLElement {
     const html = interpolateTemplate(this._template, {
       roomId: this._roomId,
       isAdmin: this._isAdmin,
-      backendUrl: this._backendUrl
+      backendUrl: this._backendUrl,
+      hideNavbar: this._hideNavbar
     });
     
     this.shadowRoot.innerHTML = html;
+
+    // Remove navbar if hide-navbar is true
+    if (this._hideNavbar) {
+      const navbar = this.shadowRoot.querySelector('ace-navbar');
+      if (navbar) {
+        navbar.remove();
+      }
+    }
   }
 
   async _fetchParticipants() {

@@ -4,6 +4,7 @@ import "./pages/ace-lobby.js";
 import "./pages/ace-results.js";
 import "./pages/ace-voting.js";
 import "./pages/ace-summary.js";
+import "./components/ace-navbar.js";
 import { createToastHost, showToastInShadow, toast } from "./utils/shadow-toast.js";
 
 class AgileAce extends HTMLElement {
@@ -12,6 +13,7 @@ class AgileAce extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._bindEvents();
     this._initializeToastHost();
+    this._initializeNavbar();
     this._renderLanding();
 
     this._backendUrl = this.getAttribute("backend-url");
@@ -31,9 +33,51 @@ class AgileAce extends HTMLElement {
     }
   }
 
+  _initializeNavbar() {
+    // Create navbar container
+    this._navbarContainer = document.createElement("div");
+    this._navbarContainer.style.display = "none"; // Hidden by default
+    
+    // Create navbar element
+    this._navbar = document.createElement("ace-navbar");
+    this._navbar.setAttribute("backend-url", this._backendUrl);
+    
+    this._navbarContainer.appendChild(this._navbar);
+    this.shadowRoot.appendChild(this._navbarContainer);
+    
+    // Create main content container
+    this._contentContainer = document.createElement("div");
+    this.shadowRoot.appendChild(this._contentContainer);
+  }
+
+  _showNavbar() {
+    if (this._navbar && this._roomId) {
+      this._navbar.setAttribute("room-id", this._roomId);
+      this._navbar.setAttribute("is-admin", this._role === "admin");
+      this._navbarContainer.style.display = "block";
+      
+      // Clear existing branding to prevent duplicates
+      const existingBranding = this._navbar.querySelectorAll('[slot="branding"]');
+      existingBranding.forEach(node => node.remove());
+      
+      // Copy branding to navbar only if not already present
+      const brandingNodes = Array.from(this.querySelectorAll('[slot="branding"]'));
+      brandingNodes.forEach(node => {
+        this._navbar.appendChild(node.cloneNode(true));
+      });
+    }
+  }
+
+  _hideNavbar() {
+    if (this._navbarContainer) {
+      this._navbarContainer.style.display = "none";
+    }
+  }
+
   _renderLanding() {
-    this.shadowRoot.innerHTML = "";
-    this.shadowRoot.append(document.createElement("ace-landing"));
+    this._hideNavbar();
+    this._contentContainer.innerHTML = "";
+    this._contentContainer.append(document.createElement("ace-landing"));
   }
 
   _goBackToLanding() {
@@ -57,29 +101,49 @@ class AgileAce extends HTMLElement {
   }
 
   _renderItems() {
-    this.shadowRoot.innerHTML = "";
+    this._showNavbar();
+    
+    const brandingNodes = Array.from(
+      this.querySelectorAll('[slot="branding"]')
+    );
+
+    console.log("Rendering items with branding nodes:", brandingNodes);
+  
+    this._contentContainer.innerHTML = "";
+  
     const cmp = document.createElement("ace-items");
     cmp.setAttribute("room-id", this._roomId);
     cmp.setAttribute("is-admin", this._role === "admin");
     cmp.setAttribute("backend-url", this._backendUrl);
+    cmp.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
+  
+    brandingNodes.forEach(node => {
+      cmp.appendChild(node.cloneNode(true));
+    });
+  
     cmp.addEventListener("ace-items-submitted", (e) => {
       console.log("Items saved:", e.detail.items);
       this._renderLobby();
     });
-    this.shadowRoot.append(cmp);
+  
+    this._contentContainer.append(cmp);
   }
+  
 
   _renderLobby() {
-    this.shadowRoot.innerHTML = "";
+    this._showNavbar();
+    this._contentContainer.innerHTML = "";
     const lobby = document.createElement("ace-lobby");
     lobby.setAttribute("room-id", this._roomId);
     lobby.setAttribute("backend-url", this._backendUrl);
-    this.shadowRoot.append(lobby);
+    lobby.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
+    this._contentContainer.append(lobby);
     this._currentLobby = lobby;
   }
 
   _renderQuestion({ item, options }) {
-    this.shadowRoot.innerHTML = "";
+    this._showNavbar();
+    this._contentContainer.innerHTML = "";
     const comp = document.createElement("ace-voting");
     console.log("rendering question, admin?", this._role === "admin");
     comp.setAttribute("item", item);
@@ -89,7 +153,8 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("is-admin", this._role === "admin");
     comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
     comp.setAttribute("backend-url", this._backendUrl);
-    this.shadowRoot.append(comp);
+    comp.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
+    this._contentContainer.append(comp);
     this._currentVoting = comp;
     this._currentLobby = null;
   }
@@ -111,24 +176,33 @@ class AgileAce extends HTMLElement {
   }
 
   _showResults(results, isLastItem = false) {
-    this.shadowRoot.innerHTML = "";
+    this._showNavbar();
+    this._contentContainer.innerHTML = "";
     const comp = document.createElement("ace-results");
     comp.setAttribute("results", JSON.stringify(results));
     comp.setAttribute("is-admin", this._role === "admin");
     comp.setAttribute("room-id", this._roomId);
     comp.setAttribute("is-last-item", isLastItem);
     comp.setAttribute("backend-url", this._backendUrl);
-    this.shadowRoot.append(comp);
+    comp.setAttribute("hide-navbar", "true");
+    
+    // Ensure the component is properly appended and check for errors
+    this._contentContainer.appendChild(comp);
     this._currentLobby = null;
     this._currentVoting = null;
+    
+    console.log("Results component created:", comp);
+    console.log("Results data:", results);
   }
 
   _renderSummary(summary) {
-    this.shadowRoot.innerHTML = "";
+    this._showNavbar();
+    this._contentContainer.innerHTML = "";
     const comp = document.createElement("ace-summary");
     comp.setAttribute("summary", JSON.stringify(summary));
     comp.setAttribute("backend-url", this._backendUrl);
-    this.shadowRoot.append(comp);
+    comp.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
+    this._contentContainer.append(comp);
   }
 
   async _onCreate({ name }) {

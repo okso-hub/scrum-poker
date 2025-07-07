@@ -1,4 +1,6 @@
+import "../components/ace-navbar.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceResults extends HTMLElement {
   constructor() {
@@ -7,34 +9,53 @@ class AceResults extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Results-Styles laden */
-    const resultsStyles = await loadStylesheet('/css/results.css');
-    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(resultsStyles);
+    const [resultsStyles, resultsTemplate] = await Promise.all([
+      loadStylesheet('/css/results.css'),
+      loadTemplate('/html/ace-results.html')
+    ]);
     
-    const data = JSON.parse(this.getAttribute('results') || '{}');
-    const votes = data.votes || {};
-    const average = data.average || 0;
-    const summary = data.summary || {};
-    // Determine question/item text:
-    // 1) explicit attribute, 2) summary.item, 3) first key in votes
-    const voteEntries = Object.entries(votes);
-    this._question = this.getAttribute('question')
-      || summary.item
-      || (voteEntries.length > 0 ? voteEntries[0][0] : '');
-    this._average = average;
+    this.shadowRoot.adoptedStyleSheets = await combineStylesheets(resultsStyles);
+    this._template = resultsTemplate;
+    
+    this._results = JSON.parse(this.getAttribute('results') || '{}');
     this._isAdmin = this.getAttribute('is-admin') === 'true';
-    this._roomId = this.getAttribute('room-id') || '';
+    this._roomId = this.getAttribute('room-id');
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
-    this._backendUrl = this.getAttribute("backend-url");
+    this._backendUrl = this.getAttribute('backend-url');
+    this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
+    
     this._render();
+    this._setupEventListeners();
   }
 
   _render() {
-    const data = JSON.parse(this.getAttribute('results') || '{}');
-    const votes = data.votes || {};
+    const html = interpolateTemplate(this._template, {
+      roomId: this._roomId,
+      isAdmin: this._isAdmin,
+      backendUrl: this._backendUrl
+    });
+    
+    this.shadowRoot.innerHTML = html;
+    
+    // Remove navbar if hide-navbar is true
+    if (this._hideNavbar) {
+      const navbar = this.shadowRoot.querySelector('ace-navbar');
+      if (navbar) {
+        navbar.remove();
+      }
+    }
+    
+    this._renderResults();
+    this._renderAdminControls();
+  }
+
+  _renderResults() {
+    const votes = this._results.votes || {};
     const voteEntries = Object.entries(votes);
     
-    // Vote-Übersicht erstellen
+    console.log("Rendering results with data:", this._results);
+    console.log("Vote entries:", voteEntries);
+    
     const voteOverview = voteEntries.length > 0 ? `
       <div class="vote-overview">
         <h3>Vote Details</h3>
@@ -55,24 +76,43 @@ class AceResults extends HTMLElement {
           </tbody>
         </table>
       </div>
-    ` : '';
+    ` : '<p>No votes found</p>';
 
-    this.shadowRoot.innerHTML = `
-      <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
+    // Get item name from results or fallback
+    const itemName = this._results.item || "Current Item";
+    const average = this._results.average || 0;
+
+    const resultsHtml = `
       <div class="question-box">
-        <h1 class="question">${this._question}</h1>
+        <h1 class="question">${itemName}</h1>
       </div>
-      <div class="average-box">Average: ${this._average}</div>
+      <div class="average-box">Average: ${average}</div>
       ${voteOverview}
-      ${this._isAdmin ? `
+    `;
+
+    const resultsContainer = this.shadowRoot.querySelector('.results-container');
+    if (resultsContainer) {
+      resultsContainer.innerHTML = resultsHtml;
+    } else {
+      console.error("Results container not found in shadow DOM");
+    }
+  }
+
+  _renderAdminControls() {
+    if (this._isAdmin) {
+      const actionsHtml = `
         <div class="actions">
           ${this._isLastItem
             ? '<button id="summaryBtn" class="primary">Show Summary</button>'
             : '<button id="nextBtn" class="primary">Next Item</button>'}
           <button id="repeatBtn" class="secondary">Repeat Voting</button>
         </div>
-      ` : ''}
-    `;
+      `;
+      this.shadowRoot.querySelector('.admin-controls').innerHTML = actionsHtml;
+    }
+  }
+
+  _setupEventListeners() {
     if (this._isAdmin) {
       this.shadowRoot.getElementById('nextBtn')?.addEventListener('click', () => this._nextItem());
       this.shadowRoot.getElementById('summaryBtn')?.addEventListener('click', () => this._showSummary());
