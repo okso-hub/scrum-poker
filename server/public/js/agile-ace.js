@@ -25,7 +25,7 @@ class AgileAce extends HTMLElement {
   }
 
   _initializeToastHost() {
-    // Toast-Host für Shadow DOM initialisieren
+    // Initialize toast for shadow DOM
     if (this.shadowRoot) {
       createToastHost(this.shadowRoot);
     }
@@ -37,13 +37,13 @@ class AgileAce extends HTMLElement {
   }
 
   _goBackToLanding() {
-    // WebSocket-Verbindung schließen, falls vorhanden
+    // Close WebSocket connection (if still existing)
     if (this._ws) {
       this._ws.close();
       this._ws = null;
     }
 
-    // Alle Zustandsvariablen zurücksetzen
+    // Reset all held variables
     this._roomId = null;
     this._name = null;
     this._role = null;
@@ -52,10 +52,12 @@ class AgileAce extends HTMLElement {
     this._allPlayers = null;
     this._currentLobby = null;
     this._currentVoting = null;
-    // Zur Startseite navigieren
+
+    // navigate to landing page
     this._renderLanding();
   }
 
+  // Renders page where the admin can add items
   _renderItems() {
     this.shadowRoot.innerHTML = "";
     const cmp = document.createElement("ace-items");
@@ -69,6 +71,7 @@ class AgileAce extends HTMLElement {
     this.shadowRoot.append(cmp);
   }
 
+  // Renders lobby page (showing participants & today's items that will be voted on)
   _renderLobby() {
     this.shadowRoot.innerHTML = "";
     const lobby = document.createElement("ace-lobby");
@@ -78,10 +81,11 @@ class AgileAce extends HTMLElement {
     this._currentLobby = lobby;
   }
 
+  // Renders each question page where users can vote
   _renderQuestion({ item, options }) {
     this.shadowRoot.innerHTML = "";
     const comp = document.createElement("ace-voting");
-    console.log("rendering question, admin?", this._role === "admin");
+
     comp.setAttribute("item", item);
     comp.setAttribute("options", JSON.stringify(options));
     comp.setAttribute("room-id", this._roomId);
@@ -90,10 +94,12 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
     comp.setAttribute("backend-url", this._backendUrl);
     this.shadowRoot.append(comp);
+
     this._currentVoting = comp;
     this._currentLobby = null;
   }
 
+  // Tells the backend to reveal the votes for everyone; WebSocket event will be sent after
   async _revealVotes() {
     await fetch(this._backendUrl + `/room/${this._roomId}/reveal`, { method: "POST" });
   }
@@ -101,17 +107,18 @@ class AgileAce extends HTMLElement {
   _showToast(message, type = 'info', duration = 5000) {
     console.log("Showing toast:", message, type, duration);
     
-    // Shadow DOM Toast verwenden
     if (this.shadowRoot) {
       showToastInShadow(this.shadowRoot, message, duration, type);
       console.log("Toast shown in shadow DOM");
     } else {
-      console.log(`Toast (shadowRoot nicht verfügbar): ${message} (${type})`);
+      console.log(`Toast (shadowRoot not available): ${message} (${type})`);
     }
   }
 
+  // Renders the results page after each voting
   _showResults(results, isLastItem = false) {
     this.shadowRoot.innerHTML = "";
+
     const comp = document.createElement("ace-results");
     comp.setAttribute("results", JSON.stringify(results));
     comp.setAttribute("is-admin", this._role === "admin");
@@ -119,10 +126,12 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("is-last-item", isLastItem);
     comp.setAttribute("backend-url", this._backendUrl);
     this.shadowRoot.append(comp);
+
     this._currentLobby = null;
     this._currentVoting = null;
   }
 
+  // Renders the summary page (end of the game)
   _renderSummary(summary) {
     this.shadowRoot.innerHTML = "";
     const comp = document.createElement("ace-summary");
@@ -131,17 +140,22 @@ class AgileAce extends HTMLElement {
     this.shadowRoot.append(comp);
   }
 
+  // "Create Game"-Button was pressed
   async _onCreate({ name }) {
     console.log("Creating room with name:", name);
+
     const res = await fetch(this._backendUrl + "/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     });
+
     if (!res.ok) {
+      // If unsuccesful, the body will contain the error in JSON format
       const err = await res.json();
       return alert(err.error || "Error on game creation");
     }
+
     const { roomId } = await res.json();
 
     this._name = name;
@@ -157,13 +171,17 @@ class AgileAce extends HTMLElement {
     console.log(`Admin for room ${roomId}`);
   }
 
+  // "Join Game"-Button was pressed
   async _onJoin({ name, gameId }) {
     console.log("Joining room with name:", name, "and gameId:", gameId);
+
     const res = await fetch(this._backendUrl + "/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, roomId: gameId }),
     });
+
+    // If unsuccesful, the body will contain the error in JSON format
     if (!res.ok) {
       const err = await res.json();
       return alert(err.error || "Error on join");
@@ -182,6 +200,7 @@ class AgileAce extends HTMLElement {
 
     this._connectWS();
 
+    // for newly joining users, we want to show the same page as other users are seeing, hence why we want to have them render that specific page
     switch (this._status) {
       case "setup":
         if (this._role === "admin") {
@@ -204,6 +223,7 @@ class AgileAce extends HTMLElement {
 
       case "completed":
         {
+          // fetch summary page details in order to display them
           const sumRes = await fetch(this._backendUrl + `/room/${this._roomId}/summary`, { method: "POST" });
           const { summary } = await sumRes.json();
           this._renderSummary(summary);
@@ -223,6 +243,8 @@ class AgileAce extends HTMLElement {
     this._ws = new WebSocket(url);
 
     this._ws.onopen = () => {
+
+      // send user info when connected to WebSocket
       this._ws.send(
         JSON.stringify({
           roomId: this._roomId,
@@ -230,12 +252,15 @@ class AgileAce extends HTMLElement {
           payload: { name: this._name },
         })
       );
-      this._showToast("Verbindung hergestellt", "success", 2000);
+      this._showToast("Connection established", "success", 2000);
     };
 
+    // Handle all specified WS messages (e.g. for showing toast messages or sending the user to the next page of the game)
     this._ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
-      console.log("received message", msg);
+
+      console.log("[WS] Received message: ", msg);
+
       if (msg.event === "cards-revealed") {
         this._showResults(msg.results, msg.isLastItem);
       } else if (msg.event === "reveal-item") {
@@ -250,12 +275,12 @@ class AgileAce extends HTMLElement {
         if(this._currentLobby !== null) {
           this._currentLobby._onUserJoined(msg.user);
         }
-        this._showToast(`${msg.user} ist dem Spiel beigetreten`, "success", 3000);
+        this._showToast(`${msg.user} joined the game`, "success", 3000);
       } else if (msg.event === "user-banned") {
         if(this._currentLobby !== null) {
           this._currentLobby._onUserBanned(msg.user);
         }
-        this._showToast(`${msg.user} wurde vom Spiel ausgeschlossen`, "warning", 4000);
+        this._showToast(`${msg.user} was banned from the game`, "warning", 4000);
       } else {
         const { from, payload } = msg;
         console.log(`WS ← ${from}:`, payload);
@@ -264,11 +289,11 @@ class AgileAce extends HTMLElement {
 
     this._ws.onclose = () => {
       console.log("WebSocket closed");
-      this._showToast("Verbindung getrennt", "warning", 3000);
+      this._showToast("Connection closed", "warning", 3000);
     };
     this._ws.onerror = (e) => {
       console.error("WebSocket errored", e);
-      this._showToast("Verbindungsfehler", "error", 4000);
+      this._showToast("A connection error occurred", "error", 4000);
     };
   }
 }

@@ -7,7 +7,7 @@ class AceResults extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Results-Styles laden */
+    /* Loads global styling & page-specific styling */
     const resultsStyles = await loadStylesheet('/css/results.css');
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(resultsStyles);
     
@@ -15,17 +15,20 @@ class AceResults extends HTMLElement {
     const votes = data.votes || {};
     const average = data.average || 0;
     const summary = data.summary || {};
+
     // Determine question/item text:
     // 1) explicit attribute, 2) summary.item, 3) first key in votes
     const voteEntries = Object.entries(votes);
     this._question = this.getAttribute('question')
       || summary.item
       || (voteEntries.length > 0 ? voteEntries[0][0] : '');
+
     this._average = average;
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._roomId = this.getAttribute('room-id') || '';
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
     this._backendUrl = this.getAttribute("backend-url");
+
     this._render();
   }
 
@@ -34,7 +37,6 @@ class AceResults extends HTMLElement {
     const votes = data.votes || {};
     const voteEntries = Object.entries(votes);
     
-    // Vote-Übersicht erstellen
     const voteOverview = voteEntries.length > 0 ? `
       <div class="vote-overview">
         <h3>Vote Details</h3>
@@ -73,6 +75,8 @@ class AceResults extends HTMLElement {
         </div>
       ` : ''}
     `;
+
+    // Add event listeners to admin-only buttons
     if (this._isAdmin) {
       this.shadowRoot.getElementById('nextBtn')?.addEventListener('click', () => this._nextItem());
       this.shadowRoot.getElementById('summaryBtn')?.addEventListener('click', () => this._showSummary());
@@ -82,6 +86,7 @@ class AceResults extends HTMLElement {
 
   async _nextItem() {
     try {
+      // Requests server to move on to next item (will trigger an event that sends all connected clients to the next item)
       await fetch(this._backendUrl + `/room/${this._roomId}/next`, { method: 'POST' });
     } catch (error) {
       console.error('Error starting next item:', error);
@@ -90,6 +95,7 @@ class AceResults extends HTMLElement {
 
   async _repeatVoting() {
     try {
+      // Requests server to repeat item (will trigger an event that sends all connected clients to the current item again)
       await fetch(this._backendUrl + `/room/${this._roomId}/repeat`, { method: 'POST' });
     } catch (error) {
       console.error('Error repeating voting:', error);
@@ -98,6 +104,7 @@ class AceResults extends HTMLElement {
 
   async _showSummary() {
     try {
+      // Requests server to move on to the summary page (will trigger an event that sends all connected clients to the summary page)
       await fetch(this._backendUrl + `/room/${this._roomId}/summary`, { method: 'POST' });
     } catch (error) {
       console.error('Error showing summary:', error);

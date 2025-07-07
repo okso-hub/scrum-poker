@@ -10,7 +10,7 @@ class AceLanding extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Landing-Styles laden */
+    /* Loads global styling & page-specific styling */
     const [landingStyles, landingTemplate] = await Promise.all([
       loadStylesheet('/css/landing.css'),
       loadTemplate('/html/ace-landing.html')
@@ -23,9 +23,11 @@ class AceLanding extends HTMLElement {
     this._prefillRoomId();
   }
 
+  // if URL query params contain a roomId, it will be pre-filled on the page, allowing for a quicker join
   _prefillRoomId() {
     const params = new URLSearchParams(window.location.search);
     const roomId = params.get('roomId') || params.get('gameId');
+
     if (roomId) {
       const gameEl = this.shadowRoot.getElementById("game-id-input");
       if (gameEl) gameEl.value = roomId;
@@ -56,6 +58,7 @@ class AceLanding extends HTMLElement {
         return;
       }
       
+      // event will render next page
       this.dispatchEvent(
         new CustomEvent("ace-create", {
           detail: { name },
@@ -78,6 +81,8 @@ class AceLanding extends HTMLElement {
         alert("Please enter the Game-ID.");
         return;
       }
+
+      // event will render next page
       this.dispatchEvent(
         new CustomEvent("ace-join", {
           detail: { name, gameId },

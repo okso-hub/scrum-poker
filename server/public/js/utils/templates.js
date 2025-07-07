@@ -5,11 +5,12 @@
 const templateCache = new Map();
 
 export async function loadTemplate(templatePath) {
-  // Cache prüfen
+  // Check cache for template first
   if (templateCache.has(templatePath)) {
     return templateCache.get(templatePath);
   }
   
+  // otherwise fetch template
   try {
     const response = await fetch(templatePath);
     if (!response.ok) {
@@ -18,17 +19,17 @@ export async function loadTemplate(templatePath) {
     
     const htmlText = await response.text();
     
-    // Template-Element erstellen für bessere Performance
+    // The following Template improves performance
     const template = document.createElement('template');
     template.innerHTML = htmlText;
     
-    // In Cache speichern
+    // Save to cache
     templateCache.set(templatePath, template);
     
     return template;
   } catch (error) {
     console.warn(`Could not load template ${templatePath}:`, error);
-    // Fallback: leeres Template
+    // Fallback: empty template
     const fallback = document.createElement('template');
     templateCache.set(templatePath, fallback);
     return fallback;
@@ -36,14 +37,14 @@ export async function loadTemplate(templatePath) {
 }
 
 export function interpolateTemplate(template, data = {}) {
-  // Template klonen für Manipulation
+  // Clone template in order to manipulate it to the needs of a page
   const clone = template.content.cloneNode(true);
   const container = document.createElement('div');
   container.appendChild(clone);
   
   let html = container.innerHTML;
   
-  // Einfache Template-Interpolation: ${variableName}
+  // Template-Interpolations should look like this: ${variableName}
   Object.entries(data).forEach(([key, value]) => {
     const regex = new RegExp(`\\$\\{${key}\\}`, 'g');
     html = html.replace(regex, String(value));
