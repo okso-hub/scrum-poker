@@ -23,6 +23,8 @@ export function initWebSocket(server: any, path = "/ws") {
   }, 30000);
 
   wss.on("connection", (ws: CustomWebSocket, req: IncomingMessage) => {
+    console.log('[WS] WSS connected')
+
     ws.isAlive = true;
 
     ws.on("pong", () => (ws.isAlive = true));
@@ -33,12 +35,12 @@ export function initWebSocket(server: any, path = "/ws") {
     });
 
     ws.on("message", (data) => {
+      console.log('[WS] received msg')
       handleMessage(data, ws);
     });
 
     ws.on("close", () => {
       console.log("Connection closed for", ws.playerName || "unknown client");
-      /* optional cleanup */
     });
   });
 
