@@ -52,7 +52,6 @@
             font-weight: 700;
             background-color: var(--color-selected);
             color: white;
-            border-color: var(--color-selected);
           }
         }
       }
