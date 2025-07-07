@@ -1,0 +1,55 @@
+<ace-navbar 
+  room-id="${roomId}" 
+  is-admin="${isAdmin}">
+</ace-navbar>
+
+<main class="results-view">
+  <header class="results-header">
+    <h1 class="question">${question}</h1>
+  </header>
+  
+  <section class="voting-results">
+    <article class="average-display" role="status" aria-live="polite">
+      <div class="average-box">Average: ${average}</div>
+    </article>
+    
+    <article class="vote-details" id="vote-overview-section">
+      <h3>Vote Details</h3>
+      <table class="vote-table">
+        <thead>
+          <tr>
+            <th scope="col">Player</th>
+            <th scope="col">Vote</th>
+          </tr>
+        </thead>
+        <tbody id="vote-table-body">
+          <!-- Vote entries will be populated dynamically -->
+        </tbody>
+      </table>
+    </article>
+  </section>
+  
+  <section class="actions" id="admin-actions">
+    <button 
+      id="next-button" 
+      type="button"
+      class="primary"
+      aria-label="Proceed to next item">
+      Next Item
+    </button>
+    <button 
+      id="summary-button" 
+      type="button"
+      class="primary"
+      aria-label="Show voting summary">
+      Show Summary
+    </button>
+    <button 
+      id="repeat-button" 
+      type="button"
+      class="secondary"
+      aria-label="Repeat voting for current item">
+      Repeat Voting
+    </button>
+  </section>
+</main>

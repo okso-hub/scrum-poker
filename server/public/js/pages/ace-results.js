@@ -1,4 +1,5 @@
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
+import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceResults extends HTMLElement {
   constructor() {
@@ -8,8 +9,13 @@ class AceResults extends HTMLElement {
 
   async connectedCallback() {
     /* Globale Styles + spezifische Results-Styles laden */
-    const resultsStyles = await loadStylesheet('/css/results.css');
+    const [resultsStyles, resultsTemplate] = await Promise.all([
+      loadStylesheet('/css/results.css'),
+      loadTemplate('/html/ace-results.html')
+    ]);
+    
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(resultsStyles);
+    this._template = resultsTemplate;
     
     const data = JSON.parse(this.getAttribute('results') || '{}');
     const votes = data.votes || {};
@@ -22,6 +28,7 @@ class AceResults extends HTMLElement {
       || summary.item
       || (voteEntries.length > 0 ? voteEntries[0][0] : '');
     this._average = average;
+    this._votes = votes;
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._roomId = this.getAttribute('room-id') || '';
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
@@ -30,54 +37,64 @@ class AceResults extends HTMLElement {
   }
 
   _render() {
-    const data = JSON.parse(this.getAttribute('results') || '{}');
-    const votes = data.votes || {};
-    const voteEntries = Object.entries(votes);
+    const html = interpolateTemplate(this._template, {
+      roomId: this._roomId,
+      isAdmin: this._isAdmin,
+      question: this._question,
+      average: this._average
+    });
     
-    // Vote-Übersicht erstellen
-    const voteOverview = voteEntries.length > 0 ? `
-      <div class="vote-overview">
-        <h3>Vote Details</h3>
-        <table class="vote-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Vote</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${voteEntries.map(([player, vote]) => `
-              <tr>
-                <td>${player}</td>
-                <td class="vote-value">${vote}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    ` : '';
+    this.shadowRoot.innerHTML = html;
 
-    this.shadowRoot.innerHTML = `
-      <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
-      <div class="question-box">
-        <h1 class="question">${this._question}</h1>
-      </div>
-      <div class="average-box">Average: ${this._average}</div>
-      ${voteOverview}
-      ${this._isAdmin ? `
-        <div class="actions">
-          ${this._isLastItem
-            ? '<button id="summaryBtn" class="primary">Show Summary</button>'
-            : '<button id="nextBtn" class="primary">Next Item</button>'}
-          <button id="repeatBtn" class="secondary">Repeat Voting</button>
-        </div>
-      ` : ''}
-    `;
-    if (this._isAdmin) {
-      this.shadowRoot.getElementById('nextBtn')?.addEventListener('click', () => this._nextItem());
-      this.shadowRoot.getElementById('summaryBtn')?.addEventListener('click', () => this._showSummary());
-      this.shadowRoot.getElementById('repeatBtn')?.addEventListener('click', () => this._repeatVoting());
+    this._populateVoteTable();
+    this._setupButtons();
+  }
+
+  _populateVoteTable() {
+    const voteTableBody = this.shadowRoot.getElementById('vote-table-body');
+    const voteOverviewSection = this.shadowRoot.getElementById('vote-overview-section');
+    
+    const voteEntries = Object.entries(this._votes);
+    
+    if (voteEntries.length === 0) {
+      voteOverviewSection.style.display = 'none';
+      return;
     }
+    
+    voteTableBody.innerHTML = voteEntries
+      .map(([player, vote]) => `
+        <tr>
+          <td>${player}</td>
+          <td class="vote-value">${vote}</td>
+        </tr>
+      `)
+      .join('');
+  }
+
+  _setupButtons() {
+    const adminActions = this.shadowRoot.getElementById('admin-actions');
+    const nextBtn = this.shadowRoot.getElementById('next-button');
+    const summaryBtn = this.shadowRoot.getElementById('summary-button');
+    const repeatBtn = this.shadowRoot.getElementById('repeat-button');
+
+    if (!this._isAdmin) {
+      adminActions.style.display = 'none';
+      return;
+    }
+
+    // Show appropriate primary button based on whether it's the last item
+    if (this._isLastItem) {
+      nextBtn.style.display = 'none';
+      summaryBtn.style.display = 'inline-block';
+    } else {
+      nextBtn.style.display = 'inline-block';
+      summaryBtn.style.display = 'none';
+    }
+
+    // Set up event listeners
+    nextBtn.addEventListener('click', () => this._nextItem());
+    summaryBtn.addEventListener('click', () => this._showSummary());
+    repeatBtn.addEventListener('click', () => this._repeatVoting());
   }
 
   async _nextItem() {
