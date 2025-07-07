@@ -13,7 +13,7 @@ class AceItems extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Items-Styles laden */
+    /* Loads global styling & page-specific styling */
     const [itemsStyles, itemsTemplate] = await Promise.all([
       loadStylesheet('/css/items.css'),
       loadTemplate('/html/ace-items.html')
@@ -25,10 +25,12 @@ class AceItems extends HTMLElement {
     this._roomId = Number(this.getAttribute("room-id")) || null;
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
+
     await this._loadItems();
     this._render();
   }
 
+  // Fetches backlog items added by admin
   async _loadItems() {
     try {
       const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`);
@@ -79,6 +81,7 @@ class AceItems extends HTMLElement {
     this._updateList();
   }
 
+  // adds new items to list
   _onAdd() {
     const text = this._inputEl.value.trim();
     
@@ -99,6 +102,7 @@ class AceItems extends HTMLElement {
     this._updateList();
   }
 
+  // refreshes the shown list
   _updateList() {
     this._listEl.innerHTML = this._items
       .map((item, idx) => `
@@ -129,7 +133,9 @@ class AceItems extends HTMLElement {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: this._items })
       });
+
       if (!res.ok) throw new Error("Error when saving items.");
+
       this.dispatchEvent(
         new CustomEvent("ace-items-submitted", {
           detail: { roomId: this._roomId, items: this._items },

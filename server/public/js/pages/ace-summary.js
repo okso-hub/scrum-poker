@@ -8,7 +8,7 @@ class AceSummary extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Summary-Styles laden */
+    /* Loads global styling & page-specific styling */
     const [summaryStyles, summaryTemplate] = await Promise.all([
       loadStylesheet('/css/summary.css'),
       loadTemplate('/html/ace-summary.html')
@@ -34,7 +34,7 @@ class AceSummary extends HTMLElement {
     
     this.shadowRoot.innerHTML = html;
 
-    // Items dynamisch einfügen
+    // Load items shown in summary dynamically
     const summaryList = this.shadowRoot.getElementById('summary-list');
     const itemsHtml = items.map(itemData => `
       <li class="list-item">
@@ -44,7 +44,7 @@ class AceSummary extends HTMLElement {
     `).join('');
     summaryList.innerHTML += itemsHtml;
 
-    // Event Handler for the button
+    // Handler for button used to return to landing page
     const backButton = this.shadowRoot.getElementById('back-button');
     backButton.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent('ace-back-to-landing', {
