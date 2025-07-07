@@ -1,6 +1,7 @@
 # Scrum Poker
 
 
+http://141.72.13.151:8100/
 
 ## Compose 
 services:
@@ -15,7 +16,7 @@ services:
       PORT: "3000"          
 
   watchtower:
-    image: containrrr/watchtower
+    image: containwrrr/watchtower
     container_name: watchtower
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
