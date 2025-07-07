@@ -24,12 +24,20 @@ export function initWebSocket(server: any, path = "/ws") {
 
   wss.on("connection", (ws: CustomWebSocket, req: IncomingMessage) => {
     ws.isAlive = true;
+
     ws.on("pong", () => (ws.isAlive = true));
+
+    // Add error handler for debugging
+    ws.on("error", (error) => {
+      console.log("WebSocket error:", error);
+    });
 
     ws.on("message", (data) => {
       handleMessage(data, ws);
     });
+
     ws.on("close", () => {
+      console.log("Connection closed for", ws.playerName || "unknown client");
       /* optional cleanup */
     });
   });
@@ -41,7 +49,6 @@ export function broadcast(roomId: string, payload: any) {
   console.log(`Broadcasting to room ${roomId}:`, payload);
   wss.clients.forEach((client: CustomWebSocket) => {
     if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
-      //console.log(`Sending to ${client.playerName || "unknown client"} in room ${roomId}`);
       client.send(JSON.stringify(payload));
     }
   });
@@ -70,7 +77,7 @@ function handleMessage(data: RawData, ws: CustomWebSocket) {
       }
     } catch {
       ws.roomId = msg;
-      //   console.log(`Assigned ws to room ${ws.roomId}`);
+      // console.log(`Assigned ws to room ${ws.roomId}`);
     }
     return;
   }
