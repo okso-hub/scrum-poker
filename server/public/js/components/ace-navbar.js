@@ -20,7 +20,7 @@ class AceNavbar extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(navbarStyles);
     this._template = navbarTemplate;
     
-    this._roomId = this.getAttribute("room-id");
+    this._roomId = Number(this.getAttribute("room-id"));
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
     this._render();
@@ -55,7 +55,7 @@ class AceNavbar extends HTMLElement {
     
     // Room ID in das Template einsetzen
     const roomIdElement = templateContent.querySelector('.room-id');
-    roomIdElement.textContent = this._roomId;
+    roomIdElement.textContent = this._roomId.toString();
     
     // Template in Shadow DOM einsetzen
     this.shadowRoot.innerHTML = '';
@@ -90,7 +90,7 @@ class AceNavbar extends HTMLElement {
 
     // Copy Game ID
     copyIdBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(this._roomId)
+      navigator.clipboard.writeText(this._roomId.toString())
         .then(() => {
           copyIdBtn.textContent = '✅';
           copyIdBtn.style.transform = 'scale(1.2)';

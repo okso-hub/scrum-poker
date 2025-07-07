@@ -8,7 +8,7 @@ class AceItems extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._items = [];
-    this._roomId = "";
+    this._roomId = null;
     this._isAdmin = false;
   }
 
@@ -22,7 +22,7 @@ class AceItems extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(itemsStyles);
     this._template = itemsTemplate;
     
-    this._roomId = this.getAttribute("room-id") || "";
+    this._roomId = Number(this.getAttribute("room-id")) || null;
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
     await this._loadItems();

@@ -22,7 +22,7 @@ class AceLobby extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(lobbyStyles);
     this._template = lobbyTemplate;
     
-    this._roomId = this.getAttribute('room-id');
+    this._roomId = Number(this.getAttribute('room-id'));
     this._backendUrl = this.getAttribute("backend-url")
     
     // ERST Admin-Status prüfen, DANN rendern

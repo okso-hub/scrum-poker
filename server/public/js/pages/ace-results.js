@@ -23,7 +23,7 @@ class AceResults extends HTMLElement {
       || (voteEntries.length > 0 ? voteEntries[0][0] : '');
     this._average = average;
     this._isAdmin = this.getAttribute('is-admin') === 'true';
-    this._roomId = this.getAttribute('room-id') || '';
+    this._roomId = Number(this.getAttribute('room-id')) || null;
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
     this._backendUrl = this.getAttribute("backend-url");
     this._render();

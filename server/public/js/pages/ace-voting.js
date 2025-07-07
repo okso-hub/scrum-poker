@@ -23,7 +23,7 @@ class AceVoting extends HTMLElement {
     
     this._item = this.getAttribute('item') || '';
     this._options = JSON.parse(this.getAttribute('options') || '[1,2,3,5,8,13,21]');
-    this._roomId = this.getAttribute('room-id') || '';
+    this._roomId = Number(this.getAttribute('room-id')) || null;
     this._playerName = this.getAttribute('player-name') || '';
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');

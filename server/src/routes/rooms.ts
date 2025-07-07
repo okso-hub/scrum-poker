@@ -3,6 +3,7 @@ import { roomService } from "../services/index.js";
 import { asyncHandler } from "../middleware/errorHandler.js";
 import { broadcast } from "../utils/ws.js";
 import { gameService } from "../services/index.js";
+import { validateRoomId } from "../utils/validation.js";
 
 const router = Router();
 
@@ -20,12 +21,13 @@ router.post(
 router.post(
   "/join",
   asyncHandler(async (req: Request, res: Response) => {
-    const { name, roomId }: { name?: string; roomId?: string } = req.body;
+    const { name, roomId }: { name?: string; roomId?: number } = req.body;
     const ip = req.ip;
 
-    const result = roomService.joinRoom(roomId!, name!, ip!);
+    const validatedRoomId = validateRoomId(roomId);
+    const result = roomService.joinRoom(validatedRoomId, name!, ip!);
 
-    broadcast(roomId!, {
+    broadcast(validatedRoomId, {
       event: "user-joined",
       rejoin: result.rejoin,
       user: name,
@@ -41,10 +43,7 @@ router.post(
 );
 
 router.get("/is-admin", (req: Request, res: Response) => {
-  const { roomId } = req.query;
-  if (!roomId || typeof roomId !== "string") {
-    return res.status(400).json({ error: "roomId is required" });
-  }
+  const roomId = validateRoomId(req.query.roomId);
 
   const isAdmin = roomService.isAdmin(roomId, req.ip!);
   console.log(`is-admin: ${req.ip} in ${roomId} = ${isAdmin}`);
@@ -54,7 +53,7 @@ router.get("/is-admin", (req: Request, res: Response) => {
 router.get(
   "/room/:roomId/items",
   asyncHandler(async (req: Request, res: Response) => {
-    const { roomId } = req.params;
+    const roomId = validateRoomId(req.params.roomId);
     const items = roomService.getItems(roomId);
     res.json({ items });
   })
@@ -63,7 +62,7 @@ router.get(
 router.get(
   "/room/:roomId/participants",
   asyncHandler(async (req: Request, res: Response) => {
-    const { roomId } = req.params;
+    const roomId = validateRoomId(req.params.roomId);
     const participants = roomService.getParticipants(roomId);
     res.json({ participants });
   })
@@ -72,7 +71,7 @@ router.get(
 router.get(
   "/room/:roomId/status",
   asyncHandler(async (req: Request, res: Response) => {
-    const { roomId } = req.params;
+    const roomId = validateRoomId(req.params.roomId);
     const status = roomService.getRoomStatus(roomId);
     res.json(status);
   })
@@ -81,7 +80,7 @@ router.get(
 router.post(
   "/room/:roomId/vote",
   asyncHandler(async (req: Request, res: Response) => {
-    const { roomId } = req.params;
+    const roomId = validateRoomId(req.params.roomId);
     const { vote, playerName }: { vote?: string; playerName?: string } = req.body;
 
     const gameEvent = gameService.vote(roomId, playerName!, vote!);
@@ -102,7 +101,7 @@ router.post(
 router.get(
   "/room/:roomId/vote-status",
   asyncHandler(async (req: Request, res: Response) => {
-    const { roomId } = req.params;
+    const roomId = validateRoomId(req.params.roomId);
     const voteStatus = gameService.getVoteStatus(roomId);
     res.json(voteStatus);
   })

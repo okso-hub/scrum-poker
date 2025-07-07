@@ -6,7 +6,7 @@ export class GameService {
 
   constructor(private readonly roomService: RoomService) {}
 
-  startVoting(roomId: string): GameEvent {
+  startVoting(roomId: number): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
     const first = room.items[0];
@@ -29,7 +29,7 @@ export class GameService {
     };
   }
 
-  vote(roomId: string, playerName: string, vote: string): GameEvent {
+  vote(roomId: number, playerName: string, vote: string): GameEvent {
     if (!playerName) {
       throw new BadRequestError("Player name is required");
     }
@@ -58,7 +58,7 @@ export class GameService {
     };
   }
 
-  revealVotes(roomId: string): GameEvent {
+  revealVotes(roomId: number): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
     const votes = room.votes || {};
@@ -88,7 +88,7 @@ export class GameService {
     };
   }
 
-  isVoteComplete(roomId: string): boolean {
+  isVoteComplete(roomId: number): boolean {
     const room = this.roomService.getRoom(roomId);
     const votes = room.votes || {};
     const players = this.roomService.getParticipants(roomId);
@@ -96,7 +96,7 @@ export class GameService {
     return Object.keys(votes).length === players.length;
   }
 
-  repeatVoting(roomId: string): GameEvent {
+  repeatVoting(roomId: number): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
     const current = room.items[0];
@@ -122,7 +122,7 @@ export class GameService {
     };
   }
 
-  nextItem(roomId: string): GameEvent {
+  nextItem(roomId: number): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
     if (room.items.length <= 1) {
@@ -147,7 +147,7 @@ export class GameService {
     };
   }
 
-  showSummary(roomId: string): GameEvent {
+  showSummary(roomId: number): GameEvent {
     const room = this.roomService.getRoom(roomId);
 
     const history = room.itemHistory;
@@ -167,7 +167,7 @@ export class GameService {
     };
   }
 
-  getVoteStatus(roomId: string) {
+  getVoteStatus(roomId: number) {
     const room = this.roomService.getRoom(roomId);
     const votes = room.votes || {};
     const players = this.roomService.getParticipants(roomId);

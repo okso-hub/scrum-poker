@@ -145,7 +145,7 @@ class AgileAce extends HTMLElement {
     const { roomId } = await res.json();
 
     this._name = name;
-    this._roomId = roomId;
+    this._roomId = Number(roomId);
     this._role = "admin";
 
     const params = new URLSearchParams(window.location.search);
@@ -162,7 +162,7 @@ class AgileAce extends HTMLElement {
     const res = await fetch(this._backendUrl + "/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, roomId: gameId }),
+      body: JSON.stringify({ name, roomId: Number(gameId) }),
     });
     if (!res.ok) {
       const err = await res.json();
@@ -171,7 +171,7 @@ class AgileAce extends HTMLElement {
 
     const { isAdmin, name: serverName, roomState } = await res.json();
     this._name = serverName;
-    this._roomId = gameId;
+    this._roomId = Number(gameId);
     this._role = isAdmin ? "admin" : "player";
     this._status = roomState.status;
     this._item = roomState.currentItem;
