@@ -10,7 +10,7 @@
   </header>
   
   <section class="input-section">
-    <div class="input-group horizontal">
+    <form class="input-group horizontal">
       <input 
         id="item-input" 
         type="text" 
@@ -18,29 +18,26 @@
         placeholder="New Item…"
         pattern="[^<>&]{0,100}"
         aria-label="New item to add">
-      </input>
       <button 
         id="add-item-button" 
-        type="button"
-        aria-label="Add item to list">
+        type="button">
         Add
       </button>
-    </div>
+    </form>
   </section>
   
   <section class="items-list">
-    <ul id="item-list" class="item-list" role="list">
+    <ul id="item-list" class="item-list">
       <!-- Items will be populated dynamically -->
     </ul>
   </section>
   
-  <section class="navigation">
+  <nav class="navigation">
     <button 
       id="next-button" 
       type="button"
-      class="horizontal"
-      aria-label="Proceed to next step">
+      class="horizontal">
       Next
     </button>
-  </section>
+  </nav>
 </main>

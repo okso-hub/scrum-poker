@@ -9,12 +9,12 @@
   </header>
   
   <section class="voting-results">
-    <article class="average-display" role="status" aria-live="polite">
-      <div class="average-box">Average: ${average}</div>
-    </article>
+    <section class="average-display" role="status" aria-live="polite">
+      <output class="average-box">Average: ${average}</output>
+    </section>
     
-    <article class="vote-details" id="vote-overview-section">
-      <h3>Vote Details</h3>
+    <section class="vote-details" id="vote-overview-section">
+      <h2>Vote Details</h2>
       <table class="players-table">
         <thead>
           <tr>
@@ -26,10 +26,10 @@
           <!-- Vote entries will be populated dynamically -->
         </tbody>
       </table>
-    </article>
+    </section>
   </section>
   
-  <section class="admin-actions" id="admin-actions">
+  <nav class="admin-actions" id="admin-actions">
     <button 
       id="next-button" 
       type="button"
@@ -48,5 +48,5 @@
       class="secondary">
       Repeat Voting
     </button>
-  </section>
+  </nav>
 </main>
