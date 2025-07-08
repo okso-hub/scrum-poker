@@ -37,6 +37,17 @@
     display: block;
   }
 
+  .navbar.minimal {
+    justify-content: center;
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar.minimal .branding {
+    position: static; /* Remove absolute positioning in minimal mode */
+    transform: none;   /* Remove transform in minimal mode */
+    margin: 0;
+  }
+
   .popup,
   .info-popup {
     position: fixed;

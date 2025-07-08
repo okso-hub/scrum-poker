@@ -24,7 +24,6 @@ class AceNavbar extends HTMLElement {
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
     this._render();
-    this._wireUp();
   }
 
   _loadQRScript() {
@@ -71,6 +70,9 @@ class AceNavbar extends HTMLElement {
       settingsBtn.setAttribute('aria-label', 'open settings');
       actionButtonsEl.appendChild(settingsBtn);
     }
+    
+    // Re-wire event listeners after DOM recreation
+    this._wireUp();
   }
 
   _wireUp() {
@@ -176,9 +178,64 @@ class AceNavbar extends HTMLElement {
     document.addEventListener('keydown', this._infoEsc);
   }
 
+  setMinimalMode(isMinimal) {
+    console.log('setMinimalMode called with:', isMinimal);
+    
+    const trySetMode = () => {
+      const navbar = this.shadowRoot.querySelector('.navbar');
+      const infoDiv = this.shadowRoot.querySelector('.info');
+      const actionButtonsDiv = this.shadowRoot.querySelector('.action-buttons');
+      
+      console.log('Found elements:', { navbar, infoDiv, actionButtonsDiv });
+      
+      if (navbar && infoDiv && actionButtonsDiv) {
+        if (isMinimal) {
+          console.log('Setting minimal mode: hiding elements and adding minimal class');
+          navbar.classList.add('minimal');
+          infoDiv.style.setProperty('display', 'none', 'important');
+          actionButtonsDiv.style.setProperty('display', 'none', 'important');
+        } else {
+          console.log('Setting full mode: showing elements and removing minimal class');
+          navbar.classList.remove('minimal');
+          infoDiv.style.display = '';
+          actionButtonsDiv.style.display = '';
+        }
+        return true;
+      }
+      return false;
+    };
+    
+    // Try immediately first
+    if (trySetMode()) return;
+    
+    // If elements not found, wait and observe
+    const observer = new MutationObserver(() => {
+      if (trySetMode()) {
+        observer.disconnect();
+      }
+    });
+    
+    observer.observe(this.shadowRoot, { 
+      childList: true, 
+      subtree: true 
+    });
+    
+    // Fallback timeout
+    setTimeout(() => {
+      observer.disconnect();
+      if (!trySetMode()) {
+        console.error('Could not find navbar elements for minimal mode after timeout');
+      }
+    }, 1000);
+  }
+
   disconnectedCallback() {
-    document.removeEventListener('keydown', this._escHandler);
-    document.removeEventListener('keydown', this._infoEsc);
+    if (this._escHandler) {
+      document.removeEventListener('keydown', this._escHandler);
+    }
+    if (this._infoEsc) {
+      document.removeEventListener('keydown', this._infoEsc);
+    }
   }
 
   async _onBan(name) {

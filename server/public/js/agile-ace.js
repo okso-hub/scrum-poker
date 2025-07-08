@@ -52,8 +52,22 @@ class AgileAce extends HTMLElement {
 
   _showNavbar() {
     if (this._navbar && this._roomId) {
+      // Set attributes BEFORE making visible
       this._navbar.setAttribute("room-id", this._roomId);
       this._navbar.setAttribute("is-admin", this._role === "admin");
+      
+      // Force the navbar to re-initialize with new attributes
+      if (this._navbar._roomId !== this._roomId) {
+        this._navbar._roomId = this._roomId;
+        this._navbar._isAdmin = this._role === "admin";
+        // Trigger re-render if the navbar has such a method
+        if (typeof this._navbar._render === 'function') {
+          this._navbar._render();
+        }
+      }
+      
+      // Exit minimal mode - show full navbar
+      this._navbar.setMinimalMode(false);
       this._navbarContainer.style.display = "block";
       
       // Clear existing branding to prevent duplicates
@@ -68,6 +82,23 @@ class AgileAce extends HTMLElement {
     }
   }
 
+  _showMinimalNavbar() {
+    if (this._navbar) {
+      this._navbarContainer.style.display = "block";
+      
+      // Copy branding to navbar
+      const brandingNodes = Array.from(this.querySelectorAll('[slot="branding"]'));
+      brandingNodes.forEach(node => {
+        this._navbar.appendChild(node.cloneNode(true));
+      });
+      
+      // Wait for navbar to be fully rendered before setting minimal mode
+      setTimeout(() => {
+        this._navbar.setMinimalMode(true);
+      }, 0);
+    }
+  }
+
   _hideNavbar() {
     if (this._navbarContainer) {
       this._navbarContainer.style.display = "none";
@@ -75,7 +106,7 @@ class AgileAce extends HTMLElement {
   }
 
   _renderLanding() {
-    this._hideNavbar();
+    this._showMinimalNavbar(); // Show minimal navbar instead of hiding
     this._contentContainer.innerHTML = "";
     this._contentContainer.append(document.createElement("ace-landing"));
   }
