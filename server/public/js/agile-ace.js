@@ -8,16 +8,115 @@ import "./components/ace-navbar.js";
 import { createToastHost, showToastInShadow, toast } from "./utils/shadow-toast.js";
 
 class AgileAce extends HTMLElement {
+  // Default configuration
+  static get DEFAULT_CONFIG() {
+    return {
+      width: "800px",
+      height: "600px",
+      toastDuration: 3000,
+      connectionTimeout: 5000
+    };
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this._bindEvents();
-    this._initializeToastHost();
     
-    // Set backend URL BEFORE initializing navbar
+    // Initialize component state
+    this._initializeState();
+    
+    // Set up component structure and styling
+    this._setupComponent();
+    
+    // Start the application
+    this._initialize();
+  }
+
+  _initializeState() {
+    // Component state
+    this._roomId = null;
+    this._name = null;
+    this._role = null;
+    this._status = null;
+    this._item = null;
+    this._allPlayers = null;
+    this._currentLobby = null;
+    this._currentVoting = null;
+    this._ws = null;
+    
+    // Configuration
     this._backendUrl = this.getAttribute("backend-url");
+  }
+
+  _setupComponent() {
+    this._applyHostStyles();
+    this._bindEvents();
+    this._createStructure();
+  }
+
+  _applyHostStyles() {
+    const { width, height } = AgileAce.DEFAULT_CONFIG;
     
-    this._initializeNavbar();
+    // Apply host element styles
+    Object.assign(this.style, {
+      width: this.getAttribute("width") || width,
+      height: this.getAttribute("height") || height,
+      display: "block",
+      overflow: "auto",
+      boxSizing: "border-box"
+    });
+  }
+
+  _createStructure() {
+    // Create main wrapper container
+    this._wrapperContainer = this._createWrapperContainer();
+    
+    // Create navbar container
+    this._navbarContainer = this._createNavbarContainer();
+    this._navbar = this._createNavbar();
+    this._navbarContainer.appendChild(this._navbar);
+    
+    // Create content container
+    this._contentContainer = this._createContentContainer();
+    
+    // Assemble structure
+    this._wrapperContainer.appendChild(this._navbarContainer);
+    this._wrapperContainer.appendChild(this._contentContainer);
+    this.shadowRoot.appendChild(this._wrapperContainer);
+    
+    // Initialize toast system
+    this._initializeToastHost();
+  }
+
+  _createWrapperContainer() {
+    const container = document.createElement("div");
+    Object.assign(container.style, {
+      width: "100%",
+      height: "100%",
+      overflow: "auto",
+      boxSizing: "border-box",
+      position: "relative"
+    });
+    return container;
+  }
+
+  _createNavbarContainer() {
+    const container = document.createElement("div");
+    container.style.display = "none"; // Hidden by default
+    return container;
+  }
+
+  _createNavbar() {
+    const navbar = document.createElement("ace-navbar");
+    navbar.setAttribute("backend-url", this._backendUrl);
+    return navbar;
+  }
+
+  _createContentContainer() {
+    return document.createElement("div");
+  }
+
+  _initialize() {
     this._renderLanding();
   }
 
@@ -29,13 +128,21 @@ class AgileAce extends HTMLElement {
   }
 
   _initializeToastHost() {
-    // Initialize toast for shadow DOM
-    if (this.shadowRoot) {
-      createToastHost(this.shadowRoot);
+    // Initialize toast for wrapper container instead of shadow root
+    if (this._wrapperContainer) {
+      createToastHost(this._wrapperContainer);
     }
   }
 
   _initializeNavbar() {
+        // Create main wrapper container - nimmt 100% der Host-Größe ein
+    this._wrapperContainer = document.createElement("div");
+    this._wrapperContainer.style.width = "100%";
+    this._wrapperContainer.style.height = "100%";
+    this._wrapperContainer.style.overflow = "auto"; // Ermöglicht Scrollen bei Überlauf
+    this._wrapperContainer.style.boxSizing = "border-box"; // Padding/Border inklusive
+    this._wrapperContainer.style.position = "relative"; // Für absolute Positionierung der Toasts
+    
     // Create navbar container
     this._navbarContainer = document.createElement("div");
     this._navbarContainer.style.display = "none"; // Hidden by default
@@ -45,11 +152,16 @@ class AgileAce extends HTMLElement {
     this._navbar.setAttribute("backend-url", this._backendUrl);
     
     this._navbarContainer.appendChild(this._navbar);
-    this.shadowRoot.appendChild(this._navbarContainer);
+    this._wrapperContainer.appendChild(this._navbarContainer);
     
     // Create main content container
     this._contentContainer = document.createElement("div");
-    this.shadowRoot.appendChild(this._contentContainer);
+    
+    this._wrapperContainer.appendChild(this._contentContainer);
+    this.shadowRoot.appendChild(this._wrapperContainer);
+    
+    // Initialize toast host AFTER wrapper is created and attached
+    this._initializeToastHost();
   }
 
   _showNavbar() {
@@ -209,11 +321,11 @@ class AgileAce extends HTMLElement {
   _showToast(message, type = 'info', duration = 5000) {
     console.log("Showing toast:", message, type, duration);
     
-    if (this.shadowRoot) {
-      showToastInShadow(this.shadowRoot, message, duration, type);
-      console.log("Toast shown in shadow DOM");
+    if (this._wrapperContainer) {
+      showToastInShadow(this._wrapperContainer, message, duration, type);
+      console.log("Toast shown in wrapper container");
     } else {
-      console.log(`Toast (shadowRoot not available): ${message} (${type})`);
+      console.log(`Toast (wrapper not available): ${message} (${type})`);
     }
   }
 

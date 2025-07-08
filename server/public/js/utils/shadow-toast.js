@@ -1,8 +1,8 @@
 const TOAST_CONTAINER_ID = 'shadow-toast-container';
 const DEFAULT_DURATION = 3000;
 
-export function createToastHost(shadowRoot) {
-  let container = shadowRoot.getElementById(TOAST_CONTAINER_ID);
+export function createToastHost(parent) {
+  let container = parent.querySelector ? parent.querySelector(`#${TOAST_CONTAINER_ID}`) : parent.getElementById(TOAST_CONTAINER_ID);
   
   if (!container) {
     container = document.createElement('div');
@@ -10,7 +10,7 @@ export function createToastHost(shadowRoot) {
     
     // apply static container styling to container element
     Object.assign(container.style, {
-      position: 'fixed',
+      position: 'absolute',
       bottom: '1rem',
       right: '1rem',
       zIndex: '9999',
@@ -20,13 +20,13 @@ export function createToastHost(shadowRoot) {
       pointerEvents: 'none',
       maxWidth: '20rem'
     });
-    shadowRoot.appendChild(container);
+    parent.appendChild(container);
   }
   return container;
 }
 
-export function showToastInShadow(shadowRoot, message, duration = DEFAULT_DURATION, type = 'info') {
-  const container = createToastHost(shadowRoot);
+export function showToastInShadow(parent, message, duration = DEFAULT_DURATION, type = 'info') {
+  const container = createToastHost(parent);
   
   const toast = document.createElement('div');
   toast.className = 'shadow-toast';
@@ -110,8 +110,8 @@ function removeToast(toast) {
 }
 
 export const toast = {
-  info: (shadowRoot, message, duration) => showToastInShadow(shadowRoot, message, duration, 'info'),
-  success: (shadowRoot, message, duration) => showToastInShadow(shadowRoot, message, duration, 'success'),
-  warning: (shadowRoot, message, duration) => showToastInShadow(shadowRoot, message, duration, 'warning'),
-  error: (shadowRoot, message, duration) => showToastInShadow(shadowRoot, message, duration, 'error')
+  info: (parent, message, duration) => showToastInShadow(parent, message, duration, 'info'),
+  success: (parent, message, duration) => showToastInShadow(parent, message, duration, 'success'),
+  warning: (parent, message, duration) => showToastInShadow(parent, message, duration, 'warning'),
+  error: (parent, message, duration) => showToastInShadow(parent, message, duration, 'error')
 }; 

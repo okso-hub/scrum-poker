@@ -1,5 +1,8 @@
 /* Items Page spezifische Styles */
 @layer pages {
+  /* Ensure relative positioning for modal overlay */
+  
+  
   .item-list {
     padding-left: 0;
     border: var(--border-width) solid var(--color-border);

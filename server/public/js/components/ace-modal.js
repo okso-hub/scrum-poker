@@ -34,7 +34,7 @@ class AceModal extends HTMLElement {
     `;
   }
 
-  async show(title, message, actions = []) {
+  async show(title, message, actions = [], parentElement = null) {
     await this._initialize();
 
     const titleEl = this.shadowRoot.querySelector('.modal-title');
@@ -58,7 +58,8 @@ class AceModal extends HTMLElement {
       });
     }
 
-    document.body.appendChild(this);
+    // Append to parent element if provided, otherwise fallback to document.body
+    (parentElement || document.body).appendChild(this);
     return this;
   }
 

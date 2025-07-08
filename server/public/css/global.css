@@ -147,8 +147,8 @@
 
     /* Admin-Hervorhebung für Participants und Players */
     .admin-user {
-        background: #fff3cd !important;
-        border-color: #ffc107 !important;
+        background: #fff3cd;
+        border-color: #ffc107;
         
         & .participant-name,
         & .player-name {
@@ -157,6 +157,6 @@
     }
     
     .regular-user {
-        background: var(--color-background) !important;
+        background: var(--color-background);
     }
 }
