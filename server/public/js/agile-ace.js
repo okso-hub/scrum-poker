@@ -381,12 +381,12 @@ class AgileAce extends HTMLElement {
         this._currentVoting._onVoteReceived(msg.votedPlayers);
         
       } else if (msg.event === "user-joined") {
-        if(this._currentLobby !== null) {
+        if(this._currentLobby !== undefined && this._currentLobby !== null) {
           this._currentLobby._onUserJoined(msg.user);
         }
         this._showToast(`${msg.user} joined the game`, "success", 3000);
       } else if (msg.event === "user-banned") {
-        if(this._currentLobby !== null) {
+        if(this._currentLobby !== undefined && this._currentLobby !== null) {
           this._currentLobby._onUserBanned(msg.user);
         }
         this._showToast(`${msg.user} was banned from the game`, "warning", 4000);
