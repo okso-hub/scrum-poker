@@ -39,14 +39,11 @@ export class RoomService {
   }
 
   generateUniqueRoomId(): number {
-    const chars = "0123456789";
-    const length = 6;
-
-    let roomId;
+    let roomId: number;
     do {
-      roomId = Number(Array.from({ length }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join(""));
+      // yields an integer from 100000 to 999999 (inclusive)
+      roomId = Math.floor(Math.random() * 900_000) + 100_000;
     } while (this.rooms.has(roomId));
-
     return roomId;
   }
 
