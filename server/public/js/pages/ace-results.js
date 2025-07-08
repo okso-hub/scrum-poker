@@ -22,12 +22,8 @@ class AceResults extends HTMLElement {
     const average = data.average || 0;
     const summary = data.summary || {};
     
-    // Determine question/item text:
-    // 1) explicit attribute, 2) summary.item, 3) first key in votes
-    const voteEntries = Object.entries(votes);
-    this._question = this.getAttribute('question')
-      || summary.item
-      || (voteEntries.length > 0 ? voteEntries[0][0] : '');
+    // Determine question/item text with fallback chain
+    this._question = this.getAttribute('question');
     this._average = average;
     this._votes = votes;
     this._isAdmin = this.getAttribute('is-admin') === 'true';
