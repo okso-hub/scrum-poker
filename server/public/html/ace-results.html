@@ -4,12 +4,50 @@
   backend-url="${backendUrl}">
 </ace-navbar>
 
-<main class="results-content">
-  <div class="results-container">
-    <!-- Results will be populated dynamically -->
-  </div>
+<main class="results-view">
+  <header class="results-header">
+    <h1 class="question">${question}</h1>
+  </header>
   
-  <div class="admin-controls">
-    <!-- Admin controls will be populated dynamically -->
-  </div>
+  <section class="voting-results">
+    <section class="average-display" role="status" aria-live="polite">
+      <output class="average-box">Average: ${average}</output>
+    </section>
+    
+    <section class="vote-details" id="vote-overview-section">
+      <h2>Vote Details</h2>
+      <table class="players-table">
+        <thead>
+          <tr>
+            <th scope="col">Player</th>
+            <th scope="col">Vote</th>
+          </tr>
+        </thead>
+        <tbody class="players-table-body" id="vote-table-body">
+          <!-- Vote entries will be populated dynamically -->
+        </tbody>
+      </table>
+    </section>
+  </section>
+  
+  <nav class="admin-actions" id="admin-actions">
+    <button 
+      id="next-button" 
+      type="button"
+      class="primary">
+      Next Item
+    </button>
+    <button 
+      id="summary-button" 
+      type="button"
+      class="primary">
+      Show Summary
+    </button>
+    <button 
+      id="repeat-button" 
+      type="button"
+      class="secondary">
+      Repeat Voting
+    </button>
+  </nav>
 </main>
