@@ -305,14 +305,20 @@ class AgileAce extends HTMLElement {
     this._status = gameState.status;
     this._item = gameState.currentItem;
 
+
+    console.log(`Joined game ${this._gameId} as ${this._role} with name "${this._name}"`);
+
     const params = new URLSearchParams(window.location.search);
     params.set("gameId", this._gameId);
     window.history.replaceState({}, "", `${location.pathname}?${params}`);
 
     this._connectWS();
 
+    console.log(`Rejoiningin status "${this._status}"`);
+
     // for newly joining users, we want to show the same page as other users are seeing, hence why we want to have them render that specific page
     switch (this._status) {
+
       case "setup":
         if (this._role === "admin") {
           this._renderItems();
