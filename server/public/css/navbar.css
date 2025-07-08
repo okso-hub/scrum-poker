@@ -1,18 +1,55 @@
 @layer base {
   :host {
     margin: 0;
-    padding: 0
+    padding: 0;
   }
 }
 
 @layer components {
   .navbar {
+    position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
 
-  .popup, .info-popup {
+  .navbar .branding {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;            
+    align-items: center;      
+    height: var(--navbar-height, 3.5rem); 
+    overflow: visible;        
+  }
+
+  .navbar .branding img {
+    max-height: 100%;        
+    width: auto;
+    object-fit: contain;      
+    display: block;
+  }
+
+  .navbar .branding > slot[name="branding"]::slotted(img) {
+    max-height: 100%;
+    width: auto;
+    object-fit: contain;
+    display: block;
+  }
+
+  .navbar.minimal {
+    justify-content: center;
+    padding: 0.5rem 1rem;
+  }
+
+  .navbar.minimal .branding {
+    position: static; /* Remove absolute positioning in minimal mode */
+    transform: none;   /* Remove transform in minimal mode */
+    margin: 0;
+  }
+
+  .popup,
+  .info-popup {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
@@ -20,11 +57,11 @@
     align-items: center;
     justify-content: center;
     z-index: 200;
-    
+
     &.hidden {
       display: none;
     }
-    
+
     & .popup-content {
       background: #fff;
       border-radius: var(--radius-md);
@@ -36,7 +73,7 @@
       overflow-y: auto;
       border: var(--border-width) solid var(--color-border);
     }
-    
+
     & .close-btn {
       position: absolute;
       inset-block-start: var(--spacing-md);
@@ -59,11 +96,11 @@
     display: flex;
     flex-direction: column;
     border-inline-start: var(--border-width) solid var(--color-border);
-    
+
     &.open {
       transform: translateX(0);
     }
-    
+
     & .sidebar-header {
       display: flex;
       justify-content: space-between;
@@ -74,18 +111,18 @@
       font-size: var(--font-size-subheading);
       font-weight: 600;
     }
-    
+
     & .settings-list {
       padding: var(--spacing-lg);
       overflow-y: auto;
       flex: 1;
-      
+
       & ul {
         list-style: none;
         padding: 0;
         margin: 0;
       }
-      
+
       & li {
         display: flex;
         justify-content: space-between;
@@ -100,4 +137,11 @@
       }
     }
   }
-} 
+
+  .branding img {
+    max-width: 200px; /* Adjust as needed */
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+}

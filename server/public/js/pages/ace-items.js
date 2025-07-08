@@ -10,6 +10,7 @@ class AceItems extends HTMLElement {
     this._items = [];
     this._roomId = null;
     this._isAdmin = false;
+    this._hideNavbar = false;
   }
 
   async connectedCallback() {
@@ -25,7 +26,7 @@ class AceItems extends HTMLElement {
     this._roomId = Number(this.getAttribute("room-id")) || null;
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
-
+    this._hideNavbar = this.getAttribute("hide-navbar") === "true";
     await this._loadItems();
     this._render();
   }
@@ -51,6 +52,14 @@ class AceItems extends HTMLElement {
     });
     
     this.shadowRoot.innerHTML = html;
+
+    // Remove navbar if hide-navbar is true
+    if (this._hideNavbar) {
+      const navbar = this.shadowRoot.querySelector('ace-navbar');
+      if (navbar) {
+        navbar.remove();
+      }
+    }
 
     this._inputEl = this.shadowRoot.getElementById("item-input");
     this._addBtn = this.shadowRoot.getElementById("add-item-button");

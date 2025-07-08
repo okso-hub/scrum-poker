@@ -1,3 +1,4 @@
+import "../components/ace-navbar.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
@@ -8,7 +9,6 @@ class AceSummary extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Loads global styling & page-specific styling */
     const [summaryStyles, summaryTemplate] = await Promise.all([
       loadStylesheet('/css/summary.css'),
       loadTemplate('/html/ace-summary.html')
@@ -18,10 +18,32 @@ class AceSummary extends HTMLElement {
     this._template = summaryTemplate;
     
     this._summary = JSON.parse(this.getAttribute('summary') || '{}');
+    this._backendUrl = this.getAttribute('backend-url');
+    this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
+    
     this._render();
+    this._setupEventListeners();
   }
 
   _render() {
+    const html = interpolateTemplate(this._template, {
+      backendUrl: this._backendUrl
+    });
+    
+    this.shadowRoot.innerHTML = html;
+    
+    // Remove navbar if hide-navbar is true
+    if (this._hideNavbar) {
+      const navbar = this.shadowRoot.querySelector('ace-navbar');
+      if (navbar) {
+        navbar.remove();
+      }
+    }
+    
+    this._renderSummaryContent();
+  }
+
+  _renderSummaryContent() {
     const { items = [], totalAverage = 0, totalTasks = 0 } = this._summary;
     // calculate sum of all averages
     const sumOfAverages = items.reduce((acc, item) => acc + Number(item.average), 0);
@@ -32,7 +54,7 @@ class AceSummary extends HTMLElement {
       sumOfAverages
     });
     
-    this.shadowRoot.innerHTML = html;
+    this.shadowRoot.innerHTML += html;
 
     // Load items shown in summary dynamically
     const summaryList = this.shadowRoot.getElementById('summary-list');
@@ -43,8 +65,10 @@ class AceSummary extends HTMLElement {
       </li>
     `).join('');
     summaryList.innerHTML += itemsHtml;
+  }
 
-    // Handler for button used to return to landing page
+  _setupEventListeners() {
+    // Event Handler for the button
     const backButton = this.shadowRoot.getElementById('back-button');
     backButton.addEventListener('click', () => {
       this.dispatchEvent(new CustomEvent('ace-back-to-landing', {

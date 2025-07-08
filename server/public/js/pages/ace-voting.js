@@ -1,5 +1,6 @@
 // public/js/components/ace-voting.js
 
+import "../components/ace-navbar.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
@@ -9,6 +10,8 @@ class AceVoting extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     this._pollInterval = null;
     this._revealed = false;
+    this._hasVoted = false;
+    this._votedPlayers = [];
   }
 
   async connectedCallback() {
@@ -28,8 +31,9 @@ class AceVoting extends HTMLElement {
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');
     this._backendUrl = this.getAttribute("backend-url");
-
+    this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
     this._render();
+    this._setupEventListeners();
   }
 
   _render() {
@@ -41,6 +45,14 @@ class AceVoting extends HTMLElement {
     });
     
     this.shadowRoot.innerHTML = html;
+
+    // Remove navbar if hide-navbar is true
+    if (this._hideNavbar) {
+      const navbar = this.shadowRoot.querySelector('ace-navbar');
+      if (navbar) {
+        navbar.remove();
+      }
+    }
 
     this._initializeVoteStatus();
     setTimeout(() => this._showButtons(), 2000);
@@ -167,6 +179,10 @@ class AceVoting extends HTMLElement {
     votedPlayers.forEach(playerName => {
       this._updateStatus(playerName, 'Voted');
     });
+  }
+
+  _setupEventListeners() {
+    // Placeholder for future event listeners
   }
 }
 
