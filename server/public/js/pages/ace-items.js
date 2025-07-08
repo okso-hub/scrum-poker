@@ -1,4 +1,5 @@
 import "../components/ace-navbar.js";
+import "../components/ace-modal.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 import { setupInputValidation, validateAndAlert, hasDangerousCharacters } from '../utils/validation.js';
@@ -66,6 +67,11 @@ class AceItems extends HTMLElement {
     this._listEl = this.shadowRoot.getElementById("item-list");
     this._nextBtn = this.shadowRoot.getElementById("next-button");
 
+    // Set up import/export button event listeners
+    this.shadowRoot.getElementById('export-button').addEventListener('click', () => this._exportItems());
+    this.shadowRoot.getElementById('import-button').addEventListener('click', () => this._triggerImport());
+    this.shadowRoot.getElementById('file-input').addEventListener('change', (e) => this._importItems(e));
+
     // Set up real-time validation using utility function
     setupInputValidation(this._inputEl, this._addBtn, {
       allowEmpty: false,
@@ -88,6 +94,132 @@ class AceItems extends HTMLElement {
     this._nextBtn.addEventListener("click", () => this._onNext());
 
     this._updateList();
+  }
+
+  _exportItems() {
+    if (this._items.length === 0) {
+      alert("No items to export.");
+      return;
+    }
+
+    const exportData = {
+      items: this._items,
+      exportDate: new Date().toISOString(),
+      roomId: this._roomId
+    };
+
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `scrum-items-${this._roomId || 'export'}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+
+  _triggerImport() {
+    const fileInput = this.shadowRoot.getElementById('file-input');
+    fileInput.value = ''; // Reset value to allow re-importing same file
+    fileInput.click();
+  }
+
+  async _importItems(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data.items || !Array.isArray(data.items)) {
+        throw new Error("Invalid file format. Expected JSON with 'items' array.");
+      }
+
+      // Validate items
+      const validItems = data.items.filter(item => {
+        if (typeof item !== 'string' || item.trim() === '') return false;
+        if (hasDangerousCharacters(item)) return false;
+        return true;
+      });
+
+      if (validItems.length === 0) {
+        alert("No valid items found in the imported file.");
+        return;
+      }
+
+      // Show custom modal for better UX
+      await this._showImportModal(validItems);
+
+    } catch (error) {
+      alert(`Error importing file: ${error.message}`);
+      console.error("Import error:", error);
+    } finally {
+      // Reset file input
+      event.target.value = '';
+    }
+  }
+
+  async _showImportModal(validItems) {
+    const itemCount = validItems.length;
+    const currentCount = this._items.length;
+    
+    const modal = document.createElement('ace-modal');
+    await modal.show(
+      'Import Items',
+      `Found <strong>${itemCount}</strong> valid items in the file.<br>
+       You currently have <strong>${currentCount}</strong> items.<br><br>
+       How would you like to import these items?`,
+      [
+        {
+          text: 'Replace All',
+          type: 'danger',
+          handler: () => {
+            this._items = validItems;
+            this._updateList();
+            this._showSuccessMessage(itemCount, 'replaced');
+          }
+        },
+        {
+          text: 'Add to Existing',
+          type: 'primary',
+          handler: () => {
+            const initialCount = this._items.length;
+            validItems.forEach(item => {
+              if (!this._items.some(existing => existing.toLowerCase() === item.toLowerCase())) {
+                this._items.push(item);
+              }
+            });
+            const addedCount = this._items.length - initialCount;
+            this._updateList();
+            this._showSuccessMessage(addedCount, 'added');
+          }
+        },
+        {
+          text: 'Cancel',
+          type: 'secondary',
+          handler: () => {} // Just closes modal
+        }
+      ]
+    );
+  }
+
+  async _showSuccessMessage(count, action) {
+    const modal = document.createElement('ace-modal');
+    await modal.show(
+      'Import Successful',
+      `Successfully ${action} <strong>${count}</strong> items.`,
+      [
+        {
+          text: 'OK',
+          type: 'primary',
+          handler: () => {}
+        }
+      ]
+    );
   }
 
   // adds new items to list
