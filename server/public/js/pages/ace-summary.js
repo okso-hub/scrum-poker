@@ -26,8 +26,14 @@ class AceSummary extends HTMLElement {
   }
 
   _render() {
+    const { items = [], totalAverage = 0, totalTasks = 0 } = this._summary;
+    const sumOfAverages = items.reduce((acc, item) => acc + Number(item.average), 0);
+    
     const html = interpolateTemplate(this._template, {
-      backendUrl: this._backendUrl
+      backendUrl: this._backendUrl,
+      totalTasks,
+      totalAverage,
+      sumOfAverages
     });
     
     this.shadowRoot.innerHTML = html;
@@ -44,27 +50,24 @@ class AceSummary extends HTMLElement {
   }
 
   _renderSummaryContent() {
-    const { items = [], totalAverage = 0, totalTasks = 0 } = this._summary;
-    // calculate sum of all averages
-    const sumOfAverages = items.reduce((acc, item) => acc + Number(item.average), 0);
+    const { items = [] } = this._summary;
 
-    const html = interpolateTemplate(this._template, {
-      totalTasks,
-      totalAverage,
-      sumOfAverages
-    });
-    
-    this.shadowRoot.innerHTML += html;
-
-    // Load items shown in summary dynamically
+    // Load items shown in summary dynamically (only the list items, not the totals)
     const summaryList = this.shadowRoot.getElementById('summary-list');
-    const itemsHtml = items.map(itemData => `
-      <li class="list-item">
-        <span>${itemData.item}</span>
-        <span>${itemData.average}</span>
-      </li>
-    `).join('');
-    summaryList.innerHTML += itemsHtml;
+    if (summaryList) {
+      const itemsHtml = items.map(itemData => `
+        <li class="list-item">
+          <span>${itemData.item}</span>
+          <span>${itemData.average}</span>
+        </li>
+      `).join('');
+      
+      // Preserve the header and add items after it
+      summaryList.innerHTML = `
+        <li class="header"><span>Item</span><span>Average Points</span></li>
+        ${itemsHtml}
+      `;
+    }
   }
 
   _setupEventListeners() {

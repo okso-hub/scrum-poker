@@ -52,6 +52,8 @@ class AceResults extends HTMLElement {
   _renderResults() {
     const votes = this._results.votes || {};
     const voteEntries = Object.entries(votes);
+    const itemName = this._results.item || 'Unknown Item';
+    const average = this._results.average || 0;
     
     console.log("Rendering results with data:", this._results);
     console.log("Vote entries:", voteEntries);
@@ -78,20 +80,30 @@ class AceResults extends HTMLElement {
       </div>
     ` : '';
 
-    this.shadowRoot.innerHTML = `
-      <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}" backend-url="${this._backendUrl}"></ace-navbar>
-      <div class="question-box">
-        <h1 class="question">${itemName}</h1>
-      </div>
-      <div class="average-box">Average: ${average}</div>
-      ${voteOverview}
-    `;
-
-    const resultsContainer = this.shadowRoot.querySelector('.results-container');
-    if (resultsContainer) {
-      resultsContainer.innerHTML = resultsHtml;
-    } else {
-      console.error("Results container not found in shadow DOM");
+    // Update only the results content, not the entire shadow DOM
+    const questionBox = this.shadowRoot.querySelector('.question-box .question');
+    const averageBox = this.shadowRoot.querySelector('.average-box');
+    const resultsContainer = this.shadowRoot.querySelector('.results-container') || 
+                            this.shadowRoot.querySelector('main') ||
+                            this.shadowRoot;
+    
+    if (questionBox) {
+      questionBox.textContent = itemName;
+    }
+    
+    if (averageBox) {
+      averageBox.textContent = `Average: ${average}`;
+    }
+    
+    // Add vote overview if there's a results container
+    if (resultsContainer && voteOverview) {
+      // Remove existing vote overview first
+      const existingOverview = resultsContainer.querySelector('.vote-overview');
+      if (existingOverview) {
+        existingOverview.remove();
+      }
+      // Add new vote overview
+      resultsContainer.insertAdjacentHTML('beforeend', voteOverview);
     }
   }
 
