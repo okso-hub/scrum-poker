@@ -23,6 +23,7 @@ class AceNavbar extends HTMLElement {
     this._roomId = Number(this.getAttribute("room-id"));
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
+    
     this._render();
   }
 

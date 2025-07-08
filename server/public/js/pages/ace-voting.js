@@ -40,6 +40,7 @@ class AceVoting extends HTMLElement {
     const html = interpolateTemplate(this._template, {
       roomId: this._roomId,
       isAdmin: this._isAdmin,
+      backendUrl: this._backendUrl,
       item: this._item
     });
     
