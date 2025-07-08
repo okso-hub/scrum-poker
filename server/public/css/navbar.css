@@ -1,51 +1,53 @@
-@layer base {
-  :host {
-    margin: 0;
-    padding: 0;
-  }
-}
-
 @layer components {
   .navbar {
     position: relative;
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
 
-  .navbar .branding {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;            
-    align-items: center;      
-    height: var(--navbar-height, 3.5rem); 
-    overflow: visible;        
-  }
+    & .info {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+    
+    & .branding {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;            
+      align-items: center;      
+      height: var(--navbar-height, 3.5rem); 
+      overflow: visible;
 
-  .navbar .branding img {
-    max-height: 100%;        
-    width: auto;
-    object-fit: contain;      
-    display: block;
-  }
+      & img {
+        max-height: 100%;        
+        width: auto;
+        object-fit: contain;      
+        display: block;
+        max-width: 200px; /* Adjust as needed */
+        height: auto;
+        margin: 0 auto;
+      }
 
-  .navbar .branding > slot[name="branding"]::slotted(img) {
-    max-height: 100%;
-    width: auto;
-    object-fit: contain;
-    display: block;
-  }
+      & > slot[name="branding"]::slotted(img) {
+        max-height: 100%;
+        width: auto;
+        object-fit: contain;
+        display: block;
+      }
+    }
 
-  .navbar.minimal {
-    justify-content: center;
-    padding: 0.5rem 1rem;
-  }
+    &.minimal {
+      justify-content: center;
+      padding: 0.5rem 1rem;
 
-  .navbar.minimal .branding {
-    position: static; /* Remove absolute positioning in minimal mode */
-    transform: none;   /* Remove transform in minimal mode */
-    margin: 0;
+      & .branding {
+        position: static; /* Remove absolute positioning in minimal mode */
+        transform: none;   /* Remove transform in minimal mode */
+        margin: 0;
+      }
+    }
   }
 
   .popup,
@@ -136,10 +138,5 @@
     }
   }
 
-  .branding img {
-    max-width: 200px; /* Adjust as needed */
-    height: auto;
-    display: block;
-    margin: 0 auto;
-  }
+
 }

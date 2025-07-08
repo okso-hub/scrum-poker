@@ -3,14 +3,13 @@
   :host {
     display: flex;
     flex-direction: column;
-    min-block-size: 100vh;
     box-sizing: border-box;
   }
 
   .participants {
     text-align: center;
     flex-shrink: 0;
-    
+    margin-block-end: var(--spacing-lg);
     & h3 {
       margin-block-end: var(--spacing-md);
       font-size: var(--font-size-heading);
@@ -26,7 +25,6 @@
     }
     
     & li {
-      margin-bottom: var(--spacing-lg);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -62,7 +60,7 @@
 
   .start-button {
     display: block;
-    margin: var(--spacing-lg) auto;
+    margin: var(--spacing-lg) auto 0;
     padding: 0.75rem 1.5rem;
     font-size: var(--font-size-body);
     cursor: pointer;
@@ -72,15 +70,10 @@
     border-radius: var(--radius-md);
     transition: var(--transition);
     flex-shrink: 0;
-    
-    &:hover {
-      background-color: #1e7e34;
-      border-color: #1e7e34;
-    }
   }
 
   .items {
-    margin-block-start: auto;
+    margin-block-start: var(--spacing-lg);
     overflow-y: auto;
     max-block-size: 40vh;
     flex-shrink: 0;
@@ -89,6 +82,13 @@
       text-align: center;
       margin-block-end: var(--spacing-md);
       font-size: var(--font-size-heading);
+    }
+  }
+
+  table {
+    & th:last-child,
+    & td:last-child {
+      text-align: left;
     }
   }
 } 
