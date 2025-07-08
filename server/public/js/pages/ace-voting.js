@@ -1,6 +1,7 @@
 // public/js/components/ace-voting.js
 
 import "../components/ace-navbar.js";
+import { createToastHelper } from "../utils/shadow-toast.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
@@ -100,11 +101,12 @@ class AceVoting extends HTMLElement {
         this._currentVote = value;
         this._updateButtonSelection(value);
       } else {
-        throw new Error('Failed to send vote');
+        const err = await response.json();
+        createToastHelper(this, err.message, "error", 3000);
       }
-    } catch (error) {
-      console.error('Error sending vote:', error);
-      alert('Error sending vote');
+    } catch (err) {
+      console.error('Error sending vote:', err);
+      createToastHelper(this, err.message, "error", 3000);
     }
   }
 
@@ -114,8 +116,8 @@ class AceVoting extends HTMLElement {
       this._revealed = true;
 
       if(!resReveal.ok) {
-        const jsonRes = await resReveal.json();
-        alert(jsonRes.error);
+        const err = await resReveal.json();
+        createToastHelper(this, err.message, "error", 3000);
         console.error('Failed to reveal votes:', resReveal);
         return;
       }
@@ -125,9 +127,13 @@ class AceVoting extends HTMLElement {
       if (res.ok) {
         const data = await res.json();
         this._updateVoteStatus(data);
+      } else {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
       }
-    } catch (error) {
-      console.error('Error revealing votes:', error);
+    } catch (err) {
+      console.error('Error revealing votes:', err);
+      createToastHelper(this, err.message, "error", 3000);
     }
   }
 

@@ -1,5 +1,6 @@
 // public/js/components/ace-lobby.js
 import "../components/ace-navbar.js";
+import { createToastHelper } from "../utils/shadow-toast.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
@@ -86,14 +87,18 @@ class AceLobby extends HTMLElement {
     try {
       const res = await fetch(this._backendUrl + `/room/${this._gameId}/participants`);
 
-      // If unsuccesful, the body will contain the error in JSON format
-      if (!res.ok) throw await res.json();
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
 
       const { participants } = await res.json();
       this._participants = participants; // Direkt verwenden, da Backend neue Struktur sendet
       this._updateList();
-    } catch (e) {
-      console.error('Failed to load participants:', e);
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
+      console.error('Failed to load participants:', err);
     }
   }
 
@@ -101,14 +106,18 @@ class AceLobby extends HTMLElement {
     try {
       const res = await fetch(this._backendUrl + `/room/${this._gameId}/items`);
 
-      // If unsuccesful, the body will contain the error in JSON format
-      if (!res.ok) throw await res.json();
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
 
       const { items } = await res.json();
       this._items = items;
       this._updateItems();
-    } catch (e) {
-      console.error('Failed to load items:', e);
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
+      console.error('Failed to load items:', err);
     }
   }
 
@@ -116,16 +125,20 @@ class AceLobby extends HTMLElement {
     try {
       const res = await fetch(this._backendUrl + `/is-admin?roomId=${this._gameId}`);
 
-      // If unsuccesful, the body will contain the error in JSON format
-      if (!res.ok) throw await res.json();
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
 
       const { isAdmin } = await res.json();
       this._isAdmin = isAdmin;
 
       // update list button rendering if participants already loaded
       this._updateList();
-    } catch (e) {
-      console.error('Admin check failed:', e);
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
+      console.error('Admin check failed:', err);
     }
   }
 
@@ -171,15 +184,15 @@ class AceLobby extends HTMLElement {
         body: JSON.stringify({ name })
       });
       if (!res.ok) {
-        // If unsuccesful, the body will contain the error in JSON format
         const err = await res.json();
-        throw new Error(err.error || 'Ban failed');
+        createToastHelper(this, err.message, "error", 3000);
+        return;
       }
 
       // Update participants list
       await this._fetchParticipants();
-    } catch (e) {
-      alert(e.message);
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
       console.error('Ban error:', e);
     }
   }
@@ -201,12 +214,15 @@ class AceLobby extends HTMLElement {
     try {
       const res = await fetch(`/room/${this._gameId}/start`, { method: 'POST' });
 
-      // If unsuccesful, the body will contain the error in JSON format
-      if (!res.ok) throw await res.json();
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
 
       console.log(`Start request successful for game ${this._gameId}`);
-    } catch (e) {
-      alert(e.error || e.message || 'Error starting game');
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
     }
   }
 }

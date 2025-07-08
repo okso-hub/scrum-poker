@@ -1,5 +1,6 @@
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
+import { createToastHelper } from "../utils/shadow-toast.js";
 
 class AceNavbar extends HTMLElement {
   static get observedAttributes() {
@@ -58,11 +59,19 @@ class AceNavbar extends HTMLElement {
     try {
       const url = `${backendUrl}/room/${gameId}/participants`;
       const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
+
       const { participants } = await res.json();
       this._participants = participants;
-    } catch (e) {
-      console.error('Could not load participants:', e);
+    } catch (err) {
+      console.error('Could not load participants:', err);
+      createToastHelper(this, err.message, "error", 3000);
+
       this._participants = [];
     }
   }
@@ -289,8 +298,10 @@ class AceNavbar extends HTMLElement {
         body: JSON.stringify({ name })
       });
 
-      // If unsuccesful, the body will contain the error in JSON format
-      if (!res.ok) throw await res.json();
+      if (!res.ok) {
+        createToastHelper(this, res.message, "error", 3000);
+        return;
+      }
 
       await this._fetchParticipants();
       const listEl = this.shadowRoot.getElementById("participantsList");
@@ -308,7 +319,7 @@ class AceNavbar extends HTMLElement {
         btn.addEventListener('click', e => this._banUser(e.currentTarget.dataset.name));
       });
     } catch (err) {
-      alert(err.error || err.message || 'Ban failed');
+      createToastHelper(this, err.message, "error", 3000);
     }
   }
 }

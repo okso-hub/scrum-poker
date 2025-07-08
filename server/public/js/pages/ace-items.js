@@ -3,6 +3,7 @@ import "../components/ace-modal.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 import { setupInputValidation, validateAndAlert, hasDangerousCharacters } from '../utils/validation.js';
+import { createToastHelper } from "../utils/shadow-toast.js";
 
 class AceItems extends HTMLElement {
   constructor() {
@@ -44,9 +45,13 @@ class AceItems extends HTMLElement {
       if (res.ok) {
         const { items } = await res.json();
         this._items = items;
+      } else {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
       }
-    } catch (e) {
-      console.error("Error loading items:", e);
+    } catch (err) {
+      console.error("Error loading items:", err);
+      createToastHelper(this, err.message, "error", 3000);
     }
   }
 
@@ -122,7 +127,7 @@ class AceItems extends HTMLElement {
 
   _exportItems() {
     if (this._items.length === 0) {
-      alert("No items to export.");
+      createToastHelper(this, "No items to export.", "error", 3000);
       return;
     }
 
@@ -171,7 +176,7 @@ class AceItems extends HTMLElement {
       });
 
       if (validItems.length === 0) {
-        alert("No valid items found in the imported file.");
+        createToastHelper(this, "No valid items found in the imported file.", 3000);
         return;
       }
 
@@ -179,7 +184,7 @@ class AceItems extends HTMLElement {
       await this._showImportModal(validItems);
 
     } catch (error) {
-      alert(`Error importing file: ${error.message}`);
+      createToastHelper(this, `Error importing file: ${error.message}`, "error", 3000);
       console.error("Import error:", error);
     } finally {
       // Reset file input
@@ -251,12 +256,12 @@ class AceItems extends HTMLElement {
     const text = this._inputEl.value.trim();
     
     // Validate text using utility function
-    if (!validateAndAlert(text, "Item")) {
+    if (!validateAndAlert(this, text, "Item")) {
       return;
     }
     
     if (this._items.some(item => item.toLowerCase() === text.toLowerCase())) {
-      alert("This item exists already.");
+      createToastHelper(this, "This item exists already.", "error", 3000);
       this._inputEl.value = "";
       this._inputEl.focus();
       return;
@@ -289,7 +294,7 @@ class AceItems extends HTMLElement {
 
   async _onNext() {
     if (this._items.length === 0) {
-      alert("Please add at least one item.");
+      createToastHelper(this, "Please add at least one item.", "error", 3000);
       return;
     }
     try {
@@ -299,7 +304,11 @@ class AceItems extends HTMLElement {
         body: JSON.stringify({ items: this._items })
       });
 
-      if (!res.ok) throw new Error("Error when saving items.");
+      if (!res.ok) {
+        const err = res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
 
       this.dispatchEvent(
         new CustomEvent("ace-items-submitted", {
@@ -308,9 +317,9 @@ class AceItems extends HTMLElement {
           composed: true
         })
       );
-    } catch (e) {
-      alert(e.message);
-      console.error("Submission error:", e);
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
+      console.error("Submission error:", err);
     }
   }
 }

@@ -3,6 +3,8 @@
  * Provides consistent validation and UI feedback across the application
  */
 
+import { createToastHelper } from "./shadow-toast.js";
+
 /**
  * Validates text input against dangerous characters and provides visual feedback
  * @param {HTMLInputElement} inputElement - The input element to validate
@@ -81,14 +83,14 @@ export function hasDangerousCharacters(text) {
  * @param {string} fieldName - Name of the field for error message (default: "Input")
  * @returns {boolean} - True if valid, false if invalid (and alert shown)
  */
-export function validateAndAlert(text, fieldName = "Input") {
+export function validateAndAlert(host, text, fieldName = "Input") {
   if (!text.trim()) {
-    alert(`${fieldName} cannot be empty.`);
+    createToastHelper(host, `${fieldName} cannot be empty.`, "error", 3000);
     return false;
   }
   
   if (hasDangerousCharacters(text)) {
-    alert(`${fieldName} contains invalid characters. Please avoid <, >, & characters.`);
+    createToastHelper(host, `${fieldName} contains invalid characters. Please avoid <, >, & characters.`, "error", 3000);
     return false;
   }
   

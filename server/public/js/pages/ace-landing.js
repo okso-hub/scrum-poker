@@ -1,4 +1,5 @@
 // public/js/components/ace-landing.js
+import { createToastHelper } from '../utils/shadow-toast.js';
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 import { setupInputValidation, validateAndAlert } from '../utils/validation.js';
@@ -56,7 +57,7 @@ class AceLanding extends HTMLElement {
       const name = nameEl.value.trim();
       
       // Validate name using utility function
-      if (!validateAndAlert(name, "Name")) {
+      if (!validateAndAlert(this, name, "Name")) {
         return;
       }
       
@@ -75,12 +76,12 @@ class AceLanding extends HTMLElement {
       const gameId = gameEl.value.trim();
       
       // Validate name using utility function
-      if (!validateAndAlert(name, "Name")) {
+      if (!validateAndAlert(this, name, "Name")) {
         return;
       }
       
       if (!gameId) {
-        alert("Please enter the Game-ID.");
+        createToastHelper(this, "Please enter the Game-ID.", "error", 3000);
         return;
       }
 

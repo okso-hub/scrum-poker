@@ -115,3 +115,13 @@ export const toast = {
   warning: (shadowRoot, message, duration) => showToastInShadow(shadowRoot, message, duration, 'warning'),
   error: (shadowRoot, message, duration) => showToastInShadow(shadowRoot, message, duration, 'error')
 }; 
+
+export function createToastHelper(host, message, type, duration) {
+  host.dispatchEvent(
+    new CustomEvent("show-toast", {
+      detail: { message, type, duration },
+      bubbles: true,
+      composed: true,
+    })
+  );
+}
