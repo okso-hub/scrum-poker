@@ -227,7 +227,8 @@ class AceItems extends HTMLElement {
           type: 'secondary',
           handler: () => {} // Just closes modal
         }
-      ]
+      ],
+      this.shadowRoot  // Shadow DOM als Parent übergeben
     );
   }
 
@@ -242,7 +243,8 @@ class AceItems extends HTMLElement {
           type: 'primary',
           handler: () => {}
         }
-      ]
+      ],
+      this.shadowRoot  // Shadow DOM als Parent übergeben
     );
   }
 

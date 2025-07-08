@@ -223,8 +223,8 @@ class AceNavbar extends HTMLElement {
         if (isMinimal) {
           console.log('Setting minimal mode: hiding elements and adding minimal class');
           navbar.classList.add('minimal');
-          infoDiv.style.setProperty('display', 'none', 'important');
-          actionButtonsDiv.style.setProperty('display', 'none', 'important');
+          infoDiv.style.setProperty('display', 'none');
+          actionButtonsDiv.style.setProperty('display', 'none');
         } else {
           console.log('Setting full mode: showing elements and removing minimal class');
           navbar.classList.remove('minimal');
