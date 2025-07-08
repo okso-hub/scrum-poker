@@ -60,7 +60,7 @@ class AceResults extends HTMLElement {
     ` : '';
 
     this.shadowRoot.innerHTML = `
-      <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}"></ace-navbar>
+      <ace-navbar room-id="${this._roomId}" is-admin="${this._isAdmin}" backend-url="${this._backendUrl}"></ace-navbar>
       <div class="question-box">
         <h1 class="question">${this._question}</h1>
       </div>
