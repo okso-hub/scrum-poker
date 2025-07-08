@@ -1,41 +1,31 @@
-<nav class="navbar" role="navigation" aria-label="main navigation">
-
-  <div class="info">
-    <span>Room: <strong class="room-id">ROOM_ID</strong></span>
+<nav class="navbar">
+  <section class="info">
+    <p>Game: <strong class="game-id">ROOM_ID</strong></p>
     <button
       id="copy-id-btn"
       class="copy-id-btn"
       type="button"
-      title="Copy Room ID"
-      aria-label="copy room id to clipboard"
+      title="Copy Game ID"
+      aria-label="copy game id to clipboard"
     >
       📋
     </button>
-  </div>
+  </section>
 
-  <div class="branding">
+  <header class="branding">
     <slot name="branding">
       <img src="../assets/images/agile-ace-high-resolution-logo.png" alt="Default Logo" />
     </slot>
-  </div>
+  </header>
   
-  <div class="action-buttons">
+  <section class="action-buttons">
     <button id="qr-btn" type="button" aria-label="show qr code">QR</button>
-    <button id="copy-btn" type="button" aria-label="copy join link">
-      Copy Link
-    </button>
-    <button id="info-btn" type="button" aria-label="show game information">
-      Info
-    </button>
-  </div>
+    <button id="copy-btn" type="button">Copy Link</button>
+    <button id="info-btn" type="button" aria-label="show game information">Info</button>
+  </section>
 </nav>
 
-<aside
-  id="settings-sidebar"
-  class="settings-sidebar"
-  role="complementary"
-  aria-label="settings panel"
->
+<aside id="settings-sidebar" class="settings-sidebar">
   <header class="sidebar-header">
     <h2>Settings</h2>
     <button
@@ -49,20 +39,14 @@
   </header>
   <section class="settings-list">
     <h3 class="screen-reader-only">Participants List</h3>
-    <ul id="participants-list" role="list" aria-label="game participants"></ul>
+    <ul id="participants-list"></ul>
   </section>
 </aside>
 
-<section
-  id="qr-popup"
-  class="popup hidden"
-  role="dialog"
-  aria-labelledby="qr-title"
-  aria-modal="true"
->
+<section id="qr-popup" class="popup hidden">
   <article class="popup-content">
     <header>
-      <h3 id="qr-title" class="screen-reader-only">QR Code for Room</h3>
+      <h3 id="qr-title" class="screen-reader-only">QR Code for Game</h3>
       <button
         class="close-btn"
         id="qr-close"
@@ -72,17 +56,11 @@
         x
       </button>
     </header>
-    <section id="qrcode" aria-label="qr code for joining the room"></section>
+    <section id="qrcode"></section>
   </article>
 </section>
 
-<section
-  id="info-popup"
-  class="info-popup hidden"
-  role="dialog"
-  aria-labelledby="info-title"
-  aria-modal="true"
->
+<section id="info-popup" class="info-popup hidden">
   <article class="popup-content">
     <header>
       <button
