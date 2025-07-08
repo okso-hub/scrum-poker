@@ -330,6 +330,7 @@ class AgileAce extends HTMLElement {
   }
 
   // Renders the results page after each voting
+  //TODO: why is this called show not render?
   _showResults(results, isLastItem = false) {
     this._showNavbar();
     this._contentContainer.innerHTML = "";
