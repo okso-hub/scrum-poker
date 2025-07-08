@@ -135,13 +135,8 @@ class AgileAce extends HTMLElement {
   }
 
   _initializeNavbar() {
-        // Create main wrapper container - nimmt 100% der Host-Größe ein
-    this._wrapperContainer = document.createElement("div");
-    this._wrapperContainer.style.width = "100%";
-    this._wrapperContainer.style.height = "100%";
-    this._wrapperContainer.style.overflow = "auto"; // Ermöglicht Scrollen bei Überlauf
-    this._wrapperContainer.style.boxSizing = "border-box"; // Padding/Border inklusive
-    this._wrapperContainer.style.position = "relative"; // Für absolute Positionierung der Toasts
+    // Create main wrapper container
+    this._createWrapperContainer();
     
     // Create navbar container
     this._navbarContainer = document.createElement("div");
