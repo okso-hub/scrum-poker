@@ -298,12 +298,15 @@ class AgileAce extends HTMLElement {
       return alert(err.error || "Error on join");
     }
 
-    const { isAdmin, name: serverName, gameState } = await res.json();
+    const payload = await res.json();
+    console.log("↩️ /join returned:", payload);
+    const { isAdmin, name: serverName, roomState } = payload;
+
     this._name = serverName;
     this._gameId = Number(gameId);
     this._role = isAdmin ? "admin" : "player";
-    this._status = gameState.status;
-    this._item = gameState.currentItem;
+    this._status = roomState.status;
+    this._item = roomState.currentItem;
 
 
     console.log(`Joined game ${this._gameId} as ${this._role} with name "${this._name}"`);
