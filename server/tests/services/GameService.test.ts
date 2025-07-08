@@ -36,11 +36,11 @@ describe("GameService", () => {
   describe("startVoting", () => {
     it("throws if no items", () => {
       fakeRoom.items = [];
-      expect(() => svc.startVoting("r1")).toThrow(BadRequestError);
+      expect(() => svc.startVoting(1)).toThrow(BadRequestError);
     });
 
     it("sets status to VOTING and returns correct event", () => {
-      const evt = svc.startVoting("r1");
+      const evt = svc.startVoting(1);
       expect(fakeRoom.status).toBe(RoomStatus.VOTING);
       expect(evt).toEqual({
         event: "reveal-item",
@@ -49,18 +49,18 @@ describe("GameService", () => {
         totalPlayers: 3,
         allPlayers: participants,
       });
-      expect(mockRoomService.getParticipants).toHaveBeenCalledWith("r1");
+      expect(mockRoomService.getParticipants).toHaveBeenCalledWith(1);
     });
   });
 
   describe("vote", () => {
     it("throws if missing playerName or vote", () => {
-      expect(() => svc.vote("r1", "", "5")).toThrow(BadRequestError);
-      expect(() => svc.vote("r1", "alice", "")).toThrow(BadRequestError);
+      expect(() => svc.vote(1, "", "5")).toThrow(BadRequestError);
+      expect(() => svc.vote(1, "alice", "")).toThrow(BadRequestError);
     });
 
     it("records a vote and returns vote-status-update", () => {
-      const evt = svc.vote("r1", "bob", "8");
+      const evt = svc.vote(1, "bob", "8");
       expect(mockRoomService.validatePlayerInRoom).toHaveBeenCalledWith(fakeRoom, "bob");
       expect(fakeRoom.votes).toMatchObject({ bob: "8" });
 
@@ -77,25 +77,27 @@ describe("GameService", () => {
   describe("isVoteComplete", () => {
     it("false when votes < players", () => {
       fakeRoom.votes = { alice: "1" };
-      expect(svc.isVoteComplete("r1")).toBe(false);
+      expect(svc.isVoteComplete(1)).toBe(false);
     });
     it("true when votes === players", () => {
       fakeRoom.votes = { alice: "1", bob: "2", cj: "3" };
-      expect(svc.isVoteComplete("r1")).toBe(true);
+      expect(svc.isVoteComplete(1)).toBe(true);
     });
   });
 
   describe("revealVotes", () => {
     it("throws if no votes", () => {
       fakeRoom.votes = {};
-      expect(() => svc.revealVotes("r1")).toThrow(BadRequestError);
+      expect(() => svc.revealVotes(1)).toThrow(BadRequestError);
     });
 
     it("calculates results, appends history and returns cards-revealed", () => {
+      // Set room to VOTING status first
+      fakeRoom.status = RoomStatus.VOTING;
       // cast some votes
       fakeRoom.votes = { alice: "3", bob: "5", cj: "3" };
 
-      const evt = svc.revealVotes("r1");
+      const evt = svc.revealVotes(1);
       expect(fakeRoom.status).toBe(RoomStatus.REVEALING);
 
       // history was pushed
@@ -118,13 +120,13 @@ describe("GameService", () => {
   describe("repeatVoting", () => {
     it("throws if no current item", () => {
       fakeRoom.items = [];
-      expect(() => svc.repeatVoting("r1")).toThrow(BadRequestError);
+      expect(() => svc.repeatVoting(1)).toThrow(BadRequestError);
     });
 
     it("clears votes, sets VOTING, and returns start event", () => {
       // pre‐populate votes
       fakeRoom.votes = { alice: "1" };
-      const evt = svc.repeatVoting("r1");
+      const evt = svc.repeatVoting(1);
       expect(fakeRoom.votes).toEqual({});
       expect(fakeRoom.status).toBe(RoomStatus.VOTING);
       expect(evt.event).toBe("reveal-item");
@@ -135,12 +137,12 @@ describe("GameService", () => {
   describe("nextItem", () => {
     it("throws if only one item left", () => {
       fakeRoom.items = ["only"];
-      expect(() => svc.nextItem("r1")).toThrow(BadRequestError);
+      expect(() => svc.nextItem(1)).toThrow(BadRequestError);
     });
 
     it("shifts items, clears votes, sets VOTING and returns start event", () => {
       const oldFirst = fakeRoom.items[0];
-      const evt = svc.nextItem("r1");
+      const evt = svc.nextItem(1);
       expect(fakeRoom.items[0]).not.toBe(oldFirst);
       expect(fakeRoom.votes).toEqual({});
       expect(fakeRoom.status).toBe(RoomStatus.VOTING);
@@ -156,7 +158,7 @@ describe("GameService", () => {
         { item: "T1", average: 3, votes: {}, summary: {} },
         { item: "T2", average: 5, votes: {}, summary: {} },
       ];
-      const evt = svc.showSummary("r1");
+      const evt = svc.showSummary(1);
 
       expect(evt.event).toBe("show-summary");
       expect(evt.summary).toMatchObject({
@@ -170,7 +172,7 @@ describe("GameService", () => {
   describe("getVoteStatus", () => {
     it("returns correct vote status object", () => {
       fakeRoom.votes = { alice: "2", bob: "8" };
-      const status = svc.getVoteStatus("r1");
+      const status = svc.getVoteStatus(1);
       expect(status).toEqual({
         voteCount: 2,
         totalPlayers: 3,

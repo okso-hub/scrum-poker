@@ -8,6 +8,13 @@ import { RoomStatus } from '../../src/types/index.js';
 // 1) Mock asyncHandler so routes run raw
 vi.mock('../src/middleware/errorHandler.js', () => ({
   asyncHandler: (fn: any) => fn,
+  errorHandler: (error: any, req: any, res: any, next: any) => {
+    if (error.statusCode) {
+      res.status(error.statusCode).json({ error: error.message, code: error.code });
+    } else {
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 }));
 
 // 2) Now import the router under test
@@ -24,17 +31,25 @@ describe('Public Routes', () => {
     app = express();
     app.use(express.json());
     app.use(router);
+    // Add error handler
+    app.use((error: any, req: any, res: any, next: any) => {
+      if (error.statusCode) {
+        res.status(error.statusCode).json({ error: error.message, code: error.code });
+      } else {
+        res.status(500).json({ error: "Internal server error" });
+      }
+    });
     vi.clearAllMocks();
   });
 
   describe('POST /create', () => {
     it('returns generated roomId', async () => {
-      vi.spyOn(roomService, 'createRoom').mockReturnValue('ROOM42');
+      vi.spyOn(roomService, 'createRoom').mockReturnValue(42);
       const res = await request(app)
         .post('/create')
         .send({ name: 'alice' })
         .expect(200);
-      expect(res.body).toEqual({ roomId: 'ROOM42' });
+      expect(res.body).toEqual({ roomId: 42 });
       expect(roomService.createRoom).toHaveBeenCalledWith('alice', expect.any(String));
     });
   });
@@ -52,7 +67,7 @@ describe('Public Routes', () => {
 
       const res = await request(app)
         .post('/join')
-        .send({ name: 'bob', roomId: 'ROOM1' })
+        .send({ name: 'bob', roomId: 1 })
         .expect(200);
 
       expect(res.body).toEqual({
@@ -61,8 +76,8 @@ describe('Public Routes', () => {
         name: 'bob',
         roomState: fakeResult.roomState,
       });
-      expect(roomService.joinRoom).toHaveBeenCalledWith('ROOM1', 'bob', expect.any(String));
-      expect(bc).toHaveBeenCalledWith('ROOM1', {
+      expect(roomService.joinRoom).toHaveBeenCalledWith(1, 'bob', expect.any(String));
+      expect(bc).toHaveBeenCalledWith(1, {
         event: 'user-joined',
         rejoin: true,
         user: 'bob',
@@ -74,17 +89,17 @@ describe('Public Routes', () => {
     it('returns 400 if roomId missing', async () => {
       await request(app)
         .get('/is-admin')
-        .expect(400, { error: 'roomId is required' });
+        .expect(400, { error: 'roomId is required', code: 'BAD_REQUEST' });
     });
 
     it('returns isAdmin flag', async () => {
       vi.spyOn(roomService, 'isAdmin').mockReturnValue(true);
       const res = await request(app)
         .get('/is-admin')
-        .query({ roomId: 'R1' })
+        .query({ roomId: 1 })
         .expect(200);
       expect(res.body).toEqual({ isAdmin: true });
-      expect(roomService.isAdmin).toHaveBeenCalledWith('R1', expect.any(String));
+      expect(roomService.isAdmin).toHaveBeenCalledWith(1, expect.any(String));
     });
   });
 
@@ -92,10 +107,10 @@ describe('Public Routes', () => {
     it('returns items array', async () => {
       vi.spyOn(roomService, 'getItems').mockReturnValue(['a', 'b']);
       const res = await request(app)
-        .get('/room/R2/items')
+        .get('/room/2/items')
         .expect(200);
       expect(res.body).toEqual({ items: ['a', 'b'] });
-      expect(roomService.getItems).toHaveBeenCalledWith('R2');
+      expect(roomService.getItems).toHaveBeenCalledWith(2);
     });
   });
 
@@ -106,13 +121,13 @@ describe('Public Routes', () => {
         { name: 'bob', isAdmin: false }
       ]);
       const res = await request(app)
-        .get('/room/R3/participants')
+        .get('/room/3/participants')
         .expect(200);
       expect(res.body).toEqual({ participants: [
         { name: 'alice', isAdmin: true },
         { name: 'bob', isAdmin: false }
       ] });
-      expect(roomService.getParticipants).toHaveBeenCalledWith('R3');
+      expect(roomService.getParticipants).toHaveBeenCalledWith(3);
     });
   });
 
@@ -128,10 +143,10 @@ describe('Public Routes', () => {
       };
       vi.spyOn(roomService, 'getRoomStatus').mockReturnValue(fakeStatus);
       const res = await request(app)
-        .get('/room/R4/status')
+        .get('/room/4/status')
         .expect(200);
       expect(res.body).toEqual(fakeStatus);
-      expect(roomService.getRoomStatus).toHaveBeenCalledWith('R4');
+      expect(roomService.getRoomStatus).toHaveBeenCalledWith(4);
     });
   });
 });

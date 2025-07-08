@@ -31,11 +31,11 @@ describe('requireAdminAccess middleware', () => {
     // stub isAdmin to return false
     vi.spyOn(roomService, 'isAdmin').mockReturnValue(false);
 
-    const req = mockReq({ roomId: 'room42' }, '5.6.7.8');
+    const req = mockReq({ roomId: 42 }, '5.6.7.8');
 
     requireAdminAccess(req, mockRes, mockNext);
 
-    expect(roomService.isAdmin).toHaveBeenCalledWith('room42', '5.6.7.8');
+    expect(roomService.isAdmin).toHaveBeenCalledWith(42, '5.6.7.8');
     expect(mockNext).toHaveBeenCalledOnce();
     const err = mockNext.mock.calls[0]![0];
     expect(err).toBeInstanceOf(ForbiddenError);
@@ -46,11 +46,11 @@ describe('requireAdminAccess middleware', () => {
     // stub isAdmin to return true
     vi.spyOn(roomService, 'isAdmin').mockReturnValue(true);
 
-    const req = mockReq({ roomId: 'room42' }, '9.10.11.12');
+    const req = mockReq({ roomId: 42 }, '9.10.11.12');
 
     requireAdminAccess(req, mockRes, mockNext);
 
-    expect(roomService.isAdmin).toHaveBeenCalledWith('room42', '9.10.11.12');
+    expect(roomService.isAdmin).toHaveBeenCalledWith(42, '9.10.11.12');
     expect(mockNext).toHaveBeenCalledOnce();
     expect(mockNext).toHaveBeenCalledWith(); // no error
   });
