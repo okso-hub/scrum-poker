@@ -151,6 +151,12 @@ class AgileAce extends HTMLElement {
     cmp.setAttribute("is-admin", this._role === "admin");
     cmp.setAttribute("backend-url", this._backendUrl);
     cmp.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
+    
+    // Pass default items if they exist
+    const defaultItems = this.getAttribute("default-items");
+    if (defaultItems) {
+      cmp.setAttribute("default-items", defaultItems);
+    }
   
     brandingNodes.forEach(node => {
       cmp.appendChild(node.cloneNode(true));
