@@ -395,14 +395,14 @@ class AgileAce extends HTMLElement {
         if(this._currentLobby !== undefined && this._currentLobby !== null) {
           this._currentLobby._onUserJoined(msg.user);
         }
-        this._showToast(`${msg.user} joined the game`, "success", 3000);
+        this._showToast(`${msg.user} joined the game`, "success", 10000);
       } else if (msg.event === "user-banned") {
         if(this._currentLobby !== undefined && this._currentLobby !== null) {
           this._currentLobby._onUserBanned(msg.user);
         }
-        this._showToast(`${msg.user} was banned from the game`, "warning", 4000);
+        this._showToast(`${msg.user} was banned from the game`, "warning", 10000);
       } else if(msg.event === "banned-by-admin") {
-        this._showToast(`You were banned by the Admin ⛔`, "error", 4000);
+        this._showToast(`You were banned by the Admin ⛔`, "error", 30000);
       }
       else {
         const { from, payload } = msg;
@@ -412,11 +412,11 @@ class AgileAce extends HTMLElement {
 
     this._ws.onclose = () => {
       console.log("WebSocket closed");
-      this._showToast("Connection closed", "warning", 3000);
+      this._showToast("Connection closed", "warning", 5000);
     };
     this._ws.onerror = (e) => {
       console.error("WebSocket errored", e);
-      this._showToast("A connection error occurred", "error", 4000);
+      this._showToast("A connection error occurred", "error", 5000);
     };
   }
 }
