@@ -401,7 +401,10 @@ class AgileAce extends HTMLElement {
           this._currentLobby._onUserBanned(msg.user);
         }
         this._showToast(`${msg.user} was banned from the game`, "warning", 4000);
-      } else {
+      } else if(msg.event === "banned-by-admin") {
+        this._showToast(`You were banned by the Admin ⛔`, "warning", 4000);
+      }
+      else {
         const { from, payload } = msg;
         console.log(`WS ← ${from}:`, payload);
       }
