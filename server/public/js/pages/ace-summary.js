@@ -52,21 +52,18 @@ class AceSummary extends HTMLElement {
   _renderSummaryContent() {
     const { items = [] } = this._summary;
 
-    // Load items shown in summary dynamically (only the list items, not the totals)
+    // Load items shown in summary dynamically (only the table rows, not the header)
     const summaryList = this.shadowRoot.getElementById('summary-list');
     if (summaryList) {
       const itemsHtml = items.map(itemData => `
-        <li class="list-item">
-          <span>${itemData.item}</span>
-          <span>${itemData.average}</span>
-        </li>
+        <tr>
+          <td>${itemData.item}</td>
+          <td>${itemData.average}</td>
+        </tr>
       `).join('');
       
-      // Preserve the header and add items after it
-      summaryList.innerHTML = `
-        <li class="header"><span>Item</span><span>Average Points</span></li>
-        ${itemsHtml}
-      `;
+      // Add table rows to tbody
+      summaryList.innerHTML = itemsHtml;
     }
   }
 

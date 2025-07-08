@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgileAce - Design Playground</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --background-color: #f8f9fa;
+      --text-color: #2c3e50;
+      --card-background: #ffffff;
+      --border-color: #dee2e6;
+      --hover-color: #34495e;
+      --success-color: #27ae60;
+      --warning-color: #f39c12;
+      
+      --font-family: system-ui, -apple-system, sans-serif;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.25rem;
+      --font-size-xl: 1.5rem;
+      --font-size-2xl: 2rem;
+      
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      
+      --border-radius: 0.375rem;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    header {
+      background: var(--card-background);
+      padding: var(--spacing-md);
+      box-shadow: var(--shadow);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      
+      h1 {
+        margin: 0;
+        color: var(--primary-color);
+        font-size: var(--font-size-xl);
+        font-weight: 600;
+      }
+      
+      button {
+        background: var(--secondary-color);
+        color: white;
+        border: none;
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-size: var(--font-size-base);
+        font-weight: 500;
+      }
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: var(--spacing-lg);
+      padding: var(--spacing-lg);
+      height: calc(100vh - 80px);
+    }
+
+    aside {
+      background: var(--card-background);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow);
+      overflow-y: auto;
+      
+      h2 {
+        color: var(--primary-color);
+        font-size: var(--font-size-lg);
+        margin-bottom: var(--spacing-lg);
+        font-weight: 600;
+        border-bottom: 2px solid var(--secondary-color);
+        padding-bottom: var(--spacing-sm);
+      }
+      
+      .control-group {
+        margin-bottom: var(--spacing-lg);
+        
+        h3 {
+          color: var(--primary-color);
+          font-size: var(--font-size-base);
+          margin-bottom: var(--spacing-md);
+          font-weight: 600;
+        }
+        
+        label {
+          display: block;
+          margin-bottom: var(--spacing-sm);
+          font-weight: 500;
+          color: var(--text-color);
+        }
+        
+        input[type="color"],
+        input[type="range"],
+        select {
+          width: 100%;
+          padding: var(--spacing-sm);
+          border: 1px solid var(--border-color);
+          border-radius: var(--border-radius);
+          font-size: var(--font-size-base);
+          
+          &:focus {
+            outline: none;
+            border-color: var(--secondary-color);
+          }
+        }
+        
+        input[type="color"] {
+          height: 40px;
+          cursor: pointer;
+        }
+        
+        input[type="range"] {
+          height: 8px;
+          appearance: none;
+          background: var(--border-color);
+          border-radius: var(--border-radius);
+          
+          &::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            cursor: pointer;
+          }
+          
+          &::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: var(--secondary-color);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+          }
+        }
+        
+        select {
+          background: var(--card-background);
+          cursor: pointer;
+        }
+        
+        .preset-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: var(--spacing-sm);
+          
+          button {
+            background: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: var(--font-size-base);
+            
+            &.active {
+              background: var(--secondary-color);
+              color: white;
+              border-color: var(--secondary-color);
+            }
+          }
+        }
+        
+        .value-display {
+          display: block;
+          margin-top: var(--spacing-sm);
+          font-size: 0.9rem;
+          color: var(--text-color);
+          font-weight: 500;
+        }
+      }
+      
+      .export-section {
+        margin-top: var(--spacing-xl);
+        padding-top: var(--spacing-lg);
+        border-top: 1px solid var(--border-color);
+        
+        button {
+          width: 100%;
+          background: var(--success-color);
+          color: white;
+          border: none;
+          padding: var(--spacing-md);
+          border-radius: var(--border-radius);
+          cursor: pointer;
+          font-size: var(--font-size-base);
+          font-weight: 500;
+          margin-bottom: var(--spacing-sm);
+        }
+      }
+    }
+
+    section {
+      background: var(--card-background);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      
+      h2 {
+        color: var(--primary-color);
+        font-size: var(--font-size-xl);
+        margin-bottom: var(--spacing-lg);
+        text-align: center;
+        font-weight: 600;
+      }
+      
+      agile-ace {
+        flex: 1;
+        min-height: 0;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      
+      aside {
+        max-height: 300px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      main {
+        padding: var(--spacing-md);
+        gap: var(--spacing-md);
+      }
+      
+      aside,
+      section {
+        padding: var(--spacing-md);
+      }
+      
+      header {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Design Playground</h1>
+    <button onclick="window.location.href='index.html'">
+      Back to Overview
+    </button>
+  </header>
+
+  <main>
+    <aside>
+      <h2>Design Settings</h2>
+      
+      <div class="control-group">
+        <h3>Theme Presets</h3>
+        <div class="preset-buttons">
+          <button onclick="applyTheme('default')" class="active">Default</button>
+          <button onclick="applyTheme('dark')">Dark</button>
+          <button onclick="applyTheme('blue')">Blue</button>
+          <button onclick="applyTheme('green')">Green</button>
+          <button onclick="applyTheme('red')">Red</button>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Colors</h3>
+        <label for="primaryColor">Primary Color:</label>
+        <input type="color" id="primaryColor" value="#2c3e50" onchange="updateColor('primary', this.value)">
+        
+        <label for="secondaryColor">Secondary Color:</label>
+        <input type="color" id="secondaryColor" value="#3498db" onchange="updateColor('secondary', this.value)">
+        
+        <label for="accentColor">Accent Color:</label>
+        <input type="color" id="accentColor" value="#e74c3c" onchange="updateColor('accent', this.value)">
+        
+        <label for="backgroundColor">Background:</label>
+        <input type="color" id="backgroundColor" value="#f8f9fa" onchange="updateColor('background', this.value)">
+      </div>
+      
+      <div class="control-group">
+        <h3>Font Size</h3>
+        <label for="fontSize">Base Font Size:</label>
+        <input type="range" id="fontSize" min="12" max="20" value="16" onchange="updateFontSize(this.value)">
+        <output id="fontSizeValue" class="value-display">16px</output>
+      </div>
+      
+      <div class="control-group">
+        <h3>Spacing</h3>
+        <label for="spacing">Spacing Multiplier:</label>
+        <input type="range" id="spacing" min="0.5" max="2" step="0.1" value="1" onchange="updateSpacing(this.value)">
+        <output id="spacingValue" class="value-display">1x</output>
+      </div>
+      
+      <div class="control-group">
+        <h3>Border Radius</h3>
+        <label for="borderRadius">Roundness:</label>
+        <input type="range" id="borderRadius" min="0" max="20" value="6" onchange="updateBorderRadius(this.value)">
+        <output id="borderRadiusValue" class="value-display">6px</output>
+      </div>
+      
+      <div class="export-section">
+        <button onclick="exportCSS()">Export CSS</button>
+        <button onclick="resetToDefault()">Reset</button>
+      </div>
+    </aside>
+
+    <section>
+      <h2>Live Preview</h2>
+      <agile-ace
+        id="agileAceComponent"
+        backend-url="http://localhost:3000"
+        width="100%"
+        height="100%"
+        default-items='{"items":["Design Test Item 1","Design Test Item 2","Design Test Item 3"],"exportDate":"2024-01-01T00:00:00.000Z"}'
+      >
+        <img slot="branding" src="./assets/images/dhbw.png" alt="DHBW Logo">
+      </agile-ace>
+    </section>
+  </main>
+
+  <script type="module" src="js/agile-ace.js"></script>
+  <script>
+    const themes = {
+      default: {
+        primary: '#2c3e50',
+        secondary: '#3498db',
+        accent: '#e74c3c',
+        background: '#f8f9fa'
+      },
+      dark: {
+        primary: '#1a1a1a',
+        secondary: '#007acc',
+        accent: '#ff6b6b',
+        background: '#2d2d2d'
+      },
+      blue: {
+        primary: '#1e3a8a',
+        secondary: '#3b82f6',
+        accent: '#f59e0b',
+        background: '#eff6ff'
+      },
+      green: {
+        primary: '#166534',
+        secondary: '#22c55e',
+        accent: '#ef4444',
+        background: '#f0fdf4'
+      },
+      red: {
+        primary: '#991b1b',
+        secondary: '#ef4444',
+        accent: '#3b82f6',
+        background: '#fef2f2'
+      }
+    };
+
+    function applyTheme(themeName) {
+      const theme = themes[themeName];
+      if (!theme) return;
+
+      document.getElementById('primaryColor').value = theme.primary;
+      document.getElementById('secondaryColor').value = theme.secondary;
+      document.getElementById('accentColor').value = theme.accent;
+      document.getElementById('backgroundColor').value = theme.background;
+
+      updateColor('primary', theme.primary);
+      updateColor('secondary', theme.secondary);
+      updateColor('accent', theme.accent);
+      updateColor('background', theme.background);
+
+      // Update active button
+      document.querySelectorAll('.preset-buttons button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+    }
+
+    function updateColor(type, color) {
+      const component = document.getElementById('agileAceComponent');
+      if (!component) return;
+
+      const propertyMap = {
+        primary: '--agile-ace-primary-color',
+        secondary: '--agile-ace-secondary-color',
+        accent: '--agile-ace-selected-color',
+        background: '--agile-ace-background-color'
+      };
+
+      const property = propertyMap[type];
+      if (property) {
+        component.style.setProperty(property, color);
+      }
+    }
+
+    function updateFontSize(size) {
+      const component = document.getElementById('agileAceComponent');
+      if (!component) return;
+
+      component.style.setProperty('--agile-ace-font-size', size + 'px');
+      document.getElementById('fontSizeValue').textContent = size + 'px';
+    }
+
+    function updateSpacing(multiplier) {
+      const component = document.getElementById('agileAceComponent');
+      if (!component) return;
+
+      const baseSpacing = 16;
+      const smallSpacing = (baseSpacing * 0.5 * multiplier) + 'px';
+      const mediumSpacing = (baseSpacing * multiplier) + 'px';
+      const largeSpacing = (baseSpacing * 1.5 * multiplier) + 'px';
+
+      component.style.setProperty('--agile-ace-spacing-sm', smallSpacing);
+      component.style.setProperty('--agile-ace-spacing-md', mediumSpacing);
+      component.style.setProperty('--agile-ace-spacing-lg', largeSpacing);
+      
+      document.getElementById('spacingValue').textContent = multiplier + 'x';
+    }
+
+    function updateBorderRadius(radius) {
+      const component = document.getElementById('agileAceComponent');
+      if (!component) return;
+
+      component.style.setProperty('--agile-ace-border-radius', radius + 'px');
+      document.getElementById('borderRadiusValue').textContent = radius + 'px';
+    }
+
+    function exportCSS() {
+      const component = document.getElementById('agileAceComponent');
+      if (!component) return;
+
+      const styles = window.getComputedStyle(component);
+      const cssProperties = [
+        '--agile-ace-primary-color',
+        '--agile-ace-secondary-color',
+        '--agile-ace-selected-color',
+        '--agile-ace-background-color',
+        '--agile-ace-font-size',
+        '--agile-ace-spacing-sm',
+        '--agile-ace-spacing-md',
+        '--agile-ace-spacing-lg',
+        '--agile-ace-border-radius'
+      ];
+
+      let css = 'agile-ace {\n';
+      cssProperties.forEach(prop => {
+        const value = component.style.getPropertyValue(prop) || getComputedStyle(component).getPropertyValue(prop);
+        if (value) {
+          css += `  ${prop}: ${value};\n`;
+        }
+      });
+      css += '}\n';
+
+      const blob = new Blob([css], { type: 'text/css' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'agile-ace-theme.css';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function resetToDefault() {
+      applyTheme('default');
+      
+      document.getElementById('fontSize').value = '16';
+      document.getElementById('spacing').value = '1';
+      document.getElementById('borderRadius').value = '6';
+      
+      updateFontSize(16);
+      updateSpacing(1);
+      updateBorderRadius(6);
+    }
+
+    // Initialize component with default theme
+    window.addEventListener('load', function() {
+      setTimeout(() => {
+        applyTheme('default');
+      }, 100);
+    });
+  </script>
+</body>
+</html> 

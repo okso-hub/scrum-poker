@@ -28,4 +28,20 @@
       }
     }
   }
+
+  .import-export {
+    & fieldset {
+      display: grid;
+      gap: var(--spacing-md);
+      grid-template-columns: 1fr 1fr;
+      
+      & legend {
+        grid-column: 1 / -1;
+      }
+      
+      & .secondary {
+        width: 100%;
+      }
+    }
+  }
 } 

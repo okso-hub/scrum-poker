@@ -181,9 +181,9 @@ class AceNavbar extends HTMLElement {
           // display all participants fetched from backend as list items
           listEl.innerHTML = this._participants.map(p =>
             `<li class="${p.isAdmin ? 'admin-user' : 'regular-user'}">
-              <span class="participant-name">
+              <p class="participant-name">
                 ${p.name}
-              </span>
+              </p>
               ${!p.isAdmin ? `<button class="ban" data-name="${p.name}" title="Ban User">🔨</button>` : ''}
             </li>`
           ).join('');

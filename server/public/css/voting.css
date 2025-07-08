@@ -1,91 +1,80 @@
 /* Voting Page spezifische Styles */
 @layer pages {
-  :host {
+  .voting-page {
     display: flex;
     flex-direction: column;
-    min-block-size: 100svh;
-    padding: var(--spacing-lg);
     box-sizing: border-box;
+  }
+
+  .question-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-block-size: 0;
     
-    & .question-section {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      flex: 1;
-      min-block-size: 0;
+    & .question {
+      text-align: center;
+      font-size: clamp(1.5rem, 6vw, 3rem);
+      margin-block-end: 1.5rem;
+      transition: var(--transition);
+      line-height: 1.2;
       
-      & .question {
-        text-align: center;
-        font-size: clamp(1.5rem, 6vw, 3rem);
-        margin-block-end: 1.5rem;
-        transition: var(--transition);
-        line-height: 1.2;
-        
-        &.positioned {
-          font-size: var(--font-size-heading);
-          margin-block-end: var(--spacing-lg);
-        }
-      }
-      
-      & .voting-buttons {
-        display: flex;
-        justify-content: center;
-        gap: var(--spacing-md);
-        opacity: 0;
-        transition: var(--transition);
-        flex-wrap: wrap;
-        
-        &.visible {
-          opacity: 1;
-        }
-        
-        & button {
-          padding: 0.75rem var(--spacing-lg);
-          font-size: var(--font-size-body);
-          line-height: 1.5;
-          min-inline-size: 3rem;
-          border-radius: var(--radius-md);
-          transition: var(--transition);
-          
-          &.selected {
-            font-weight: 700;
-            background-color: var(--color-selected);
-            color: white;
-          }
-        }
+      &.positioned {
+        font-size: var(--font-size-heading);
+        margin-block-end: var(--spacing-lg);
       }
     }
     
-    & .bottom-section {
-      flex-shrink: 0;
-      margin-block-start: var(--spacing-lg);
+    & .voting-buttons {
+      display: flex;
+      justify-content: center;
+      gap: var(--spacing-md);
+      opacity: 0;
+      transition: var(--transition);
+      flex-wrap: wrap;
       
-      & .admin-controls {
-        text-align: center;
-        margin-block-end: var(--spacing-md);
+      &.visible {
+        opacity: 1;
       }
       
-      & .players-table {
-        max-block-size: 30vh;
-        overflow-y: auto;
-        margin-block-start: var(--spacing-md);
+      & button {
+        padding: 0.75rem var(--spacing-lg);
+        font-size: var(--font-size-body);
+        line-height: 1.5;
+        min-inline-size: 3rem;
+        border-radius: var(--radius-md);
+        transition: var(--transition);
         
-        & thead th {
-          position: sticky;
-          top: 0;
-          background-color: var(--color-background);
-          z-index: 1;
+        &.selected {
+          font-weight: 700;
+          background-color: var(--color-selected);
+          color: white;
         }
-        
-        & tbody tr:hover {
-          background-color: var(--color-background);
-        }
-        
-        & td:last-child {
-          text-align: center;
-          font-weight: 500;
-        }
+      }
+    }
+  }
+
+  .bottom-section {
+    flex-shrink: 0;
+    margin-block-start: var(--spacing-md);
+    
+    & .admin-controls {
+      text-align: center;
+      margin-block-end: var(--spacing-lg);
+    }
+    
+    & .players-table {
+      max-block-size: 30vh;
+      overflow-y: auto;
+      margin-block-start: var(--spacing-md);
+      
+      & thead th {
+        position: sticky;
+        top: 0;
+        background-color: var(--color-background);
+        z-index: 1;
       }
     }
   }
