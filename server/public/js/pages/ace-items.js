@@ -28,7 +28,12 @@ class AceItems extends HTMLElement {
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
     this._hideNavbar = this.getAttribute("hide-navbar") === "true";
+    
     await this._loadItems();
+    
+    // Load default items if no items exist and defaults are provided
+    this._loadDefaultItems();
+    
     this._render();
   }
 
@@ -42,6 +47,25 @@ class AceItems extends HTMLElement {
       }
     } catch (e) {
       console.error("Error loading items:", e);
+    }
+  }
+
+  _loadDefaultItems() {
+    if (this._items.length === 0) {
+      const defaultItemsAttr = this.getAttribute("default-items");
+      if (defaultItemsAttr) {
+        try {
+          const defaultData = JSON.parse(defaultItemsAttr);
+          if (defaultData.items && Array.isArray(defaultData.items)) {
+            this._items = defaultData.items.filter(item => 
+              typeof item === 'string' && item.trim() !== '' && !hasDangerousCharacters(item)
+            );
+            console.log("Loaded default items:", this._items);
+          }
+        } catch (e) {
+          console.error("Error parsing default items:", e);
+        }
+      }
     }
   }
 

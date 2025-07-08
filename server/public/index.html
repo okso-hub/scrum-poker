@@ -1,28 +1,31 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-  <title>AgileAce</title>
-  <style>
-    * {
-      font-family: "Lucida Console", "Courier New", monospace;
-    }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>AgileAce</title>
+    <style>
+      * {
+        font-family: "Lucida Console", "Courier New", monospace;
+      }
 
-    agile-ace {
-      --agile-ace-primary-color: #ec7e3f;
-      --agile-ace-hover-color: #0056b3;
-      --agile-ace-selected-color: #111512;
-      --agile-ace-border-radius: 0.75rem;
-      --agile-ace-font-size: 1.1rem;
-    }
-  </style>
-</head>
-<body>
-  <agile-ace backend-url="http://localhost:3000" >
-    <img slot="branding" src="./assets/images/dhbw.png" alt="My Brand Logo" />
-  </agile-ace>
-  
-  <script type="module" src="js/agile-ace.js"></script>
-</body>
+      agile-ace {
+        --agile-ace-primary-color: #ec7e3f;
+        --agile-ace-hover-color: #0056b3;
+        --agile-ace-selected-color: #111512;
+        --agile-ace-border-radius: 0.75rem;
+        --agile-ace-font-size: 1.1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <agile-ace
+      backend-url="http://localhost:3000"
+      default-items='{"items":["User Registration Feature","Payment Gateway Integration","Dashboard Analytics","Mobile App Responsive Design","Database Migration"],"exportDate":"2024-01-01T00:00:00.000Z"}'
+    >
+      <img slot="branding" src="./assets/images/dhbw.png" alt="My Brand Logo" />
+    </agile-ace>
+
+    <script type="module" src="js/agile-ace.js"></script>
+  </body>
 </html>
