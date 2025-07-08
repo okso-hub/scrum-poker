@@ -1,3 +1,5 @@
+![Agile Ace Logo](https://github.com/okso-hub/scrum-poker/blob/main/server/public/assets/images/agile-ace-high-resolution-logo.png)
+
 # Dokumentation - User
 
 ## Projektbeschreibung
