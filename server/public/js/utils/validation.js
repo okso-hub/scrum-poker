@@ -69,7 +69,7 @@ export function hasDangerousCharacters(text) {
  * @param {string} fieldName - Name of the field for error message (default: "Input")
  * @returns {boolean} - True if valid, false if invalid (and alert shown)
  */
-export function validateAndAlert(text, fieldName = "Input") {
+export function validateAndAlert(host, text, fieldName = "Input") {
   if (!text.trim()) {
     createToastHelper(host, `${fieldName} cannot be empty.`, "error", 3000);
     return false;
