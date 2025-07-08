@@ -42,13 +42,13 @@ router.post(
   })
 );
 
-router.get("/is-admin", (req: Request, res: Response) => {
+router.get("/is-admin", asyncHandler(async (req: Request, res: Response) => {
   const roomId = validateRoomId(req.query.roomId);
 
   const isAdmin = roomService.isAdmin(roomId, req.ip!);
   console.log(`is-admin: ${req.ip} in ${roomId} = ${isAdmin}`);
   res.json({ isAdmin });
-});
+}));
 
 router.get(
   "/room/:roomId/items",

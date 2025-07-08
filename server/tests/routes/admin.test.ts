@@ -26,12 +26,12 @@ describe("Room API", () => {
     it("calls setItems and returns success", async () => {
       const spy = vi.spyOn(roomService, "setItems").mockImplementation(() => {});
       const res = await request(app)
-        .post("/room/abc123/items")
+        .post("/room/123/items")
         .send({ items: ["A", "B", "C"] })
         .expect(200);
 
       expect(res.body).toEqual({ success: true });
-      expect(spy).toHaveBeenCalledWith("abc123", ["A", "B", "C"]);
+      expect(spy).toHaveBeenCalledWith(123, ["A", "B", "C"]);
     });
   });
 
@@ -47,10 +47,10 @@ describe("Room API", () => {
       vi.spyOn(gameService, "startVoting").mockReturnValue(fakeEvt);
       const bc = vi.spyOn(wsUtils, "broadcast").mockImplementation(() => {});
 
-      await request(app).post("/room/xyz/start").expect(200).expect({ success: true });
+      await request(app).post("/room/456/start").expect(200).expect({ success: true });
 
-      expect(gameService.startVoting).toHaveBeenCalledWith("xyz");
-      expect(bc).toHaveBeenCalledWith("xyz", fakeEvt);
+      expect(gameService.startVoting).toHaveBeenCalledWith(456);
+      expect(bc).toHaveBeenCalledWith(456, fakeEvt);
     });
   });
 
@@ -72,8 +72,8 @@ describe("Room API", () => {
 
       await request(app).post("/room/123/reveal").expect(200).expect({ success: true, gameEvent: fakeEvent });
 
-      expect(gameService.revealVotes).toHaveBeenCalledWith("123");
-      expect(bc).toHaveBeenCalledWith("123", fakeEvent);
+      expect(gameService.revealVotes).toHaveBeenCalledWith(123);
+      expect(bc).toHaveBeenCalledWith(123, fakeEvent);
     });
   });
 
@@ -91,8 +91,8 @@ describe("Room API", () => {
 
       await request(app).post("/room/321/repeat").expect(200).expect({ success: true, item: "A" });
 
-      expect(gameService.repeatVoting).toHaveBeenCalledWith("321");
-      expect(bc).toHaveBeenCalledWith("321", fakeEvent);
+      expect(gameService.repeatVoting).toHaveBeenCalledWith(321);
+      expect(bc).toHaveBeenCalledWith(321, fakeEvent);
     });
   });
 
@@ -110,8 +110,8 @@ describe("Room API", () => {
 
       await request(app).post("/room/555/next").expect(200).expect({ success: true, item: "B" });
 
-      expect(gameService.nextItem).toHaveBeenCalledWith("555");
-      expect(bc).toHaveBeenCalledWith("555", fakeEvent);
+      expect(gameService.nextItem).toHaveBeenCalledWith(555);
+      expect(bc).toHaveBeenCalledWith(555, fakeEvent);
     });
   });
 
@@ -143,7 +143,7 @@ describe("Room API", () => {
 
       // fast-forward the 5s delay
       vi.advanceTimersByTime(5_000);
-      expect(del).toHaveBeenCalledWith("999");
+      expect(del).toHaveBeenCalledWith(999);
     });
   });
 
@@ -154,11 +154,11 @@ describe("Room API", () => {
       const disc = vi.spyOn(wsUtils, "disconnectUser").mockImplementation(() => {});
       const bc = vi.spyOn(wsUtils, "broadcast").mockImplementation(() => {});
 
-      await request(app).post("/room/abc/ban").send({ name: "bob" }).expect(200).expect({ success: true });
+      await request(app).post("/room/789/ban").send({ name: "bob" }).expect(200).expect({ success: true });
 
-      expect(roomService.banUser).toHaveBeenCalledWith("abc", "bob");
-      expect(disc).toHaveBeenCalledWith("abc", "bob");
-      expect(bc).toHaveBeenCalledWith("abc", {
+      expect(roomService.banUser).toHaveBeenCalledWith(789, "bob");
+      expect(disc).toHaveBeenCalledWith(789, "bob");
+      expect(bc).toHaveBeenCalledWith(789, {
         event: "user-banned",
         user: "bob",
       });

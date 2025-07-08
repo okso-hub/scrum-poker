@@ -13,7 +13,7 @@ describe('RoomService', () => {
   let svc: RoomService;
   const ADMIN_NAME = 'alice';
   const ADMIN_IP = '1.1.1.1';
-  const ROOM_ID = '654321';
+  const ROOM_ID = 654321;
 
   beforeEach(() => {
     svc = new RoomService();
@@ -49,7 +49,7 @@ describe('RoomService', () => {
 
   describe('deleteRoom', () => {
     it('throws if room does not exist', () => {
-      expect(() => svc.deleteRoom('nope')).toThrow(NotFoundError);
+      expect(() => svc.deleteRoom(999)).toThrow(NotFoundError);
     });
 
     it('removes an existing room', () => {
@@ -61,11 +61,11 @@ describe('RoomService', () => {
 
   describe('getRoom & isAdmin', () => {
     it('getRoom throws if not found', () => {
-      expect(() => svc.getRoom('404')).toThrow(NotFoundError);
+      expect(() => svc.getRoom(404)).toThrow(NotFoundError);
     });
 
     it('isAdmin returns false when room missing', () => {
-      expect(svc.isAdmin('404', 'x')).toBe(false);
+      expect(svc.isAdmin(404, 'x')).toBe(false);
     });
 
     it('isAdmin identifies the admin by IP', () => {
@@ -81,7 +81,7 @@ describe('RoomService', () => {
     });
 
     it('throws if missing userName or roomId', () => {
-      expect(() => svc.joinRoom('', 'bob', '2.2.2.2')).toThrow(BadRequestError);
+      expect(() => svc.joinRoom(0, 'bob', '2.2.2.2')).toThrow(BadRequestError);
       expect(() => svc.joinRoom(ROOM_ID, '', '2.2.2.2')).toThrow(BadRequestError);
     });
 

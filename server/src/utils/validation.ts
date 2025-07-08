@@ -1,12 +1,14 @@
+import { BadRequestError } from "../types/index.js";
+
 export function validateRoomId(roomId: any): number {
   if (!roomId) {
-    throw new Error("roomId is required");
+    throw new BadRequestError("roomId is required");
   }
   
   const numericRoomId = Number(roomId);
   
   if (isNaN(numericRoomId) || numericRoomId <= 0) {
-    throw new Error("roomId must be a valid positive number");
+    throw new BadRequestError("roomId must be a valid positive number");
   }
   
   return numericRoomId;

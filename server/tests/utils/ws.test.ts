@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createServer, Server as HttpServer } from "http";
 import WebSocket, { WebSocketServer } from "ws";
 import * as wsModule from "../../src/utils/ws.js";
-import type { CustomWebSocket } from "../../src/utils/ws.js";
+import type { CustomWebSocket } from "../../src/types/index.js";
 
 describe("WebSocket utils", () => {
   let httpServer: HttpServer;
@@ -40,14 +40,14 @@ describe("WebSocket utils", () => {
       wss.clients.clear();
       fake1 = {
         readyState: WebSocket.OPEN,
-        roomId: "room1",
+        roomId: 1,
         playerName: "alice",
         send: vi.fn(),
         terminate: vi.fn(),
       } as any;
       fake2 = {
         readyState: WebSocket.OPEN,
-        roomId: "room2",
+        roomId: 2,
         playerName: "bob",
         send: vi.fn(),
         terminate: vi.fn(),
@@ -58,14 +58,14 @@ describe("WebSocket utils", () => {
     });
 
     it("broadcast() only hits matching OPEN clients", () => {
-      wsModule.broadcast("room1", { foo: "bar" });
+      wsModule.broadcast(1, { foo: "bar" });
       expect(fake1.send).toHaveBeenCalledWith(JSON.stringify({ foo: "bar" }));
       expect(fake2.send).not.toHaveBeenCalled();
     });
 
     it("disconnectUser() messages+terminates only the named client", () => {
-      fake2.roomId = "room1";
-      wsModule.disconnectUser("room1", "alice");
+      fake2.roomId = 1;
+      wsModule.disconnectUser(1, "alice");
       expect(fake1.send).toHaveBeenCalledWith(
         JSON.stringify({ event: "banned-by-admin" })
       );
@@ -81,7 +81,7 @@ describe("WebSocket utils", () => {
 
       client.send(
         JSON.stringify({
-          roomId: "r42",
+          roomId: 42,
           role: "player",
           payload: { name: "charlie" },
         })
@@ -91,23 +91,9 @@ describe("WebSocket utils", () => {
       await new Promise((r) => setTimeout(r, 50));
 
       const [serverSide] = Array.from(wss.clients) as CustomWebSocket[];
-      expect(serverSide.roomId).toBe("r42");
+      expect(serverSide.roomId).toBe(42);
       expect(serverSide.role).toBe("player");
       expect(serverSide.playerName).toBe("charlie");
-
-      client.close();
-    });
-
-    it("falls back to raw string on invalid JSON", async () => {
-      const client = new WebSocket(url);
-      await new Promise((r) => client.once("open", r));
-
-      client.send("just-a-room-id");
-
-      await new Promise((r) => setTimeout(r, 50));
-
-      const [serverSide] = Array.from(wss.clients) as CustomWebSocket[];
-      expect(serverSide.roomId).toBe("just-a-room-id");
 
       client.close();
     });
@@ -117,17 +103,17 @@ describe("WebSocket utils", () => {
       await new Promise((r) => client.once("open", r));
 
       // first message sets it
-      client.send(JSON.stringify({ roomId: "first" }));
+      client.send(JSON.stringify({ roomId: 1 }));
       await new Promise((r) => setTimeout(r, 50));
 
       const [serverSide] = Array.from(wss.clients) as CustomWebSocket[];
-      expect(serverSide.roomId).toBe("first");
+      expect(serverSide.roomId).toBe(1);
 
       // second message should be ignored
-      client.send(JSON.stringify({ roomId: "second", role: "x", payload: { name: "y" } }));
+      client.send(JSON.stringify({ roomId: 2, role: "x", payload: { name: "y" } }));
       await new Promise((r) => setTimeout(r, 50));
 
-      expect(serverSide.roomId).toBe("first");
+      expect(serverSide.roomId).toBe(1);
       expect(serverSide.role).toBeUndefined();
       expect(serverSide.playerName).toBeUndefined();
 

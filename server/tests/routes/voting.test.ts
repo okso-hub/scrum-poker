@@ -32,7 +32,7 @@ describe('Vote Routes', () => {
   });
 
   describe('POST /room/:roomId/vote', () => {
-    const ROOM = 'room42';
+    const ROOM = 42;
     const PLAYER = 'alice';
     const VOTE = '5';
 
@@ -71,6 +71,7 @@ describe('Vote Routes', () => {
       };
       vi.spyOn(gameService, 'vote').mockReturnValue({ event: 'vote-status-update' } as any);
       vi.spyOn(gameService, 'isVoteComplete').mockReturnValue(true);
+      vi.spyOn(gameService, 'canRevealVotes').mockReturnValue(true);
       vi.spyOn(gameService, 'revealVotes').mockReturnValue(revealEvent);
       const bc = vi.spyOn(wsUtils, 'broadcast').mockImplementation(() => {});
 
@@ -111,11 +112,11 @@ describe('Vote Routes', () => {
       vi.spyOn(gameService, 'getVoteStatus').mockReturnValue(fakeStatus);
 
       const res = await request(app)
-        .get(`/room/xyz/vote-status`)
+        .get(`/room/789/vote-status`)
         .expect(200);
 
       expect(res.body).toEqual(fakeStatus);
-      expect(gameService.getVoteStatus).toHaveBeenCalledWith('xyz');
+      expect(gameService.getVoteStatus).toHaveBeenCalledWith(789);
     });
   });
 });
