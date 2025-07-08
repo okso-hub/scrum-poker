@@ -30,7 +30,6 @@
       align-items: center;
       justify-content: center;
       padding: 0.75rem;
-      background: var(--color-background);
       border: var(--border-width) solid var(--color-border);
       border-radius: var(--radius-md);
       text-align: center;
@@ -43,16 +42,7 @@
         margin-block-start: var(--spacing-md);
       }
       
-      &.admin-participant {
-        background: #fff3cd;
-        border-color: #ffc107;
-        
-        & .participant-name {
-          font-weight: bold;
-        }
-      }
-      
-      &.regular-participant {
+      &:not(.admin-user) {
         background: var(--color-background);
       }
     }

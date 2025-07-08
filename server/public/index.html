@@ -1,39 +1,226 @@
 <!doctype html>
-<html lang="de">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <title>AgileAce</title>
-    <style>
-      * {
-        font-family: "Lucida Console", "Courier New", monospace;
-      }
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AgileAce Planning Poker</title>
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --background-color: #f8f9fa;
+      --text-color: #2c3e50;
+      --card-background: #ffffff;
+      --border-color: #dee2e6;
+      --hover-color: #34495e;
+      --success-color: #27ae60;
+      
+      --font-family: system-ui, -apple-system, sans-serif;
+      --font-size-base: 1rem;
+      --font-size-lg: 1.25rem;
+      --font-size-xl: 1.5rem;
+      --font-size-2xl: 2rem;
+      
+      --spacing-sm: 0.5rem;
+      --spacing-md: 1rem;
+      --spacing-lg: 1.5rem;
+      --spacing-xl: 2rem;
+      
+      --border-radius: 0.375rem;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
 
-      html, body {
-        height: 100%;
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--font-family);
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: var(--spacing-xl);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: var(--spacing-xl);
+      
+      h1 {
+        font-size: var(--font-size-2xl);
+        color: var(--primary-color);
+        margin: 0 0 var(--spacing-md) 0;
+        font-weight: 600;
+      }
+      
+      p {
+        font-size: var(--font-size-lg);
+        color: var(--text-color);
         margin: 0;
-        padding: 0;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
       }
+    }
 
-      agile-ace {
-        --agile-ace-primary-color: #ec7e3f;
-        --agile-ace-hover-color: #0056b3;
-        --agile-ace-selected-color: #111512;
-        --agile-ace-border-radius: 0.75rem;
-        --agile-ace-font-size: 1.1rem;
+    section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: var(--spacing-lg);
+      margin-bottom: var(--spacing-xl);
+    }
+
+    article {
+      background: var(--card-background);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--spacing-lg);
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
-    </style>
-  </head>
-  <body>
-    <agile-ace
-      backend-url="http://141.72.13.151:8100"
-      width="100%"
-      height="100%"
-      default-items='{"items":["#041 - User Registration Feature","#062 - Mobile App Responsive Design","#063 - Database Migration"],"exportDate":"2024-01-01T00:00:00.000Z"}'
-    >
-      <img slot="branding" src="./assets/images/dhbw.png" alt="My Brand Logo" />
-    </agile-ace>
-    V5
-    <script type="module" src="js/agile-ace.js"></script>
-  </body>
+      
+      h2 {
+        font-size: var(--font-size-xl);
+        color: var(--primary-color);
+        margin: 0 0 var(--spacing-md) 0;
+        font-weight: 600;
+      }
+      
+      p {
+        margin: 0 0 var(--spacing-lg) 0;
+        color: var(--text-color);
+      }
+      
+      ul {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 var(--spacing-lg) 0;
+        
+        li {
+          padding: var(--spacing-sm) 0;
+          border-left: 3px solid var(--secondary-color);
+          padding-left: var(--spacing-md);
+          margin-bottom: var(--spacing-sm);
+          
+          &:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
+      
+      a {
+        display: block;
+        background: var(--secondary-color);
+        color: white;
+        padding: var(--spacing-md);
+        text-decoration: none;
+        border-radius: var(--border-radius);
+        text-align: center;
+        font-weight: 500;
+        transition: background-color 0.2s ease;
+        
+        &.primary {
+          background: var(--primary-color);
+        }
+        
+        &.accent {
+          background: var(--accent-color);
+        }
+        
+        &.success {
+          background: var(--success-color);
+        }
+      }
+    }
+
+    footer {
+      text-align: center;
+      padding: var(--spacing-xl) 0;
+      border-top: 1px solid var(--border-color);
+      margin-top: var(--spacing-xl);
+      
+      p {
+        margin: 0;
+        color: var(--text-color);
+        opacity: 0.7;
+      }
+    }
+
+    @media (max-width: 768px) {
+      main {
+        padding: var(--spacing-lg);
+      }
+      
+      header h1 {
+        font-size: var(--font-size-xl);
+      }
+      
+      section {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>AgileAce Planning Poker</h1>
+      <p>Choose one of the 3 available pages to experience the AgileAce Planning Poker component in different contexts.</p>
+    </header>
+
+    <section>
+      <article>
+        <h2>Standard Component</h2>
+        <p>The AgileAce component in its purest form - full screen size with default configuration. Perfect for quick estimation sessions without additional distractions.</p>
+        <ul>
+          <li>Full screen view</li>
+          <li>Default component values</li>
+          <li>Minimal configuration</li>
+          <li>Quick start</li>
+        </ul>
+        <a href="simple.html" class="primary">Open</a>
+      </article>
+
+      <article>
+        <h2>Sprint Backlog Dashboard</h2>
+        <p>Complete overview with detailed Sprint Backlog items and integrated Planning Poker component. Ideal for team meetings and structured estimation sessions.</p>
+        <ul>
+          <li>Detailed item descriptions</li>
+          <li>Split-screen layout</li>
+          <li>Status badges and priorities</li>
+          <li>Team context</li>
+        </ul>
+        <a href="dashboard.html" class="accent">Open</a>
+      </article>
+
+      <article>
+        <h2>Design Playground</h2>
+        <p>Experiment with different themes and color schemes. Test various design variants of the AgileAce component and adapt them to your needs.</p>
+        <ul>
+          <li>Various themes</li>
+          <li>Live customization</li>
+          <li>Design token editor</li>
+          <li>CSS export functions</li>
+        </ul>
+        <a href="playground.html" class="success">Open</a>
+      </article>
+    </section>
+
+    <footer>
+      <p>&copy; 2024 AgileAce - Planning Poker for agile teams</p>
+    </footer>
+  </main>
+</body>
 </html>
