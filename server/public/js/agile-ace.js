@@ -13,10 +13,12 @@ class AgileAce extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this._bindEvents();
     this._initializeToastHost();
+    
+    // Set backend URL BEFORE initializing navbar
+    this._backendUrl = this.getAttribute("backend-url");
+    
     this._initializeNavbar();
     this._renderLanding();
-
-    this._backendUrl = this.getAttribute("backend-url");
   }
 
   _bindEvents() {

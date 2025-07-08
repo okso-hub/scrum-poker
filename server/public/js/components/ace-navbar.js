@@ -2,6 +2,10 @@ import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceNavbar extends HTMLElement {
+  static get observedAttributes() {
+    return ['room-id', 'is-admin', 'backend-url'];
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -20,9 +24,7 @@ class AceNavbar extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(navbarStyles);
     this._template = navbarTemplate;
     
-    this._roomId = Number(this.getAttribute("room-id"));
     this._isAdmin = this.getAttribute("is-admin") === "true";
-    this._backendUrl = this.getAttribute("backend-url");
     
     this._render();
   }
@@ -38,9 +40,25 @@ class AceNavbar extends HTMLElement {
   }
 
   async _fetchParticipants() {
+    // Always get fresh values from attributes to avoid context loss
+    let backendUrl = this.getAttribute("backend-url");
+    const roomId = Number(this.getAttribute("room-id"));
+    
+    // Handle case where backendUrl is string "undefined" or "null"
+    if (backendUrl === "undefined" || backendUrl === "null") {
+      backendUrl = null;
+    }
+    
+    if (!backendUrl || !roomId) {
+      console.error('Missing required attributes for participant fetch:', { backendUrl, roomId });
+      this._participants = [];
+      return;
+    }
+    
     try {
-      const res = await fetch(this._backendUrl + `/room/${this._roomId}/participants`);
-      if (!res.ok) throw new Error('Fetch failed');
+      const url = `${backendUrl}/room/${roomId}/participants`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const { participants } = await res.json();
       this._participants = participants;
     } catch (e) {
@@ -50,12 +68,14 @@ class AceNavbar extends HTMLElement {
   }
 
   _render() {
+    const roomId = Number(this.getAttribute("room-id"));
+    
     // Loads templace
     const templateContent = this._template.content.cloneNode(true);
 
     // Inserts room ID in the template
     const roomIdElement = templateContent.querySelector('.room-id');
-    roomIdElement.textContent = this._roomId.toString();
+    roomIdElement.textContent = roomId.toString();
     
     // Places template in shadow root
     this.shadowRoot.innerHTML = '';
@@ -78,7 +98,8 @@ class AceNavbar extends HTMLElement {
   }
 
   _wireUp() {
-    const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
+    const roomId = Number(this.getAttribute("room-id"));
+    const joinUrl = `${location.origin}${location.pathname}?roomId=${roomId}`;
 
     const copyIdBtn = this.shadowRoot.getElementById("copy-id-btn");
     const copyBtn = this.shadowRoot.getElementById("copy-btn");
@@ -95,7 +116,7 @@ class AceNavbar extends HTMLElement {
 
     // Copy Game ID
     copyIdBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(this._roomId.toString())
+      navigator.clipboard.writeText(roomId.toString())
         .then(() => {
           // Success animation
           copyIdBtn.textContent = '✅';
@@ -252,8 +273,17 @@ class AceNavbar extends HTMLElement {
     if (!name) return;
     if (!confirm(`Really ban "${name}"?`)) return;
 
+    let backendUrl = this.getAttribute("backend-url");
+    const roomId = Number(this.getAttribute("room-id"));
+    
+    // Handle case where backendUrl is string "undefined" or "null"
+    if (backendUrl === "undefined" || backendUrl === "null") {
+      console.error('Invalid backend URL for ban operation:', backendUrl);
+      return;
+    }
+
     try {
-      const res = await fetch(this._backendUrl + `/room/${this._roomId}/ban`, {
+      const res = await fetch(`${backendUrl}/room/${roomId}/ban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
