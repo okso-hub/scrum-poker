@@ -16,15 +16,14 @@
       <h3>Create Game</h3>
       <button 
         id="create-game-button" 
-        type="button"
-        aria-label="Start game as admin">
+        type="button">
         Start Game as Admin
       </button>
     </article>
     
     <article class="action card">
       <h3>Join Game</h3>
-      <div class="input-group">
+      <section class="input-group" role="group">
         <label for="game-id-input">Game-ID:</label>
         <input 
           id="game-id-input" 
@@ -33,11 +32,10 @@
           placeholder="z. B. ABC123"
           pattern="[A-Za-z0-9]{3,}">
         </input>
-      </div>
+      </section>
       <button 
         id="join-game-button" 
-        type="button"
-        aria-label="Join existing game">
+        type="button">
         Join
       </button>
     </article>

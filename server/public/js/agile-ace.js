@@ -228,6 +228,8 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("is-last-item", isLastItem);
     comp.setAttribute("backend-url", this._backendUrl);
     comp.setAttribute("hide-navbar", "true");
+    comp.setAttribute("player-name", this._name); // Add current player name
+    comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
     
     // Ensure the component is properly appended and check for errors
     this._contentContainer.appendChild(comp);
@@ -371,6 +373,10 @@ class AgileAce extends HTMLElement {
       console.log("[WS] Received message: ", msg);
 
       if (msg.event === "cards-revealed") {
+        // Update allPlayers if provided in the message
+        if (msg.allPlayers) {
+          this._allPlayers = msg.allPlayers;
+        }
         this._showResults(msg.results, msg.isLastItem);
       } else if (msg.event === "reveal-item") {
         this._allPlayers = msg.allPlayers;
