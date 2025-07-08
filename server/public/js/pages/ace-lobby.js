@@ -22,7 +22,7 @@ class AceLobby extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(lobbyStyles);
     this._template = lobbyTemplate;
     
-    this._roomId = this.getAttribute('room-id');
+    this._gameId = this.getAttribute('game-id');
     this._backendUrl = this.getAttribute("backend-url");
     this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
     
@@ -65,7 +65,7 @@ class AceLobby extends HTMLElement {
 
   _render() {
     const html = interpolateTemplate(this._template, {
-      roomId: this._roomId,
+      gameId: this._gameId,
       isAdmin: this._isAdmin,
       backendUrl: this._backendUrl,
       hideNavbar: this._hideNavbar
@@ -84,7 +84,7 @@ class AceLobby extends HTMLElement {
 
   async _fetchParticipants() {
     try {
-      const res = await fetch(this._backendUrl + `/room/${this._roomId}/participants`);
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/participants`);
 
       // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
@@ -99,7 +99,7 @@ class AceLobby extends HTMLElement {
 
   async _fetchItems() {
     try {
-      const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`);
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/items`);
 
       // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
@@ -114,7 +114,7 @@ class AceLobby extends HTMLElement {
 
   async _checkAdmin() {
     try {
-      const res = await fetch(this._backendUrl + `/is-admin?roomId=${this._roomId}`);
+      const res = await fetch(this._backendUrl + `/is-admin?roomId=${this._gameId}`);
 
       // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
@@ -165,7 +165,7 @@ class AceLobby extends HTMLElement {
     if (!confirm(`Really ban user "${name}"?`)) return;
 
     try {
-      const res = await fetch(`/room/${this._roomId}/ban`, {
+      const res = await fetch(`/room/${this._gameId}/ban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
@@ -199,12 +199,12 @@ class AceLobby extends HTMLElement {
 
   async _onStart() {
     try {
-      const res = await fetch(`/room/${this._roomId}/start`, { method: 'POST' });
+      const res = await fetch(`/room/${this._gameId}/start`, { method: 'POST' });
 
       // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
 
-      console.log(`Start request successful for room ${this._roomId}`);
+      console.log(`Start request successful for game ${this._gameId}`);
     } catch (e) {
       alert(e.error || e.message || 'Error starting game');
     }

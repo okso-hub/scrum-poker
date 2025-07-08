@@ -17,9 +17,19 @@ class AceResults extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(resultsStyles);
     this._template = resultsTemplate;
     
-    this._results = JSON.parse(this.getAttribute('results') || '{}');
+    const data = JSON.parse(this.getAttribute('results') || '{}');
+    const votes = data.votes || {};
+    const average = data.average || 0;
+    const summary = data.summary || {};
+    
+    // Determine question/item text with fallback chain
+    this._question = this.getAttribute('question');
+    this._average = average;
+    this._votes = votes;
     this._isAdmin = this.getAttribute('is-admin') === 'true';
-    this._roomId = this.getAttribute('room-id');
+    this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');
+    this._playerName = this.getAttribute('player-name') || '';
+    this._gameId = this.getAttribute('game-id') || '';
     this._isLastItem = this.getAttribute('is-last-item') === 'true';
     this._backendUrl = this.getAttribute('backend-url');
     this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
@@ -30,8 +40,10 @@ class AceResults extends HTMLElement {
 
   _render() {
     const html = interpolateTemplate(this._template, {
-      roomId: this._roomId,
+      gameId: this._gameId,
       isAdmin: this._isAdmin,
+      question: this._question,
+      average: this._average,
       backendUrl: this._backendUrl
     });
     
@@ -45,94 +57,87 @@ class AceResults extends HTMLElement {
       }
     }
     
-    this._renderResults();
+    this._populateVoteTable();
     this._renderAdminControls();
   }
 
-  _renderResults() {
-    const votes = this._results.votes || {};
-    const voteEntries = Object.entries(votes);
-    const itemName = this._results.item || 'Unknown Item';
-    const average = this._results.average || 0;
+  _populateVoteTable() {
+    const voteTableBody = this.shadowRoot.querySelector('#vote-table-body');
+    const voteOverviewSection = this.shadowRoot.querySelector('#vote-overview-section');
     
-    console.log("Rendering results with data:", this._results);
-    console.log("Vote entries:", voteEntries);
+    const voteEntries = Object.entries(this._votes);
     
-    const voteOverview = voteEntries.length > 0 ? `
-      <div class="vote-overview">
-        <h3>Vote Details</h3>
-        <table class="vote-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>Vote</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${voteEntries.map(([player, vote]) => `
-              <tr>
-                <td>${player}</td>
-                <td class="vote-value">${vote}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    ` : '';
-
-    // Update only the results content, not the entire shadow DOM
-    const questionBox = this.shadowRoot.querySelector('.question-box .question');
-    const averageBox = this.shadowRoot.querySelector('.average-box');
-    const resultsContainer = this.shadowRoot.querySelector('.results-container') || 
-                            this.shadowRoot.querySelector('main') ||
-                            this.shadowRoot;
+    console.log('DEBUG: _allPlayers:', this._allPlayers);
+    console.log('DEBUG: _votes:', this._votes);
+    console.log('DEBUG: voteEntries:', voteEntries);
     
-    if (questionBox) {
-      questionBox.textContent = itemName;
-    }
-    
-    if (averageBox) {
-      averageBox.textContent = `Average: ${average}`;
-    }
-    
-    // Add vote overview if there's a results container
-    if (resultsContainer && voteOverview) {
-      // Remove existing vote overview first
-      const existingOverview = resultsContainer.querySelector('.vote-overview');
-      if (existingOverview) {
-        existingOverview.remove();
+    if (voteEntries.length === 0) {
+      if (voteOverviewSection) {
+        voteOverviewSection.style.display = 'none';
       }
-      // Add new vote overview
-      resultsContainer.insertAdjacentHTML('beforeend', voteOverview);
+      return;
+    }
+    
+    if (voteTableBody) {
+      voteTableBody.innerHTML = voteEntries
+        .map(([playerName, vote]) => {
+          // Find player in allPlayers array to get isAdmin status
+          const player = this._allPlayers.find(p => p.name === playerName);
+          let isAdmin = player ? player.isAdmin : false;
+          
+          // Fallback: If no allPlayers info but current user is admin, highlight current user
+          if (!player && this._allPlayers.length === 0 && this._isAdmin && playerName === this._playerName) {
+            isAdmin = true;
+          }
+          
+          console.log(`DEBUG: Player: ${playerName}, isAdmin: ${isAdmin}, currentPlayer: ${this._playerName}, isCurrentAdmin: ${this._isAdmin}`, player);
+          
+          return `
+            <tr class="${isAdmin ? 'admin-user' : 'regular-user'}">
+              <td class="player-name">${playerName}</td>
+              <td class="vote-value">${vote}</td>
+            </tr>
+          `;
+        })
+        .join('');
     }
   }
 
   _renderAdminControls() {
-    if (this._isAdmin) {
-      const actionsHtml = `
-        <div class="actions">
-          ${this._isLastItem
-            ? '<button id="summaryBtn" class="primary">Show Summary</button>'
-            : '<button id="nextBtn" class="primary">Next Item</button>'}
-          <button id="repeatBtn" class="secondary">Repeat Voting</button>
-        </div>
-      `;
-      this.shadowRoot.querySelector('.admin-controls').innerHTML = actionsHtml;
+    const adminActions = this.shadowRoot.querySelector('#admin-actions');
+    const nextBtn = this.shadowRoot.querySelector('#next-button');
+    const summaryBtn = this.shadowRoot.querySelector('#summary-button');
+    const repeatBtn = this.shadowRoot.querySelector('#repeat-button');
+
+    if (!this._isAdmin) {
+      if (adminActions) {
+        adminActions.style.display = 'none';
+      }
+      return;
+    }
+
+    // Show appropriate primary button based on whether it's the last item
+    if (this._isLastItem) {
+      if (nextBtn) nextBtn.style.display = 'none';
+      if (summaryBtn) summaryBtn.style.display = 'inline-block';
+    } else {
+      if (nextBtn) nextBtn.style.display = 'inline-block';
+      if (summaryBtn) summaryBtn.style.display = 'none';
     }
   }
 
   _setupEventListeners() {
     if (this._isAdmin) {
-      this.shadowRoot.getElementById('nextBtn')?.addEventListener('click', () => this._nextItem());
-      this.shadowRoot.getElementById('summaryBtn')?.addEventListener('click', () => this._showSummary());
-      this.shadowRoot.getElementById('repeatBtn')?.addEventListener('click', () => this._repeatVoting());
+      this.shadowRoot.getElementById('next-button')?.addEventListener('click', () => this._nextItem());
+      this.shadowRoot.getElementById('summary-button')?.addEventListener('click', () => this._showSummary());
+      this.shadowRoot.getElementById('repeat-button')?.addEventListener('click', () => this._repeatVoting());
     }
   }
 
   async _nextItem() {
     try {
       // Requests server to move on to next item (will trigger an event that sends all connected clients to the next item)
-      await fetch(this._backendUrl + `/room/${this._roomId}/next`, { method: 'POST' });
+      await fetch(this._backendUrl + `/room/${this._gameId}/next`, { method: 'POST' });
     } catch (error) {
       console.error('Error starting next item:', error);
     }
@@ -141,7 +146,7 @@ class AceResults extends HTMLElement {
   async _repeatVoting() {
     try {
       // Requests server to repeat item (will trigger an event that sends all connected clients to the current item again)
-      await fetch(this._backendUrl + `/room/${this._roomId}/repeat`, { method: 'POST' });
+      await fetch(this._backendUrl + `/room/${this._gameId}/repeat`, { method: 'POST' });
     } catch (error) {
       console.error('Error repeating voting:', error);
     }
@@ -150,7 +155,7 @@ class AceResults extends HTMLElement {
   async _showSummary() {
     try {
       // Requests server to move on to the summary page (will trigger an event that sends all connected clients to the summary page)
-      await fetch(this._backendUrl + `/room/${this._roomId}/summary`, { method: 'POST' });
+      await fetch(this._backendUrl + `/room/${this._gameId}/summary`, { method: 'POST' });
     } catch (error) {
       console.error('Error showing summary:', error);
     }

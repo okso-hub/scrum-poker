@@ -3,7 +3,7 @@ import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
 class AceNavbar extends HTMLElement {
   static get observedAttributes() {
-    return ['room-id', 'is-admin', 'backend-url'];
+    return ['game-id', 'is-admin', 'backend-url'];
   }
 
   constructor() {
@@ -42,21 +42,21 @@ class AceNavbar extends HTMLElement {
   async _fetchParticipants() {
     // Always get fresh values from attributes to avoid context loss
     let backendUrl = this.getAttribute("backend-url");
-    const roomId = Number(this.getAttribute("room-id"));
+    const gameId = Number(this.getAttribute("game-id"));
     
     // Handle case where backendUrl is string "undefined" or "null"
     if (backendUrl === "undefined" || backendUrl === "null") {
       backendUrl = null;
     }
     
-    if (!backendUrl || !roomId) {
-      console.error('Missing required attributes for participant fetch:', { backendUrl, roomId });
+    if (!backendUrl || !gameId) {
+      console.error('Missing required attributes for participant fetch:', { backendUrl, gameId });
       this._participants = [];
       return;
     }
     
     try {
-      const url = `${backendUrl}/room/${roomId}/participants`;
+      const url = `${backendUrl}/room/${gameId}/participants`;
       const res = await fetch(url);
       if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
       const { participants } = await res.json();
@@ -68,14 +68,14 @@ class AceNavbar extends HTMLElement {
   }
 
   _render() {
-    const roomId = Number(this.getAttribute("room-id"));
+    const gameId = Number(this.getAttribute("game-id"));
     
     // Loads templace
     const templateContent = this._template.content.cloneNode(true);
 
-    // Inserts room ID in the template
-    const roomIdElement = templateContent.querySelector('.room-id');
-    roomIdElement.textContent = roomId.toString();
+    // Inserts game ID in the template
+    const gameIdElement = templateContent.querySelector('.game-id');
+    gameIdElement.textContent = gameId.toString();
     
     // Places template in shadow root
     this.shadowRoot.innerHTML = '';
@@ -98,8 +98,8 @@ class AceNavbar extends HTMLElement {
   }
 
   _wireUp() {
-    const roomId = Number(this.getAttribute("room-id"));
-    const joinUrl = `${location.origin}${location.pathname}?roomId=${roomId}`;
+    const gameId = Number(this.getAttribute("game-id"));
+    const joinUrl = `${location.origin}${location.pathname}?gameId=${gameId}`;
 
     const copyIdBtn = this.shadowRoot.getElementById("copy-id-btn");
     const copyBtn = this.shadowRoot.getElementById("copy-btn");
@@ -116,7 +116,7 @@ class AceNavbar extends HTMLElement {
 
     // Copy Game ID
     copyIdBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(roomId.toString())
+      navigator.clipboard.writeText(gameId.toString())
         .then(() => {
           // Success animation
           copyIdBtn.textContent = '✅';
@@ -274,7 +274,7 @@ class AceNavbar extends HTMLElement {
     if (!confirm(`Really ban "${name}"?`)) return;
 
     let backendUrl = this.getAttribute("backend-url");
-    const roomId = Number(this.getAttribute("room-id"));
+    const gameId = Number(this.getAttribute("game-id"));
     
     // Handle case where backendUrl is string "undefined" or "null"
     if (backendUrl === "undefined" || backendUrl === "null") {
@@ -283,7 +283,7 @@ class AceNavbar extends HTMLElement {
     }
 
     try {
-      const res = await fetch(`${backendUrl}/room/${roomId}/ban`, {
+      const res = await fetch(`${backendUrl}/room/${gameId}/ban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })

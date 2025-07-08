@@ -20,17 +20,19 @@ class AceLanding extends HTMLElement {
     this._template = landingTemplate;
     
     this._render();
-    this._prefillRoomId();
+    this._prefillGameId();
   }
 
-  // if URL query params contain a roomId, it will be pre-filled on the page, allowing for a quicker join
-  _prefillRoomId() {
+  // if URL query params contain a gameId, it will be pre-filled on the page, allowing for a quicker join
+  _prefillGameId() {
     const params = new URLSearchParams(window.location.search);
-    const roomId = params.get('roomId') || params.get('gameId');
+    const gameId = params.get('roomId') || params.get('gameId');
 
-    if (roomId) {
+    console.log('game id is ' + gameId)
+
+    if (gameId) {
       const gameEl = this.shadowRoot.getElementById("game-id-input");
-      if (gameEl) gameEl.value = roomId;
+      if (gameEl) gameEl.value = gameId;
     }
   }
 

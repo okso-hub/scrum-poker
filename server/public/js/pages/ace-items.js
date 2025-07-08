@@ -9,7 +9,7 @@ class AceItems extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._items = [];
-    this._roomId = null;
+    this._gameId = null;
     this._isAdmin = false;
     this._hideNavbar = false;
   }
@@ -24,7 +24,7 @@ class AceItems extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(itemsStyles);
     this._template = itemsTemplate;
     
-    this._roomId = Number(this.getAttribute("room-id")) || null;
+    this._gameId = Number(this.getAttribute("game-id")) || null;
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
     this._hideNavbar = this.getAttribute("hide-navbar") === "true";
@@ -40,7 +40,7 @@ class AceItems extends HTMLElement {
   // Fetches backlog items added by admin
   async _loadItems() {
     try {
-      const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`);
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/items`);
       if (res.ok) {
         const { items } = await res.json();
         this._items = items;
@@ -71,7 +71,7 @@ class AceItems extends HTMLElement {
 
   _render() {
     const html = interpolateTemplate(this._template, {
-      roomId: this._roomId,
+      gameId: this._gameId,
       isAdmin: this._isAdmin,
       backendUrl: this._backendUrl
     });
@@ -129,7 +129,7 @@ class AceItems extends HTMLElement {
     const exportData = {
       items: this._items,
       exportDate: new Date().toISOString(),
-      roomId: this._roomId
+      gameId: this._gameId
     };
 
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -138,7 +138,7 @@ class AceItems extends HTMLElement {
 
     const link = document.createElement('a');
     link.href = url;
-    link.download = `scrum-items-${this._roomId || 'export'}-${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `scrum-items-${this._gameId || 'export'}-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -295,7 +295,7 @@ class AceItems extends HTMLElement {
       return;
     }
     try {
-      const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`, {
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: this._items })
@@ -305,7 +305,7 @@ class AceItems extends HTMLElement {
 
       this.dispatchEvent(
         new CustomEvent("ace-items-submitted", {
-          detail: { roomId: this._roomId, items: this._items },
+          detail: { gameId: this._gameId, items: this._items },
           bubbles: true,
           composed: true
         })

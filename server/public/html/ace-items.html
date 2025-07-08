@@ -1,5 +1,5 @@
 <ace-navbar 
-  room-id="${roomId}" 
+  game-id="${gameId}" 
   is-admin="${isAdmin}"
   backend-url="${backendUrl}">
 </ace-navbar>
@@ -10,45 +10,42 @@
   </header>
   
   <section class="input-section">
-    <div class="input-group horizontal">
+    <section class="input-group horizontal" role="group">
       <input 
         id="item-input" 
         type="text" 
         name="newItem"
         placeholder="New Item…"
-        pattern="[^<>&]{0,100}"
-        aria-label="New item to add">
+        pattern="[^<>&]{0,100}">
       </input>
       <button 
         id="add-item-button" 
-        type="button"
-        aria-label="Add item to list">
+        type="button">
         Add
       </button>
-    </div>
+    </section>
   </section>
   
   <section class="items-list">
-    <ul id="item-list" class="item-list" role="list">
+    <ul id="item-list" class="item-list">
       <!-- Items will be populated dynamically -->
     </ul>
   </section>
   
   <section class="import-export">
-    <div class="import-export-controls">
+    <nav class="import-export-controls">
       <button id="export-button" type="button" class="secondary">Export Items</button>
       <button id="import-button" type="button" class="secondary">Import Items</button>
       <input id="file-input" type="file" accept=".json" style="display: none;">
-    </div>
+    </nav>
   </section>
   
-  <section class="navigation">
+  <nav class="navigation">
     <button 
       id="next-button" 
       type="button"
-      class="horizontal"
-      aria-label="Proceed to next step">
+      class="horizontal">
       Next
     </button>
-  </section>
+  </nav>
 </main>
