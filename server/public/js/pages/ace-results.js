@@ -1,4 +1,5 @@
 import "../components/ace-navbar.js";
+import { createToastHelper } from "../utils/shadow-toast.js";
 import { combineStylesheets, loadStylesheet } from '../utils/styles.js';
 import { loadTemplate, interpolateTemplate } from '../utils/templates.js';
 
@@ -137,27 +138,45 @@ class AceResults extends HTMLElement {
   async _nextItem() {
     try {
       // Requests server to move on to next item (will trigger an event that sends all connected clients to the next item)
-      await fetch(this._backendUrl + `/room/${this._gameId}/next`, { method: 'POST' });
-    } catch (error) {
-      console.error('Error starting next item:', error);
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/next`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
+      console.error('Error starting next item:', err);
     }
   }
 
   async _repeatVoting() {
     try {
       // Requests server to repeat item (will trigger an event that sends all connected clients to the current item again)
-      await fetch(this._backendUrl + `/room/${this._gameId}/repeat`, { method: 'POST' });
-    } catch (error) {
-      console.error('Error repeating voting:', error);
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/repeat`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
+      console.error('Error repeating voting:', err);
     }
   }
 
   async _showSummary() {
     try {
       // Requests server to move on to the summary page (will trigger an event that sends all connected clients to the summary page)
-      await fetch(this._backendUrl + `/room/${this._gameId}/summary`, { method: 'POST' });
-    } catch (error) {
-      console.error('Error showing summary:', error);
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/summary`, { method: 'POST' });
+      if (!res.ok) {
+        const err = await res.json();
+        createToastHelper(this, err.message, "error", 3000);
+        return;
+      }
+    } catch (err) {
+      createToastHelper(this, err.message, "error", 3000);
+      console.error('Error showing summary:', err);
     }
   }
 }

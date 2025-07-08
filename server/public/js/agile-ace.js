@@ -125,6 +125,7 @@ class AgileAce extends HTMLElement {
     this.addEventListener("ace-join", (e) => this._onJoin(e.detail));
     this.addEventListener("ace-vote", (e) => this._sendVote(e.detail.value));
     this.addEventListener("ace-back-to-landing", () => this._goBackToLanding());
+    this.addEventListener("show-toast", (e) => this._showToast(e.detail.message, e.detail.type, e.detail.duration))
   }
 
   _initializeToastHost() {
@@ -311,7 +312,16 @@ class AgileAce extends HTMLElement {
 
   // Tells the backend to reveal the votes for everyone; WebSocket event will be sent after
   async _revealVotes() {
-    await fetch(this._backendUrl + `/room/${this._gameId}/reveal`, { method: "POST" });
+    try {
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/reveal`, { method: "POST" });
+
+      if (!res.ok) {
+        const err = await res.json();
+        this._showToast(err.message, "error", 3000);
+      }
+    } catch(err) {
+      this._showToast(err.message, "error", 3000);
+    }
   }
 
   _showToast(message, type = 'info', duration = 5000) {
@@ -365,16 +375,22 @@ class AgileAce extends HTMLElement {
   async _onCreate({ name }) {
     console.log("Creating game with name:", name);
 
-    const res = await fetch(this._backendUrl + "/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
+    let res;
+    try {
+      res = await fetch(this._backendUrl + "/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
 
-    if (!res.ok) {
-      // If unsuccesful, the body will contain the error in JSON format
-      const err = await res.json();
-      return alert(err.error || "Error on game creation");
+      if (!res.ok) {
+        const err = await res.json();
+        this._showToast(err.message, "error", 3000);
+        return;
+      }
+    } catch(err) {
+      this._showToast(err.message, "error", 3000);
+      return;
     }
 
     const { roomId } = await res.json();
@@ -398,16 +414,22 @@ class AgileAce extends HTMLElement {
   async _onJoin({ name, gameId }) {
     console.log("Joining game with name:", name, "and gameId:", gameId);
 
-    const res = await fetch(this._backendUrl + "/join", {
+    let res;
+    try {
+      res = await fetch(this._backendUrl + "/join", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, roomId: Number(gameId) }),
     });
 
-    // If unsuccesful, the body will contain the error in JSON format
-    if (!res.ok) {
-      const err = await res.json();
-      return alert(err.error || "Error on join");
+      if (!res.ok) {
+        const err = await res.json();
+        this._showToast(err.message, "error", 3000);
+        return;
+      }
+    } catch(err) {
+      this._showToast(err.message, "error", 3000);
+      return;
     }
 
     const payload = await res.json();
@@ -456,7 +478,20 @@ class AgileAce extends HTMLElement {
       case "completed":
         {
           // fetch summary page details in order to display them
-          const sumRes = await fetch(this._backendUrl + `/room/${this._gameId}/summary`, { method: "POST" });
+          let sumRes;
+          try {
+            sumRes = await fetch(this._backendUrl + `/room/${this._gameId}/summary`, { method: "POST" });
+
+            if (!res.ok) {
+              const err = await res.json();
+              this._showToast(err.message, "error", 3000);
+              return;
+            }
+          } catch(err) {
+            this._showToast(err.message, "error", 3000);
+            return;
+          }
+
           const { summary } = await sumRes.json();
           this._renderSummary(summary);
         }
