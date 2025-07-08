@@ -8,13 +8,13 @@ class AceItems extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this._items = [];
-    this._roomId = "";
+    this._roomId = null;
     this._isAdmin = false;
     this._hideNavbar = false;
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Items-Styles laden */
+    /* Loads global styling & page-specific styling */
     const [itemsStyles, itemsTemplate] = await Promise.all([
       loadStylesheet('/css/items.css'),
       loadTemplate('/html/ace-items.html')
@@ -23,7 +23,7 @@ class AceItems extends HTMLElement {
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(itemsStyles);
     this._template = itemsTemplate;
     
-    this._roomId = this.getAttribute("room-id") || "";
+    this._roomId = Number(this.getAttribute("room-id")) || null;
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
     this._hideNavbar = this.getAttribute("hide-navbar") === "true";
@@ -31,6 +31,7 @@ class AceItems extends HTMLElement {
     this._render();
   }
 
+  // Fetches backlog items added by admin
   async _loadItems() {
     try {
       const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`);
@@ -89,6 +90,7 @@ class AceItems extends HTMLElement {
     this._updateList();
   }
 
+  // adds new items to list
   _onAdd() {
     const text = this._inputEl.value.trim();
     
@@ -109,6 +111,7 @@ class AceItems extends HTMLElement {
     this._updateList();
   }
 
+  // refreshes the shown list
   _updateList() {
     this._listEl.innerHTML = this._items
       .map((item, idx) => `
@@ -139,7 +142,9 @@ class AceItems extends HTMLElement {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: this._items })
       });
+
       if (!res.ok) throw new Error("Error when saving items.");
+
       this.dispatchEvent(
         new CustomEvent("ace-items-submitted", {
           detail: { roomId: this._roomId, items: this._items },

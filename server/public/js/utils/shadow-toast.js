@@ -8,6 +8,7 @@ export function createToastHost(shadowRoot) {
     container = document.createElement('div');
     container.id = TOAST_CONTAINER_ID;
     
+    // apply static container styling to container element
     Object.assign(container.style, {
       position: 'fixed',
       bottom: '1rem',
@@ -56,6 +57,7 @@ export function showToastInShadow(shadowRoot, message, duration = DEFAULT_DURATI
   
   const currentTypeStyle = typeStyles[type] || typeStyles.info;
   
+  // apply toast styling to toast element
   Object.assign(toast.style, {
     backgroundColor: currentTypeStyle.backgroundColor,
     color: currentTypeStyle.color,
@@ -77,6 +79,7 @@ export function showToastInShadow(shadowRoot, message, duration = DEFAULT_DURATI
   
   container.appendChild(toast);
   
+  // toast animation
   requestAnimationFrame(() => {
     toast.style.transform = 'translateY(0)';
     toast.style.opacity = '1';

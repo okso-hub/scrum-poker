@@ -13,7 +13,7 @@ class AceLobby extends HTMLElement {
   }
 
   async connectedCallback() {
-    // Styles und Template parallel laden
+    /* Loads global styling & page-specific styling */
     const [lobbyStyles, lobbyTemplate] = await Promise.all([
       loadStylesheet('/css/lobby.css'),
       loadTemplate('/html/ace-lobby.html')
@@ -26,11 +26,11 @@ class AceLobby extends HTMLElement {
     this._backendUrl = this.getAttribute("backend-url");
     this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
     
-    // ERST Admin-Status prüfen, DANN rendern
+    // Check admin status and render UI afterwards based on the admin status
     await this._checkAdmin();
-    this._render();  // ← Jetzt mit korrektem Admin-Status
+    this._render();
     
-    // Element-Referenzen nach dem Rendern
+    // Set element references
     this._listEl = this.shadowRoot.getElementById('participants-list');
     this._itemsTable = this.shadowRoot.getElementById('items-table');
     this._itemsBody = this._itemsTable.querySelector('tbody');
@@ -49,7 +49,7 @@ class AceLobby extends HTMLElement {
       startGameBtn.addEventListener('click', () => this._onStart());
     } else {
       // Show "Waiting for admin to start game..." text
-      // ToDo: CSS for this text
+      // ToDo: CSS for this text element
       const startInfoText = document.createElement('p');
       startInfoText.textContent = 'Waiting for admin to start game...';
       startInfoText.type = 'p';
@@ -59,7 +59,7 @@ class AceLobby extends HTMLElement {
       this._startGameControls.appendChild(startInfoText);
     }
     
-    // Daten laden
+    // Fetch participants & items to be shown in lobby
     await Promise.all([this._fetchParticipants(), this._fetchItems()]);
   }
 
@@ -85,7 +85,10 @@ class AceLobby extends HTMLElement {
   async _fetchParticipants() {
     try {
       const res = await fetch(this._backendUrl + `/room/${this._roomId}/participants`);
+
+      // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
+
       const { participants } = await res.json();
       this._participants = participants; // Direkt verwenden, da Backend neue Struktur sendet
       this._updateList();
@@ -97,7 +100,10 @@ class AceLobby extends HTMLElement {
   async _fetchItems() {
     try {
       const res = await fetch(this._backendUrl + `/room/${this._roomId}/items`);
+
+      // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
+
       const { items } = await res.json();
       this._items = items;
       this._updateItems();
@@ -109,9 +115,13 @@ class AceLobby extends HTMLElement {
   async _checkAdmin() {
     try {
       const res = await fetch(this._backendUrl + `/is-admin?roomId=${this._roomId}`);
+
+      // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
+
       const { isAdmin } = await res.json();
       this._isAdmin = isAdmin;
+
       // update list button rendering if participants already loaded
       this._updateList();
     } catch (e) {
@@ -133,12 +143,12 @@ class AceLobby extends HTMLElement {
         </li>
       `).join('');
 
-    // Event-Listener nach dem Rendern hinzufügen
+    // Add event listeners for admin-only ban button
     if (this._isAdmin) {
       this.shadowRoot.querySelectorAll('.ban-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
           const name = e.currentTarget.getAttribute('data-name');
-          this._onBan(name);
+          this._banUser(name);
         });
       });
     }
@@ -150,9 +160,10 @@ class AceLobby extends HTMLElement {
       .join('');
   }
 
-  async _onBan(name) {
+  async _banUser(name) {
     if (!name) return;
     if (!confirm(`Really ban user "${name}"?`)) return;
+
     try {
       const res = await fetch(`/room/${this._roomId}/ban`, {
         method: 'POST',
@@ -160,9 +171,12 @@ class AceLobby extends HTMLElement {
         body: JSON.stringify({ name })
       });
       if (!res.ok) {
+        // If unsuccesful, the body will contain the error in JSON format
         const err = await res.json();
         throw new Error(err.error || 'Ban failed');
       }
+
+      // Update participants list
       await this._fetchParticipants();
     } catch (e) {
       alert(e.message);
@@ -186,7 +200,10 @@ class AceLobby extends HTMLElement {
   async _onStart() {
     try {
       const res = await fetch(`/room/${this._roomId}/start`, { method: 'POST' });
+
+      // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
+
       console.log(`Start request successful for room ${this._roomId}`);
     } catch (e) {
       alert(e.error || e.message || 'Error starting game');

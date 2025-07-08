@@ -1,10 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { roomService } from "../services/index.js";
 import { ForbiddenError, BadRequestError } from "../types/index.js";
+import { validateRoomId } from "../utils/validation.js";
 
 export function requireAdminAccess(req: Request, res: Response, next: NextFunction): void {
   try {
-    const { roomId } = req.params;
+    const roomId = validateRoomId(req.params.roomId);
 
     if (!roomId) {
       throw new BadRequestError("roomId is required");

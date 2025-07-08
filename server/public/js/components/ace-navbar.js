@@ -11,16 +11,16 @@ class AceNavbar extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Navbar-Styles laden */
+    /* Loads global styling & page-specific styling */
     const [navbarStyles, navbarTemplate] = await Promise.all([
       loadStylesheet('/css/navbar.css'),
       loadTemplate('/html/ace-navbar.html')
     ]);
-    
+
     this.shadowRoot.adoptedStyleSheets = await combineStylesheets(navbarStyles);
     this._template = navbarTemplate;
     
-    this._roomId = this.getAttribute("room-id");
+    this._roomId = Number(this.getAttribute("room-id"));
     this._isAdmin = this.getAttribute("is-admin") === "true";
     this._backendUrl = this.getAttribute("backend-url");
     this._render();
@@ -49,17 +49,18 @@ class AceNavbar extends HTMLElement {
   }
 
   _render() {
-    // Template laden und Room ID einsetzen
+    // Loads templace
     const templateContent = this._template.content.cloneNode(true);
-    
-    // Room ID in das Template einsetzen
+
+    // Inserts room ID in the template
     const roomIdElement = templateContent.querySelector('.room-id');
-    roomIdElement.textContent = this._roomId;
+    roomIdElement.textContent = this._roomId.toString();
     
-    // Template in Shadow DOM einsetzen
+    // Places template in shadow root
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(templateContent);
 
+    // Render settings button only for the game admin
     if (this._isAdmin) {
       const actionButtonsEl = this.shadowRoot.querySelector('.action-buttons');
       const settingsBtn = document.createElement('button');
@@ -77,35 +78,38 @@ class AceNavbar extends HTMLElement {
 
   _wireUp() {
     const joinUrl = `${location.origin}${location.pathname}?roomId=${this._roomId}`;
+
     const copyIdBtn = this.shadowRoot.getElementById("copy-id-btn");
-    const copyBtn   = this.shadowRoot.getElementById("copy-btn");
-    const qrBtn     = this.shadowRoot.getElementById("qr-btn");
-    const qrPopup   = this.shadowRoot.getElementById("qr-popup");
-    const closeQr   = this.shadowRoot.getElementById("qr-close");
-    const infoBtn   = this.shadowRoot.getElementById("info-btn");
+    const copyBtn = this.shadowRoot.getElementById("copy-btn");
+    const qrBtn = this.shadowRoot.getElementById("qr-btn");
+    const qrPopup = this.shadowRoot.getElementById("qr-popup");
+    const closeQr = this.shadowRoot.getElementById("qr-close");
+    const infoBtn = this.shadowRoot.getElementById("info-btn");
     const infoPopup = this.shadowRoot.getElementById("info-popup");
     const closeInfo = this.shadowRoot.getElementById("info-close");
     const settingsBtn = this.shadowRoot.getElementById("settings-btn");
-    const sidebar     = this.shadowRoot.getElementById("settings-sidebar");
+    const sidebar = this.shadowRoot.getElementById("settings-sidebar");
     const sidebarClose = this.shadowRoot.getElementById("sidebar-close");
-    const listEl      = this.shadowRoot.getElementById("participants-list");
+    const listEl = this.shadowRoot.getElementById("participants-list");
 
     // Copy Game ID
     copyIdBtn.addEventListener("click", () => {
-      navigator.clipboard.writeText(this._roomId)
+      navigator.clipboard.writeText(this._roomId.toString())
         .then(() => {
+          // Success animation
           copyIdBtn.textContent = '✅';
           copyIdBtn.style.transform = 'scale(1.2)';
           setTimeout(() => { copyIdBtn.textContent = '📋'; copyIdBtn.style.transform = ''; }, 1000);
         })
         .catch(() => {
+          // Failure animation
           copyIdBtn.textContent = '❌';
           copyIdBtn.style.transform = 'scale(1.2)';
           setTimeout(() => { copyIdBtn.textContent = '📋'; copyIdBtn.style.transform = ''; }, 1000);
         });
     });
 
-    // Copy URL
+    // Copy URL button handler
     copyBtn.addEventListener("click", () => {
       navigator.clipboard.writeText(joinUrl)
         .then(() => {
@@ -120,28 +124,30 @@ class AceNavbar extends HTMLElement {
         });
     });
 
-    // QR Code Popup
+    // QR Code Popup handler
     qrBtn.addEventListener("click", () => {
       this._loadQRScript().then(() => {
         qrPopup.classList.remove("hidden");
         const container = this.shadowRoot.getElementById("qrcode");
         container.innerHTML = "";
-        new QRCode(container, { text: joinUrl, width:200, height:200, correctLevel: QRCode.CorrectLevel.H });
+        new QRCode(container, { text: joinUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.H });
       });
     });
     closeQr.addEventListener("click", () => qrPopup.classList.add("hidden"));
     qrPopup.addEventListener('click', e => { if (e.target === qrPopup) qrPopup.classList.add('hidden'); });
 
-    // Info Popup
+    // Info Popup handler
     infoBtn.addEventListener("click", () => infoPopup.classList.remove("hidden"));
     closeInfo.addEventListener("click", () => infoPopup.classList.add("hidden"));
     infoPopup.addEventListener("click", e => { if (e.target === infoPopup) infoPopup.classList.add("hidden"); });
 
-    // Settings Sidebar (admin only)
+    // Settings Sidebar (visible for game admin only)
     if (this._isAdmin && settingsBtn) {
       settingsBtn.addEventListener("click", async () => {
         if (!this._openSidebar) {
           await this._fetchParticipants();
+
+          // display all participants fetched from backend as list items
           listEl.innerHTML = this._participants.map(p =>
             `<li class="${p.isAdmin ? 'admin-user' : 'regular-user'}">
               <span class="participant-name">
@@ -150,10 +156,13 @@ class AceNavbar extends HTMLElement {
               ${!p.isAdmin ? `<button class="ban" data-name="${p.name}" title="Ban User">🔨</button>` : ''}
             </li>`
           ).join('');
+
+          // handle ban button clicks
           this.shadowRoot.querySelectorAll('button.ban').forEach(btn => {
-            btn.addEventListener('click', e => this._onBan(e.currentTarget.dataset.name));
+            btn.addEventListener('click', e => this._banUser(e.currentTarget.dataset.name));
           });
         }
+        // toggling of sidebar
         this._openSidebar = !this._openSidebar;
         sidebar.classList.toggle('open', this._openSidebar);
       });
@@ -163,7 +172,7 @@ class AceNavbar extends HTMLElement {
       });
     }
 
-    // Escape key handler for QR, Sidebar, Info
+    // Escape key handler for QR, Sidebar & Info
     this._escHandler = e => {
       if (e.key === 'Escape') {
         if (!qrPopup.classList.contains('hidden')) qrPopup.classList.add('hidden');
@@ -238,16 +247,20 @@ class AceNavbar extends HTMLElement {
     }
   }
 
-  async _onBan(name) {
+  async _banUser(name) {
     if (!name) return;
     if (!confirm(`Really ban "${name}"?`)) return;
+
     try {
       const res = await fetch(this._backendUrl + `/room/${this._roomId}/ban`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name })
       });
+
+      // If unsuccesful, the body will contain the error in JSON format
       if (!res.ok) throw await res.json();
+
       await this._fetchParticipants();
       const listEl = this.shadowRoot.getElementById("participantsList");
       listEl.innerHTML = this._participants.map(p =>
@@ -258,8 +271,10 @@ class AceNavbar extends HTMLElement {
           ${!p.isAdmin ? `<button class="ban" data-name="${p.name}" title="Ban User">🔨</button>` : ''}
         </li>`
       ).join('');
+
+      // add event listener to button
       this.shadowRoot.querySelectorAll('button.ban').forEach(btn => {
-        btn.addEventListener('click', e => this._onBan(e.currentTarget.dataset.name));
+        btn.addEventListener('click', e => this._banUser(e.currentTarget.dataset.name));
       });
     } catch (err) {
       alert(err.error || err.message || 'Ban failed');

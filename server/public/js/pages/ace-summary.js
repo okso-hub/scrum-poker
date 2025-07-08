@@ -56,7 +56,7 @@ class AceSummary extends HTMLElement {
     
     this.shadowRoot.innerHTML += html;
 
-    // Items dynamisch einfügen
+    // Load items shown in summary dynamically
     const summaryList = this.shadowRoot.getElementById('summary-list');
     const itemsHtml = items.map(itemData => `
       <li class="list-item">

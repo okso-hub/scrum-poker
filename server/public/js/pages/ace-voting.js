@@ -15,7 +15,7 @@ class AceVoting extends HTMLElement {
   }
 
   async connectedCallback() {
-    /* Globale Styles + spezifische Voting-Styles laden */
+    /* Loads global styling & page-specific styling */
     const [votingStyles, votingTemplate] = await Promise.all([
       loadStylesheet('/css/voting.css'),
       loadTemplate('/html/ace-voting.html')
@@ -26,7 +26,7 @@ class AceVoting extends HTMLElement {
     
     this._item = this.getAttribute('item') || '';
     this._options = JSON.parse(this.getAttribute('options') || '[1,2,3,5,8,13,21]');
-    this._roomId = this.getAttribute('room-id') || '';
+    this._roomId = Number(this.getAttribute('room-id')) || null;
     this._playerName = this.getAttribute('player-name') || '';
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');
@@ -63,6 +63,7 @@ class AceVoting extends HTMLElement {
     
     questionEl.classList.add('positioned');
 
+    // add voting buttons
     this._options.forEach(opt => {
       const btn = document.createElement('button');
       btn.textContent = opt;
@@ -74,6 +75,7 @@ class AceVoting extends HTMLElement {
 
     buttonsEl.classList.add('visible');
 
+    // add "Reveal votes" button (admin-only)
     if (this._isAdmin) {
       const adminControlsEl = this.shadowRoot.querySelector('.admin-controls');
       const revealBtn = document.createElement('button');
@@ -96,7 +98,6 @@ class AceVoting extends HTMLElement {
       if (response.ok) {
         this._currentVote = value;
         this._updateButtonSelection(value);
-        //this._updateStatus(this._playerName, this._revealed ? value : 'Voted');
       } else {
         throw new Error('Failed to send vote');
       }
@@ -110,12 +111,14 @@ class AceVoting extends HTMLElement {
     try {
       const resReveal = await fetch(this._backendUrl + `/room/${this._roomId}/reveal`, { method: 'POST' });
       this._revealed = true;
+
       if(!resReveal.ok) {
         const jsonRes = await resReveal.json();
         alert(jsonRes.error);
         console.error('Failed to reveal votes:', resReveal);
         return;
       }
+
       // Immediately fetch updated vote-status with actual vote values
       const res = await fetch(this._backendUrl + `/room/${this._roomId}/vote-status`);
       if (res.ok) {
@@ -161,6 +164,7 @@ class AceVoting extends HTMLElement {
       this._initializeVoteStatus();
     }
 
+    // update the table showing the current vote status of each user
     this._allPlayers.forEach(player => {
       if (this._revealed && votes) {
         this._updateStatus(player.name, votes[player.name] ?? '-');

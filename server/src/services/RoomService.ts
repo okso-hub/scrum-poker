@@ -1,9 +1,9 @@
 import { Room, User, RoomStatus, NotFoundError, ForbiddenError, BadRequestError, Participant } from "../types/index.js";
 
 export class RoomService {
-  private rooms = new Map<string, Room>();
+  private rooms = new Map<number, Room>();
 
-  createRoom(adminName: string, adminIp: string): string {
+  createRoom(adminName: string, adminIp: string): number {
     if (!adminName) {
       throw new BadRequestError("Name is required");
     }
@@ -29,7 +29,7 @@ export class RoomService {
     return roomId;
   }
 
-  deleteRoom(roomId: string): void {
+  deleteRoom(roomId: number): void {
     if (!this.rooms.has(roomId)) {
       throw new NotFoundError("Room not found");
     }
@@ -38,19 +38,19 @@ export class RoomService {
     console.log(`Room closed: ${roomId}`);
   }
 
-  generateUniqueRoomId(): string {
+  generateUniqueRoomId(): number {
     const chars = "0123456789";
     const length = 6;
 
     let roomId;
     do {
-      roomId = Array.from({ length }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join("");
+      roomId = Number(Array.from({ length }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join(""));
     } while (this.rooms.has(roomId));
 
     return roomId;
   }
 
-  getRoom(roomId: string): Room {
+  getRoom(roomId: number): Room {
     const room = this.rooms.get(roomId);
     if (!room) {
       throw new NotFoundError("Room not found");
@@ -58,7 +58,7 @@ export class RoomService {
     return room;
   }
 
-  isAdmin(roomId: string, ip: string): boolean {
+  isAdmin(roomId: number, ip: string): boolean {
     try {
       const room = this.getRoom(roomId);
       return room.admin.ip === ip;
@@ -67,7 +67,7 @@ export class RoomService {
     }
   }
 
-  joinRoom(roomId: string, userName: string, userIp: string): { isAdmin: boolean; name: string; rejoin: boolean; roomState: { status: RoomStatus; currentItem: string | null } } {
+  joinRoom(roomId: number, userName: string, userIp: string): { isAdmin: boolean; name: string; rejoin: boolean; roomState: { status: RoomStatus; currentItem: string | null } } {
     if (!userName || !roomId) {
       throw new BadRequestError("Name and roomId are required");
     }
@@ -131,7 +131,7 @@ export class RoomService {
     };
   }
 
-  getParticipants(roomId: string): Participant[] {
+  getParticipants(roomId: number): Participant[] {
     const room = this.getRoom(roomId);
     return [
       { name: room.admin.name, isAdmin: true },
@@ -146,7 +146,7 @@ export class RoomService {
     }
   }
 
-  banUser(roomId: string, userName: string): User {
+  banUser(roomId: number, userName: string): User {
     const room = this.getRoom(roomId);
 
     if (!userName) {
@@ -169,7 +169,7 @@ export class RoomService {
     return user;
   }
 
-  setItems(roomId: string, items: string[]): void {
+  setItems(roomId: number, items: string[]): void {
     const room = this.getRoom(roomId);
 
     if (!Array.isArray(items)) {
@@ -182,12 +182,12 @@ export class RoomService {
     console.log(`Items set for room ${roomId}: ${items}`);
   }
 
-  getItems(roomId: string): string[] {
+  getItems(roomId: number): string[] {
     const room = this.getRoom(roomId);
     return room.items;
   }
 
-  getRoomStatus(roomId: string) {
+  getRoomStatus(roomId: number) {
     const room = this.getRoom(roomId);
     return {
       status: room.status,

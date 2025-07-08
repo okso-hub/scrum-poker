@@ -1,3 +1,5 @@
+import { WebSocket } from "ws";
+
 export interface User {
   name: string;
   ip: string;
@@ -46,12 +48,12 @@ export interface Room {
   bannedIps: string[];
 }
 
-export type CustomWebSocket = WebSocket & {
-  roomId?: string;
+export interface CustomWebSocket extends WebSocket {
+  roomId?: number;
   role?: string;
   playerName?: string;
   isAlive?: boolean;
-};
+}
 
 export interface Summary {
   items: ItemHistory[];

@@ -122,6 +122,7 @@ class AceResults extends HTMLElement {
 
   async _nextItem() {
     try {
+      // Requests server to move on to next item (will trigger an event that sends all connected clients to the next item)
       await fetch(this._backendUrl + `/room/${this._roomId}/next`, { method: 'POST' });
     } catch (error) {
       console.error('Error starting next item:', error);
@@ -130,6 +131,7 @@ class AceResults extends HTMLElement {
 
   async _repeatVoting() {
     try {
+      // Requests server to repeat item (will trigger an event that sends all connected clients to the current item again)
       await fetch(this._backendUrl + `/room/${this._roomId}/repeat`, { method: 'POST' });
     } catch (error) {
       console.error('Error repeating voting:', error);
@@ -138,6 +140,7 @@ class AceResults extends HTMLElement {
 
   async _showSummary() {
     try {
+      // Requests server to move on to the summary page (will trigger an event that sends all connected clients to the summary page)
       await fetch(this._backendUrl + `/room/${this._roomId}/summary`, { method: 'POST' });
     } catch (error) {
       console.error('Error showing summary:', error);

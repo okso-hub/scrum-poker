@@ -1,12 +1,6 @@
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import { IncomingMessage } from "http";
-
-export interface CustomWebSocket extends WebSocket {
-  roomId?: string;
-  role?: string;
-  playerName?: string;
-  isAlive?: boolean;
-}
+import { CustomWebSocket } from "../types/index.js";
 
 export let wss: WebSocketServer;
 
@@ -47,7 +41,7 @@ export function initWebSocket(server: any, path = "/ws") {
   return wss;
 }
 
-export function broadcast(roomId: string, payload: any) {
+export function broadcast(roomId: number, payload: any) {
   console.log(`Broadcasting to room ${roomId}:`, payload);
   wss.clients.forEach((client: CustomWebSocket) => {
     if (client.readyState === WebSocket.OPEN && client.roomId === roomId) {
@@ -56,7 +50,7 @@ export function broadcast(roomId: string, payload: any) {
   });
 }
 
-export function disconnectUser(roomId: string, playerName: string): void {
+export function disconnectUser(roomId: number, playerName: string): void {
   wss.clients.forEach((client: CustomWebSocket) => {
     if (client.readyState === WebSocket.OPEN && client.roomId === roomId && client.playerName === playerName) {
       client.send(JSON.stringify({ event: "banned-by-admin" }));
@@ -72,13 +66,13 @@ function handleMessage(data: RawData, ws: CustomWebSocket) {
     try {
       const parsed = JSON.parse(msg);
       if (parsed.roomId) {
-        ws.roomId = parsed.roomId;
+        ws.roomId = Number(parsed.roomId);
         ws.role = parsed.role;
         ws.playerName = parsed.payload?.name;
         // console.log(`Assigned ws: ${ws.playerName} (${ws.role}) to room ${ws.roomId}`);
       }
     } catch {
-      ws.roomId = msg;
+      ws.roomId = Number(msg);
       // console.log(`Assigned ws to room ${ws.roomId}`);
     }
     return;
