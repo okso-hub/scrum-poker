@@ -26,7 +26,7 @@ class AceVoting extends HTMLElement {
     
     this._item = this.getAttribute('item') || '';
     this._options = JSON.parse(this.getAttribute('options') || '[1,2,3,5,8,13,21]');
-    this._roomId = Number(this.getAttribute('room-id')) || null;
+    this._gameId = Number(this.getAttribute('game-id')) || null;
     this._playerName = this.getAttribute('player-name') || '';
     this._isAdmin = this.getAttribute('is-admin') === 'true';
     this._allPlayers = JSON.parse(this.getAttribute('all-players') || '[]');
@@ -38,7 +38,7 @@ class AceVoting extends HTMLElement {
 
   _render() {
     const html = interpolateTemplate(this._template, {
-      roomId: this._roomId,
+      gameId: this._gameId,
       isAdmin: this._isAdmin,
       backendUrl: this._backendUrl,
       item: this._item
@@ -90,7 +90,7 @@ class AceVoting extends HTMLElement {
 
   async _sendVote(value) {
     try {
-      const response = await fetch(this._backendUrl + `/room/${this._roomId}/vote`, {
+      const response = await fetch(this._backendUrl + `/room/${this._gameId}/vote`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vote: value, playerName: this._playerName })
@@ -110,7 +110,7 @@ class AceVoting extends HTMLElement {
 
   async _revealVotes() {
     try {
-      const resReveal = await fetch(this._backendUrl + `/room/${this._roomId}/reveal`, { method: 'POST' });
+      const resReveal = await fetch(this._backendUrl + `/room/${this._gameId}/reveal`, { method: 'POST' });
       this._revealed = true;
 
       if(!resReveal.ok) {
@@ -121,7 +121,7 @@ class AceVoting extends HTMLElement {
       }
 
       // Immediately fetch updated vote-status with actual vote values
-      const res = await fetch(this._backendUrl + `/room/${this._roomId}/vote-status`);
+      const res = await fetch(this._backendUrl + `/room/${this._gameId}/vote-status`);
       if (res.ok) {
         const data = await res.json();
         this._updateVoteStatus(data);

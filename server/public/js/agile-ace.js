@@ -53,14 +53,14 @@ class AgileAce extends HTMLElement {
   }
 
   _showNavbar() {
-    if (this._navbar && this._roomId) {
+    if (this._navbar && this._gameId) {
       // Set attributes BEFORE making visible
-      this._navbar.setAttribute("room-id", this._roomId);
+      this._navbar.setAttribute("game-id", this._gameId);
       this._navbar.setAttribute("is-admin", this._role === "admin");
       
       // Force the navbar to re-initialize with new attributes
-      if (this._navbar._roomId !== this._roomId) {
-        this._navbar._roomId = this._roomId;
+      if (this._navbar._gameId !== this._gameId) {
+        this._navbar._gameId = this._gameId;
         this._navbar._isAdmin = this._role === "admin";
         // Trigger re-render if the navbar has such a method
         if (typeof this._navbar._render === 'function') {
@@ -121,7 +121,7 @@ class AgileAce extends HTMLElement {
     }
 
     // Reset all held variables
-    this._roomId = null;
+    this._gameId = null;
     this._name = null;
     this._role = null;
     this._status = null;
@@ -147,7 +147,7 @@ class AgileAce extends HTMLElement {
     this._contentContainer.innerHTML = "";
   
     const cmp = document.createElement("ace-items");
-    cmp.setAttribute("room-id", this._roomId);
+    cmp.setAttribute("game-id", this._gameId);
     cmp.setAttribute("is-admin", this._role === "admin");
     cmp.setAttribute("backend-url", this._backendUrl);
     cmp.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
@@ -175,7 +175,7 @@ class AgileAce extends HTMLElement {
     this._showNavbar();
     this._contentContainer.innerHTML = "";
     const lobby = document.createElement("ace-lobby");
-    lobby.setAttribute("room-id", this._roomId);
+    lobby.setAttribute("game-id", this._gameId);
     lobby.setAttribute("backend-url", this._backendUrl);
     lobby.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
     this._contentContainer.append(lobby);
@@ -184,13 +184,14 @@ class AgileAce extends HTMLElement {
 
   // Renders each question page where users can vote
   _renderQuestion({ item, options }) {
+    this._item = item; // Store current item
     this._showNavbar();
     this._contentContainer.innerHTML = "";
     const comp = document.createElement("ace-voting");
 
     comp.setAttribute("item", item);
     comp.setAttribute("options", JSON.stringify(options));
-    comp.setAttribute("room-id", this._roomId);
+    comp.setAttribute("game-id", this._gameId);
     comp.setAttribute("player-name", this._name);
     comp.setAttribute("is-admin", this._role === "admin");
     comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
@@ -203,7 +204,7 @@ class AgileAce extends HTMLElement {
 
   // Tells the backend to reveal the votes for everyone; WebSocket event will be sent after
   async _revealVotes() {
-    await fetch(this._backendUrl + `/room/${this._roomId}/reveal`, { method: "POST" });
+    await fetch(this._backendUrl + `/room/${this._gameId}/reveal`, { method: "POST" });
   }
 
   _showToast(message, type = 'info', duration = 5000) {
@@ -224,12 +225,13 @@ class AgileAce extends HTMLElement {
     const comp = document.createElement("ace-results");
     comp.setAttribute("results", JSON.stringify(results));
     comp.setAttribute("is-admin", this._role === "admin");
-    comp.setAttribute("room-id", this._roomId);
+    comp.setAttribute("game-id", this._gameId);
     comp.setAttribute("is-last-item", isLastItem);
     comp.setAttribute("backend-url", this._backendUrl);
     comp.setAttribute("hide-navbar", "true");
     comp.setAttribute("player-name", this._name); // Add current player name
     comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
+    comp.setAttribute("question", this._item || "Unknown Item"); // Add current item as question
     
     // Ensure the component is properly appended and check for errors
     this._contentContainer.appendChild(comp);
@@ -253,7 +255,7 @@ class AgileAce extends HTMLElement {
 
   // "Create Game"-Button was pressed
   async _onCreate({ name }) {
-    console.log("Creating room with name:", name);
+    console.log("Creating game with name:", name);
 
     const res = await fetch(this._backendUrl + "/create", {
       method: "POST",
@@ -269,22 +271,24 @@ class AgileAce extends HTMLElement {
 
     const { roomId } = await res.json();
 
+    console.log('Game id: ' + roomId)
+
     this._name = name;
-    this._roomId = Number(roomId);
+    this._gameId = Number(roomId);
     this._role = "admin";
 
     const params = new URLSearchParams(window.location.search);
-    params.set("roomId", this._roomId);
+    params.set("gameId", this._gameId);
     window.history.replaceState({}, "", `${location.pathname}?${params}`);
 
     this._connectWS();
     this._renderItems();
-    console.log(`Admin for room ${roomId}`);
+    console.log(`Admin for game ${this._gameId}`);
   }
 
   // "Join Game"-Button was pressed
   async _onJoin({ name, gameId }) {
-    console.log("Joining room with name:", name, "and gameId:", gameId);
+    console.log("Joining game with name:", name, "and gameId:", gameId);
 
     const res = await fetch(this._backendUrl + "/join", {
       method: "POST",
@@ -298,21 +302,30 @@ class AgileAce extends HTMLElement {
       return alert(err.error || "Error on join");
     }
 
-    const { isAdmin, name: serverName, roomState } = await res.json();
+    const payload = await res.json();
+    console.log("↩️ /join returned:", payload);
+    const { isAdmin, name: serverName, roomState } = payload;
+
     this._name = serverName;
-    this._roomId = Number(gameId);
+    this._gameId = Number(gameId);
     this._role = isAdmin ? "admin" : "player";
     this._status = roomState.status;
     this._item = roomState.currentItem;
 
+
+    console.log(`Joined game ${this._gameId} as ${this._role} with name "${this._name}"`);
+
     const params = new URLSearchParams(window.location.search);
-    params.set("roomId", this._roomId);
+    params.set("gameId", this._gameId);
     window.history.replaceState({}, "", `${location.pathname}?${params}`);
 
     this._connectWS();
 
+    console.log(`Rejoiningin status "${this._status}"`);
+
     // for newly joining users, we want to show the same page as other users are seeing, hence why we want to have them render that specific page
     switch (this._status) {
+
       case "setup":
         if (this._role === "admin") {
           this._renderItems();
@@ -335,18 +348,18 @@ class AgileAce extends HTMLElement {
       case "completed":
         {
           // fetch summary page details in order to display them
-          const sumRes = await fetch(this._backendUrl + `/room/${this._roomId}/summary`, { method: "POST" });
+          const sumRes = await fetch(this._backendUrl + `/room/${this._gameId}/summary`, { method: "POST" });
           const { summary } = await sumRes.json();
           this._renderSummary(summary);
         }
         break;
 
       default:
-        console.warn("Unknown room status:", this._status);
+        console.warn("Unknown game status:", this._status);
         this._renderLobby();
     }
 
-    console.log(`Rejoined room ${gameId} in status "${this._status}"`);
+    console.log(`Rejoined game ${gameId} in status "${this._status}"`);
   }
 
   _connectWS() {
@@ -358,7 +371,7 @@ class AgileAce extends HTMLElement {
       // send user info when connected to WebSocket
       this._ws.send(
         JSON.stringify({
-          roomId: this._roomId,
+          roomId: this._gameId,
           role: this._role,
           payload: { name: this._name },
         })
@@ -387,16 +400,19 @@ class AgileAce extends HTMLElement {
         this._currentVoting._onVoteReceived(msg.votedPlayers);
         
       } else if (msg.event === "user-joined") {
-        if(this._currentLobby !== null) {
+        if(this._currentLobby !== undefined && this._currentLobby !== null) {
           this._currentLobby._onUserJoined(msg.user);
         }
         this._showToast(`${msg.user} joined the game`, "success", 3000);
       } else if (msg.event === "user-banned") {
-        if(this._currentLobby !== null) {
+        if(this._currentLobby !== undefined && this._currentLobby !== null) {
           this._currentLobby._onUserBanned(msg.user);
         }
         this._showToast(`${msg.user} was banned from the game`, "warning", 4000);
-      } else {
+      } else if(msg.event === "banned-by-admin") {
+        this._showToast(`You were banned by the Admin ⛔`, "warning", 4000);
+      }
+      else {
         const { from, payload } = msg;
         console.log(`WS ← ${from}:`, payload);
       }
