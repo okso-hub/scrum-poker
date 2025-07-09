@@ -43,9 +43,52 @@
       padding: 0.5rem 1rem;
 
       & .branding {
-        position: static; /* Remove absolute positioning in minimal mode */
-        transform: none;   /* Remove transform in minimal mode */
+        position: static;
+        transform: none;
         margin: 0;
+      }
+    }
+
+    @media (max-width: 655px) {
+      flex-wrap: wrap;
+      padding: var(--spacing-sm) var(--spacing-md);
+      gap: var(--spacing-sm);
+
+      & .info {
+        order: 1;
+        flex: 0 1 auto;
+      }
+
+      & .action-buttons {
+        order: 2;
+        flex: 0 1 auto;
+        display: flex;
+        gap: var(--spacing-sm);
+      }
+
+      & .branding {
+        order: 3;
+        position: static;
+        transform: none;
+        width: 100%;
+        justify-content: center;
+        height: auto;
+        margin-top: var(--spacing-sm);
+
+        & img {
+          max-width: 150px;
+          max-height: 2.5rem;
+        }
+      }
+    }
+
+    @media (max-width: 430px) {
+      & .info #copy-id-btn {
+        display: none;
+      }
+
+      & .action-buttons #copy-btn {
+        display: none;
       }
     }
   }
