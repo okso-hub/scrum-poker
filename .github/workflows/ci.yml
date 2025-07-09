@@ -55,10 +55,12 @@ jobs:
 
       # 4) Install Playwright browser engines
       - name: Install Playwright Browsers
+        working-directory: server
         run: npx playwright install --with-deps
       
       # 5) Run the Playwright tests
       - name: Run Playwright Tests
+        working-directory: server
         run: npx playwright test --workers=1 --reporter=github
 
       # 6) Upload Artifacts on Failure
