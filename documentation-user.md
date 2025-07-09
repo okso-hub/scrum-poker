@@ -11,6 +11,8 @@ Das vorliegende Projekt, welches im Rahmen der Vorlesung Webentwicklung & Vertei
 ## Setup
 Die Anwendung kann im Browser unter http://141.72.13.151:8100/ aufgerufen werden, sofern man sich im Netzwerk der DHBW Mannheim befindet.
 
+In `./server/public/*.html` muss die IP von `http://141.72.13.151:8100` bei lokaler Ausführung in den zu nutzenden HTML Dateien auf `http://localhost:3000` geändert werden.
+
 Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schritte erforderlich:
 - git clone https://github.com/okso-hub/scrum-poker
 - cd scrum-poker/server
