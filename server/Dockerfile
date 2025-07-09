@@ -8,7 +8,6 @@ RUN npm ci
 
 # 3. Copy source & static assets
 COPY public ./public
-COPY assets ./assets
 COPY src ./src
 
 # 4. Build TypeScript
