@@ -73,6 +73,7 @@
     }
 
     input {
+        font-family: var(--font-family);
         padding: var(--spacing-md);
         font-size: var(--font-size-body);
         line-height: 1.5;

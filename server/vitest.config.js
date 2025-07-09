@@ -7,6 +7,10 @@ export default defineConfig({
     include: [
       '**/tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts}',
     ],
+    
+    exclude: [
+      'public/**/*'
+    ],
 
     globals: true,
 

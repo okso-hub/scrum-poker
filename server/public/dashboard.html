@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AgileAce - Sprint Backlog Dashboard</title>
+  
+  <!-- Google Fonts - JetBrains Mono für professionelle monospace Optik -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary-color: #2c3e50;
@@ -17,7 +22,7 @@
       --success-color: #27ae60;
       --warning-color: #f39c12;
       
-      --font-family: system-ui, -apple-system, sans-serif;
+      --font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
       --font-size-base: 1rem;
       --font-size-lg: 1.25rem;
       --font-size-xl: 1.5rem;
@@ -182,8 +187,6 @@
       letter-spacing: 0.5px;
       
       &.status-todo { background: #e3f2fd; color: #1565c0; }
-      &.status-progress { background: #fff3e0; color: #ef6c00; }
-      &.status-done { background: #e8f5e8; color: #2e7d32; }
     }
 
     .poker-section {
@@ -319,7 +322,7 @@
           <div class="detail-item">
             <strong>Status</strong>
             <div class="value">
-              <mark class="status-badge status-progress">In Progress</mark>
+              <mark class="status-badge status-todo">To Do</mark>
             </div>
           </div>
           <div class="detail-item">
@@ -351,7 +354,7 @@
           <div class="detail-item">
             <strong>Status</strong>
             <div class="value">
-              <mark class="status-badge status-done">Done</mark>
+              <mark class="status-badge status-todo">To Do</mark>
             </div>
           </div>
           <div class="detail-item">
