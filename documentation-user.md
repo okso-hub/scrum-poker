@@ -23,7 +23,7 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
 ## Ausführung der Tests
 ### Unit Tests
 - cd scrum-poker/server
-- npm run test (for coverage: npm run test:coverage)
+- npm run test (for coverage: npm run test:coverage, with nice looking overview: npm run test:ui)
 
 ### End-to-End Test
 - cd scrum-poker/server
