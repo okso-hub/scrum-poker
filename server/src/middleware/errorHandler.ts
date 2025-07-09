@@ -7,7 +7,7 @@ export function errorHandler(error: Error, req: Request, res: Response, next: Ne
   // our error
   if (error instanceof AppError) {
     res.status(error.statusCode).json({
-      error: error.message,
+      message: error.message,
       code: error.code,
     });
     return;
@@ -15,7 +15,7 @@ export function errorHandler(error: Error, req: Request, res: Response, next: Ne
 
   // unknown error
   res.status(500).json({
-    error: "Internal server error",
+    message: "Internal server error",
     code: "INTERNAL_ERROR",
   });
 }

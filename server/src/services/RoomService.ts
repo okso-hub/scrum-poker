@@ -1,4 +1,5 @@
 import { Room, User, RoomStatus, NotFoundError, ForbiddenError, BadRequestError, Participant } from "../types/index.js";
+import { validateUsername } from "../utils/validation.js";
 
 export class RoomService {
   private rooms = new Map<number, Room>();
@@ -10,6 +11,10 @@ export class RoomService {
 
     if(!adminName.match(/^[^<>&]{0,100}$/)) {
       throw new BadRequestError("Username contains invalid characters");
+    }
+
+    if(!validateUsername(adminName)) {
+      throw new BadRequestError("Username is not allowed");
     }
 
     const roomId = this.generateUniqueRoomId();
@@ -71,6 +76,10 @@ export class RoomService {
 
     if(!userName.match(/^[^<>&]{0,100}$/)) {
       throw new BadRequestError("Username contains invalid characters");
+    }
+
+    if(!validateUsername(userName)) {
+      throw new BadRequestError("Username is not allowed");
     }
 
     const room = this.getRoom(roomId);
