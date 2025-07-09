@@ -9,6 +9,10 @@ test.describe.serial('Home page form', () => {
   test.beforeAll(async ({ browser }) => {
     context = await browser.newContext();
     page = await context.newPage();
+    if (process.env.CI_PIPELINE) {
+      // wait longer for server in pipeline
+      await page.waitForTimeout(10000);
+    }
     await page.goto(BASE);
   });
 
