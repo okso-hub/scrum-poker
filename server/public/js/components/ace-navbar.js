@@ -305,19 +305,23 @@ class AceNavbar extends HTMLElement {
 
       await this._fetchParticipants();
       const listEl = this.shadowRoot.getElementById("participantsList");
-      listEl.innerHTML = this._participants.map(p =>
-        `<li class="${p.isAdmin ? 'admin-user' : 'regular-user'}">
-          <span class="participant-name">
-            ${p.name}
-          </span>
-          ${!p.isAdmin ? `<button class="ban" data-name="${p.name}" title="Ban User">🔨</button>` : ''}
-        </li>`
-      ).join('');
+      
+      if (listEl) {
+        listEl.innerHTML = this._participants.map(p =>
+          `<li class="${p.isAdmin ? 'admin-user' : 'regular-user'}">
+            <span class="participant-name">
+              ${p.name}
+            </span>
+            ${!p.isAdmin ? `<button class="ban" data-name="${p.name}" title="Ban User">🔨</button>` : ''}
+          </li>`
+        ).join('');
 
-      // add event listener to button
-      this.shadowRoot.querySelectorAll('button.ban').forEach(btn => {
-        btn.addEventListener('click', e => this._banUser(e.currentTarget.dataset.name));
-      });
+        this.shadowRoot.querySelectorAll('button.ban').forEach(btn => {
+          btn.addEventListener('click', e => this._banUser(e.currentTarget.dataset.name));
+        });
+      } else {
+        console.log('Participants list not found - user might not be in lobby');
+      }
     } catch (err) {
       createToastHelper(this, err.message, "error", 3000);
     }
