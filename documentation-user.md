@@ -20,6 +20,17 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
 - npm run start:dev
 - Die URL http://localhost:3000 im Browser aufrufen
 
+## Ausführung der Tests
+### Unit Tests
+- cd scrum-poker/server
+- npm run test (for coverage: npm run test:coverage)
+
+### End-to-End Test
+- cd scrum-poker/server
+- Wenn lokal ausgeführt: export ci_pipeline=true
+- npx playwright install
+- npx playwright test
+
 ## Verwendung der Komponente
 - beim Einbinden der Komponente gibt es mehrere Konfigurationsmöglichkeiten
 
@@ -89,19 +100,6 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
     default-items='{"items":["#041 - User Registration Feature","#062 - Mobile App Responsive Design","#063 - Database Migration"],"exportDate":"2024-01-01T00:00:00.000Z"}'>
 </agile-ace>
 ```
-
-
-## Ausführung der Tests
-### Unit Tests
-- cd scrum-poker/server
-- npm run test (for coverage: npm run test:coverage)
-
-### End-to-End Test
-- cd scrum-poker/server
-- Wenn lokal ausgeführt: export ci_pipeline=true
-- npx playwright install
-- npx playwright test
-
 
 ## Beschreibung der Anwendung
 
