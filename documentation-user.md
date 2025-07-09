@@ -91,6 +91,18 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
 ```
 
 
+## Ausführung der Tests
+### Unit Tests
+- cd scrum-poker/server
+- npm run test (for coverage: npm run test:coverage)
+
+### End-to-End Test
+- cd scrum-poker/server
+- Wenn lokal ausgeführt: export ci_pipeline=true
+- npx playwright install
+- npx playwright test
+
+
 ## Beschreibung der Anwendung
 
 ### Startseite (index.html)

@@ -1,28 +1,26 @@
-# Technische Dokumentation - Scrum Poker Anwendung
-
 ## Architektur-Überblick
 
 Die Anwendung ist eine **Full-Stack TypeScript/JavaScript** Anwendung mit einem **Express.js Backend** und einem **Vanilla JavaScript Frontend**. Sie verwendet **WebSockets** für Real-time Kommunikation und **In-Memory Storage** für Daten.
 
-
-### Technology Stack
+### Technologie-Stack
 
 **Backend:**
 - **Node.js** mit **TypeScript**
-- **Express.js** - REST API Framework
-- **WebSocket (ws)** - Real-time Kommunikation
-- **Vitest** - Testing Framework
+- **Express.js** - REST-API-Framework
+- **WebSocket (ws)** - Echtzeitkommunikation
+- **Vitest** - Testframework
 
 **Frontend:**
 - **Vanilla JavaScript** mit **Web Components**
 - **Shadow DOM** für Kapselung
-- **WebSocket Client** für Real-time Updates
+- **WebSocket-Client** für Echtzeit-Updates
 - **CSS3** für Styling
+- **Playwright** für E2E-Tests
 
-**Development & Build:**
-- **TypeScript Compiler** für Backend
-- **Vite** für Frontend Build
-- **Playwright** für E2E Tests
+**Entwicklung & Build:**
+- **TypeScript-Compiler** für Backend
+- **Vite** für Frontend-Build
+- **Playwright** für E2E-Tests
 - **Docker** für Containerisierung
 
 ## Projekt-Struktur
@@ -59,9 +57,7 @@ scrum-poker/
 │   └── package.json           # Dependencies & Scripts
 ```
 
-## Architektur-Pattern
-
-### Backend: Layered Architecture
+## Architektur-Muster
 
 ```mermaid
 graph TB
@@ -69,16 +65,16 @@ graph TB
         Routes[Route Handlers<br/>admin.ts, rooms.ts]
         Middleware[Middleware<br/>Auth, Error Handling]
     end
-    
+
     subgraph "Business Logic Layer"
         RoomService[Room Service<br/>User Management]
         GameService[Game Service<br/>Voting Logic]
     end
-    
+
     subgraph "Data Layer"
         Memory[(In-Memory Storage<br/>Map<roomId, Room>)]
     end
-    
+
     subgraph "Communication Layer"
         WebSocket[WebSocket Server<br/>Real-time Events]
         HTTP[HTTP Server<br/>REST API]
@@ -93,14 +89,14 @@ graph TB
     GameService --> RoomService
 ```
 
-### Frontend: Component-Based Architecture
+## Frontend: Komponentenbasierte Architektur
 
 ```mermaid
 graph TB
     subgraph "Main App"
         AgileAce[agile-ace.js<br/>Main App Component]
     end
-    
+
     subgraph "Page Components"
         Landing[ace-landing.js]
         Lobby[ace-lobby.js]
@@ -108,12 +104,12 @@ graph TB
         Results[ace-results.js]
         Summary[ace-summary.js]
     end
-    
+
     subgraph "Shared Components"
         Navbar[ace-navbar.js]
         Modal[ace-modal.js]
     end
-    
+
     subgraph "Utilities"
         Templates[templates.js]
         Styles[styles.js]
@@ -125,17 +121,17 @@ graph TB
     AgileAce --> Voting
     AgileAce --> Results
     AgileAce --> Summary
-    
+
     Landing --> Navbar
     Lobby --> Navbar
     Voting --> Navbar
-    
+
     AgileAce --> Templates
     AgileAce --> Styles
     AgileAce --> Toast
 ```
 
-### Kommunikation Client <---> Server
+## Kommunikation Client ←→ Server
 
 ```mermaid
 graph LR
@@ -184,16 +180,17 @@ graph LR
     style WSUtils fill:#fff3e0
     style RoomData fill:#e8f5e8
 
-	style WSServer color:#8C52FF
-	style WS_Client color:#8C52FF
-	style Frontend fill:#D9D9D9,stroke:#545454
-	style AdminRoutes color:#CB6CE6
-	style RoomRoutes color:#CB6CE6
-	style UI color:#CB6CE6
+    style WSServer color:#8C52FF
+    style WS_Client color:#8C52FF
+    style Frontend fill:#D9D9D9,stroke:#545454
+    style AdminRoutes color:#CB6CE6
+    style RoomRoutes color:#CB6CE6
+    style UI color:#CB6CE6
 ```
 
-### Ban user flow
-Im folgenden ist dargestellt, was passiert wenn ein User gebannt werden soll.
+## Benutzer-Sperrablauf
+
+Im Folgenden ist dargestellt, was passiert, wenn ein Benutzer gesperrt werden soll.
 
 ```mermaid
 sequenceDiagram
@@ -206,13 +203,13 @@ sequenceDiagram
     Admin->>API: POST /room/:roomId/ban {name}
     API->>Auth: requireAdminAccess()
     Auth->>Room: isAdmin(roomId, ip)
-    
+
     alt Not Admin
         Auth-->>API: 403 Forbidden
         API-->>Admin: Error
     else Admin OK
         API->>Room: banUser(roomId, userName)
-        
+
         alt Invalid User/Admin/Not Found
             Room-->>API: 400/404 Error
             API-->>Admin: Error Message
@@ -220,14 +217,14 @@ sequenceDiagram
             Room->>Room: Add IP to bannedIps
             Room->>Room: Remove from users
             Room-->>API: ✅ User banned
-            
+
             API->>WS: disconnectUser(roomId, userName)
             WS->>WS: Send "banned-by-admin" to user
             WS->>WS: Close user connection
-            
+
             API->>WS: broadcast "user-banned" event
             WS->>WS: Notify all other users
-            
+
             API-->>Admin: Success
         end
     end
@@ -237,7 +234,7 @@ sequenceDiagram
 
 ## Datenmodell
 
-### Room Structure
+### Raumstruktur
 ```typescript
 interface Room {
   admin: User;              // Room Administrator
@@ -263,33 +260,34 @@ enum RoomStatus {
 }
 ```
 
-## API Endpoints
+## API-Endpunkte
 
-### Room Operations (`/api/rooms.ts`)
-```
+### Raum-Operationen (`/api/rooms.ts`)
+```text
 POST /create              # Create new room
-POST /join               # Join existing room
-GET  /is-admin           # Check admin status
-GET  /room/:id/items     # Get room items
+POST /join                # Join existing room
+GET  /is-admin            # Check admin status
+GET  /room/:id/items      # Get room items
 GET  /room/:id/participants # Get participants
-GET  /room/:id/status    # Get room status
-POST /room/:id/vote      # Submit vote
+GET  /room/:id/status     # Get room status
+POST /room/:id/vote       # Submit vote
 ```
 
-### Admin Operations (`/api/admin.ts`)
-```
-POST /room/:id/items     # Set estimation items
-POST /room/:id/start     # Start voting
-POST /room/:id/reveal    # Reveal votes
-POST /room/:id/repeat    # Repeat current item
-POST /room/:id/next      # Move to next item
-POST /room/:id/summary   # Show final summary
-POST /room/:id/ban       # Ban user from room
+### Administrator-Operationen (`/api/admin.ts`)
+```text
+POST /room/:id/items      # Set estimation items
+POST /room/:id/start      # Start voting
+POST /room/:id/reveal     # Reveal votes
+POST /room/:id/repeat     # Repeat current item
+POST /room/:id/next       # Move to next item
+POST /room/:id/summary    # Show final summary
+POST /room/:id/ban        # Ban user from room
 ```
 
-## WebSocket Events
+## WebSocket-Ereignisse
 
 ### Client → Server
+Direkt nach der erfolgreichen ws connection wird eine Nachricht vom Client an den Server geschickt, welche raumId und Name des Users enthält, damit die connection zugeordnet werden kann. Alle anderen events werden entsprechend unserer Architektur ausschließlich vom Server zum Client geschickt.
 ```javascript
 {
   roomId: number,
@@ -312,14 +310,37 @@ POST /room/:id/ban       # Ban user from room
 { event: "banned-by-admin" }
 ```
 
-## Security & Validation
+## Sicherheit & Validierung
 
-### Input Validation
-- **Username/Items**: Regex pattern `^[^<>&]{0,100}$` (No HTML/XSS)
-- **Room ID**: Numeric validation
-- **IP-based Admin/Ban System**
+### Eingabevalidierung
+- **Benutzername/Items**: Regex-Muster `^[^<>&]{0,100}$` (Kein HTML/XSS)
+- **Raum-ID**: Numerische Validierung
+- **IP-basiertes Admin-/Sperrsystem**
 
-### Authorization
-- **Admin Operations**: IP-based authentication
-- **Room Access**: Banned IP checking
-- **WebSocket**: Room-based message filtering
+### Autorisierung
+- **Administrator-Operationen**: IP-basierte Authentifizierung
+- **Raumzugang**: Überprüfung gesperrter IPs
+- **WebSocket**: Raumbezogene Nachrichtenfilterung
+
+## CI-Pipeline
+
+Unsere CI-Pipeline besteht aus mehreren Automatisierungsschritten, die bei jedem Push oder Pull Request auf dem **main**‑Branch ausgelöst werden:
+
+1. **Server-Tests ausführen**
+   - Repository auschecken
+   - Node.js (Version 18) installieren
+   - Abhängigkeiten im **server/**-Verzeichnis mit `npm ci` installieren
+   - Unit- und Integrationstests mit `npm test` ausführen
+
+2. **End-to-End‑Tests (Playwright)**
+   - Abhängigkeiten erneut installieren (via Cache) und Playwright‑Browser installieren
+   - Playwright‑Tests sequenziell (`--workers=1`) ausführen
+   - Bei Fehlschlägen werden Test‑Artefakte (Berichte und Ergebnisse) hochgeladen
+
+3. **Docker‑Image bauen und veröffentlichen**
+   - Image mit dem aktuellen Commit-Hash und dem "latest"‑Tag erstellen
+   - Als Paket im GitHub Container Registry (GHCR) ablegen
+
+Auf dem Produktionsserver läuft zusätzlich **Watchtower**, das zyklisch das GHCR‑Repository überprüft und automatisch das Docker‑Image aktualisiert, sobald eine neue Version verfügbar ist.
+
+![Succesfull Pipeline run](image.png)

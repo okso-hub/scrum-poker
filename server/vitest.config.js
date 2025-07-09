@@ -27,6 +27,7 @@ export default defineConfig({
         '**/*.d.ts',
 
         'vitest.config.*',
+        'playwright.config.*'
       ],
     },
   },
