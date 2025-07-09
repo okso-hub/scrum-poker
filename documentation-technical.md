@@ -1,5 +1,6 @@
 ### Kommunikation Client <---> Server
-´´´mermaid
+
+```mermaid
 graph LR
     subgraph "Frontend"
         UI[UI Components<br/>ace-lobby.js, ace-navbar.js]
@@ -52,11 +53,12 @@ graph LR
 	style AdminRoutes color:#CB6CE6
 	style RoomRoutes color:#CB6CE6
 	style UI color:#CB6CE6
-´´´
+```
+
 
 
 ### Ban user flow
-´´´mermaid
+```mermaid
 sequenceDiagram
     participant Admin as Admin
     participant API as Ban API
@@ -94,4 +96,4 @@ sequenceDiagram
     end
 
     Note over Room: User IP blocked<br/>from rejoining
-´´´
+```
