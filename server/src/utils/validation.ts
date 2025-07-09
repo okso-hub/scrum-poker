@@ -20,7 +20,7 @@ export function validateRoomId(roomId: any): number {
 
 export function validateUsername(userName: string): boolean {
   for (const pat of userRegex.patterns) {
-    if (new RegExp(pat, ).test(userName)) {
+    if (new RegExp(pat, "i").test(userName)) {
       return false;
     }
   }
