@@ -4,6 +4,7 @@ import { requireAdminAccess } from '../../src/middleware/adminAuth';
 import { roomService } from '../../src/services/index.js';
 import { BadRequestError, ForbiddenError } from '../../src/types/index.js';
 import type { Request, Response, NextFunction } from 'express';
+import * as validation from '../../src/utils/validation.js';
 
 describe('requireAdminAccess middleware', () => {
     const mockNext = vi.fn() as Mock;
@@ -16,11 +17,17 @@ describe('requireAdminAccess middleware', () => {
     mockNext.mockReset();
   });
 
-  it('should call next with BadRequestError if roomId is missing', () => {
-    const req = mockReq({}, '1.2.3.4');
+  
+ it('should call next with BadRequestError if validateRoomId returns falsy', () => {
+    // stub validateRoomId to return a falsy value
+    vi.spyOn(validation, 'validateRoomId').mockReturnValue(undefined as any);
+
+    const req = mockReq({ roomId: 'some-invalid-id' }, '1.2.3.4');
 
     requireAdminAccess(req, mockRes, mockNext);
 
+    // validateRoomId should have been called with the raw param
+    expect(validation.validateRoomId).toHaveBeenCalledWith('some-invalid-id');
     expect(mockNext).toHaveBeenCalledOnce();
     const err = mockNext.mock.calls[0]![0];
     expect(err).toBeInstanceOf(BadRequestError);

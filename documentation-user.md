@@ -20,6 +20,18 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
 - npm run start:dev
 - Die URL http://localhost:3000 im Browser aufrufen
 
+## Ausführung der Tests
+### Unit Tests
+- cd scrum-poker/server
+- npm run test (for coverage: npm run test:coverage)
+
+### End-to-End Test
+- cd scrum-poker/server
+- Wenn lokal ausgeführt: export ci_pipeline=true
+- npx playwright install
+- npx playwright test
+
+
 ## Beschreibung der Anwendung
 ### Startseite
 Auf der Startseite muss der Benutzer seinen Namen eingeben. Anschließend kann er über Buttons ein neues Spiel starten (er wird zum Admin) oder einem existierenden Spiel mittels Angabe einer ID beitreten. Sofern der Nutzer über einen Link, welcher die GameID enthält, auf die Seite der Komponente gelangt ist, wird die GameID zum Betreten eines existierenden Spiels für den Nutzer automatisch eingetragen.
