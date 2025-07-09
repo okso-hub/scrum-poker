@@ -23,7 +23,7 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
 ## Ausführung der Tests
 ### Unit Tests
 - cd scrum-poker/server
-- npm run test (for coverage: npm run test:coverage)
+- npm run test (for coverage: npm run test:coverage, with nice looking overview: npm run test:ui)
 
 ### End-to-End Test
 - cd scrum-poker/server
@@ -31,10 +31,103 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
 - npx playwright install
 - npx playwright test
 
+## Verwendung der Komponente
+- beim Einbinden der Komponente gibt es mehrere Konfigurationsmöglichkeiten
+
+### Backend URL
+- Die `backend-url` muss angegeben werden, damit die Komponente funktioniert und mit dem Backend-Server kommunizieren kann
+
+```html
+<agile-ace backend-url="http://141.72.13.151:8100"></agile-ace>
+```
+
+### CSS Konfiguration
+- Die `font-family` wird von dem HTML übernommen, welches die Komponente einbindet
+- Außerdem kann man über CSS-Variablen, welche die `global.css` der Komponente überschreiben, die Standardwerte anpassen
+
+```css
+--font-size-body: var(--agile-ace-font-size, 1rem);
+--font-size-heading: var(--agile-ace-font-size-heading, 1.5rem);
+--font-size-subheading: var(--agile-ace-font-size-subheading, 1.25rem);
+
+--color-primary: var(--agile-ace-primary-color, #cccccc);
+--color-hover: var(--agile-ace-hover-color, #878787);
+--color-border: var(--agile-ace-border-color, #ccc);
+--color-background: var(--agile-ace-background-color, #f9f9f9);
+--color-selected: var(--agile-ace-selected-color, #007bff);
+
+--radius-sm: var(--agile-ace-border-radius-sm, 0.25rem);
+--radius-md: var(--agile-ace-border-radius-md, 0.5rem);
+--radius-lg: var(--agile-ace-border-radius-lg, 0.75rem);
+--radius-xl: var(--agile-ace-border-radius-xl, 1rem);
+
+--spacing-sm: var(--agile-ace-spacing-sm, 0.25rem);
+--spacing-md: var(--agile-ace-spacing-md, 0.5rem);
+--spacing-lg: var(--agile-ace-spacing-lg, 1rem);
+
+--transition: all 0.2s ease;
+--border-width: 0.0625rem;
+--border: var(--border-width) solid var(--color-border);
+
+--border-radius: var(--agile-ace-border-radius, var(--radius-md));
+--spacing: var(--agile-ace-spacing, var(--spacing-md));
+```
+
+- Werden diese nicht gesetzt, werden die Standard-Fallback-Werte der Komponente verwendet
+
+### Größen
+- Die Größe der Komponente kann über die HTML-Attribute `width` und `height` angepasst werden
+
+```html
+<agile-ace backend-url="http://141.72.13.151:8100" width="800px" height="600px"></agile-ace>
+```
+
+### Slotted (Logo überschreiben)
+- Das Logo der Komponente kann überschrieben werden, indem man ein neues Bild mit `slot="branding"` übergibt
+
+```html
+<agile-ace backend-url="http://141.72.13.151:8100">
+    <img slot="branding" src="./assets/images/dhbw.png" alt="DHBW Logo">
+</agile-ace>
+```
+
+### Items übergeben
+- Wenn man Items standardmäßig der Komponente übergeben möchte, kann man dies über das HTML-Attribut `default-items` in Form eines JSON tun
+- Diese werden dann voreingestellt, wenn man ein Spiel erstellen möchte
+
+```html
+<agile-ace backend-url="http://141.72.13.151:8100"
+    default-items='{"items":["#041 - User Registration Feature","#062 - Mobile App Responsive Design","#063 - Database Migration"],"exportDate":"2024-01-01T00:00:00.000Z"}'>
+</agile-ace>
+```
 
 ## Beschreibung der Anwendung
-### Startseite
+
+### Startseite (index.html)
+
+- Übersichtsseite mit drei Implementierungsbeispielen der AgileAce-Komponente
+
+**1. Standard Component (simple.html)**
+- Komponente im Vollbild-Modus
+- Standard-Konfiguration ohne Anpassungen
+- Keine CSS-Variablen oder HTML-Attribute gesetzt
+
+**2. Dashboard (dashboard.html)**
+- Sprint Backlog Items neben der Komponente
+- Vererbte Font-Family von der Seite
+- CSS-Variablen für visuell einheitliches Design an Komponente übergeben
+- default_items via HTML-Attribut übergeben
+- DHBW-Logo ersetzt Standard AgileAce-Logo (via Slot)
+
+**3. Playground (playground.html)**
+- Live-Anpassung der Komponenten-Inputs
+- Slotted Logo customization
+- CSS-Variablen für Farbanpassungen
+- Echtzeit-Vorschau der Änderungen
+
+### Startseite der Komponente
 Auf der Startseite muss der Benutzer seinen Namen eingeben. Anschließend kann er über Buttons ein neues Spiel starten (er wird zum Admin) oder einem existierenden Spiel mittels Angabe einer ID beitreten. Sofern der Nutzer über einen Link, welcher die GameID enthält, auf die Seite der Komponente gelangt ist, wird die GameID zum Betreten eines existierenden Spiels für den Nutzer automatisch eingetragen.
+für das spacing, die font-size und die radien
 
 ### Items hinzufügen
 Sofern der Nutzer sich dazu entschieden hat, ein eigenes Spiel zu erstellen, kann er nun die Backlog-Items, welche gemeinsam eingeschätzt werden sollen, eintragen. Mindestens ein Eintrag ist erforderlich. Einträge können über den "Add"-Button hinzugefügt und über das Mülltonnen-Emoji entfernt werden. Durch einen Klick auf "Next" gelangt der Admin in die Lobby.
