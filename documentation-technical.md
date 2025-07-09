@@ -343,4 +343,4 @@ Unsere CI-Pipeline besteht aus mehreren Automatisierungsschritten, die bei jedem
 
 Auf dem Produktionsserver läuft zusätzlich **Watchtower**, das zyklisch das GHCR‑Repository überprüft und automatisch das Docker‑Image aktualisiert, sobald eine neue Version verfügbar ist.
 
-![Succesfull Pipeline Run](image.png)
+![Succesfull Pipeline Run](workflow.png)
