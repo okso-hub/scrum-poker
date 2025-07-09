@@ -92,7 +92,7 @@ Um die Anwendung lokal auf dem eigenen Rechner auszuführen, sind folgende Schri
 ```
 
 ### Items übergeben
-- Wenn man Items standardmäßig der Komponente übergeben möchte, kann man dies über das HTML-Attribut `default-items` in Form eines JSON tun
+- Wenn man Items standardmäßig der Komponente übergeben möchte, kann man dies über das HTML-Attribut `default-items` in Form eines JSON Objekts tun
 - Diese werden dann voreingestellt, wenn man ein Spiel erstellen möchte
 
 ```html
