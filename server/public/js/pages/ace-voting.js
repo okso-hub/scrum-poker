@@ -155,13 +155,13 @@ class AceVoting extends HTMLElement {
         <td class="player-name">
           ${player.name}
         </td>
-        <td class="status-${player.name}">Waiting...</td>
+        <td class="vote-status" data-player-name="${player.name}">Waiting...</td>
       </tr>
     `).join('');
   }
 
   _updateStatus(playerName, text) {
-    const el = this.shadowRoot.querySelector(`.status-${playerName}`);
+    const el = this.shadowRoot.querySelector(`[data-player-name="${playerName}"]`);
     if (el) el.textContent = text;
   }
 
