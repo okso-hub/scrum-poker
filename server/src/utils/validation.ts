@@ -1,7 +1,7 @@
 import { BadRequestError } from "../types/index.js";
 import { createRequire } from "module";
 
-const require = createRequire(import.meta.url);
+// const require = createRequire(import.meta.url);
 const userRegex =  [
   "\\b((n[\\W_]*?)+(h+[\\W_]*?)*?([yijl][\\W_]*?)+(a[\\W_]*?)*?(g[\\W_]*?)+([ae][\\W_]*?)+(r[\\W_]*?)*?(o[\\W_]*?)*?(h[\\W_]*?)*?(s[\\W_]*?)*?)+\\b",
   "\\b(k*?[\\W_]*?n+[\\W_]*?[iyl!]+[\\W_]*?h*?[\\W_]*?[bqg]+[\\W_]*?[bqg]*?[\\W_]*?[wr]*?[\\W_]*?([aeu]+[\\W_]*?h*[\\W_]*?r+|a+|u+[\\W_]*?h+)[\\W_]*?[sz]*?)+\\b",
