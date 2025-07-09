@@ -82,7 +82,7 @@
       }
     }
 
-    @media (max-width: 430px) {
+    @media (max-width: 425px) {
       & .info #copy-id-btn {
         display: none;
       }
