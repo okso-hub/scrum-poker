@@ -59,7 +59,7 @@ test.describe.serial('Home page form', () => {
     // 1) Select page elements
     const itemInput = page.locator('#item-input');
     const addBtn = page.locator('#add-item-button');
-    const listEl = page.locator('#item-list');;
+    const listEl = page.locator('#item-list');
 
     // 2) initial list should be empty
     await expect(listEl.locator('li')).toHaveCount(3);
