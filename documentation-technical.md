@@ -131,6 +131,8 @@ graph TB
     AgileAce --> Toast
 ```
 
+In den einzelnen Pages werden Events dispatched (`this.dispatchEvent`; Beispiel-Event: `ace-back-to-landing`), welche im Root der Komponente (`agile-ace.js`) gefangen werden. Im Falle von `ace-back-to-landing` wird durch einen Klick auf "Back to main page" der Komponente mitgeteilt, dass diese zurück auf die Landing-Page gehen soll. Die Root der Komponente rendert die Landing-Page daraufhin. Auf diese Weise kommuniziert die Komponente intern zwischen den einzelnen Seiten.
+
 ## Kommunikation Client ←→ Server
 
 ```mermaid
