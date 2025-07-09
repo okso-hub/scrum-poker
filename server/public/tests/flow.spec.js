@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe.serial('Home page form', () => {
-  const BASE = 'http://localhost:3000';
+  const BASE = 'http://localhost:3000/dashboard.html';
   let context;
   let page;
 
@@ -50,7 +50,7 @@ test.describe.serial('Home page form', () => {
   });
 
   // 6) website URL including 6 digit game ID
-  const urlRegEx = new RegExp(`^${BASE}\\/\\?gameId=\\d{6}$`, 'i');
+  const urlRegEx = new RegExp(`^${BASE}\\?gameId=\\d{6}$`, 'i');
 
   test('Add Items', async () => {
     const aceItems = page.locator('ace-items');
@@ -222,14 +222,14 @@ test.describe.serial('Home page form', () => {
     await expect(summaryRoot.locator('h2')).toHaveText('Sprint Summary');
 
     // 3) Grab all rows in the summary list (excluding the header)
-    const rows = summaryRoot.locator('#summary-list li.list-item');
+    const rows = summaryRoot.locator('#summary-list tr');
     await expect(rows).toHaveCount(4);
 
     // 4) Check first and last item text + averages
-    await expect(rows.nth(0).locator('span').nth(0)).toHaveText(ITEMS[0]);
-    await expect(rows.nth(0).locator('span').nth(1)).toHaveText('5');
-    await expect(rows.nth(3).locator('span').nth(0)).toHaveText(ITEMS[3]);
-    await expect(rows.nth(3).locator('span').nth(1)).toHaveText('5');
+    await expect(rows.nth(0).locator('td').nth(0)).toHaveText(ITEMS[0]);
+    await expect(rows.nth(0).locator('td').nth(1)).toHaveText('5');
+    await expect(rows.nth(3).locator('td').nth(0)).toHaveText(ITEMS[3]);
+    await expect(rows.nth(3).locator('td').nth(1)).toHaveText('5');
 
     // 5) Check the totals output
     const totals = summaryRoot.locator('.total');

@@ -30,6 +30,8 @@ jobs:
   e2e:
     name: Run End-to-End Test
     runs-on: ubuntu-latest
+    env:
+      CI_PIPELINE: true
     steps:
       # 1) Checkout your repo
       - name: Checkout repository

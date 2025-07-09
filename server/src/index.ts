@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from'fs';
 import { initWebSocket } from "./utils/ws.js";
 import router from "./routes/index.js";
 import { errorHandler } from "./middleware/errorHandler.js";
@@ -17,21 +18,44 @@ console.log("🗂️  Serving static files from:", publicDir);
 // 2) Middleware
 app.set("trust proxy", true);
 app.use(express.json());
-app.use(express.static(publicDir));
 
-// 3) Your API routes
+// 3) Override just dashboard.html when CI=true
+app.get("/dashboard.html", async (req, res, next) => {
+  try {
+    const filePath = path.join(publicDir, "dashboard.html")
+    let html = await fs.promises.readFile(filePath, "utf-8")
+
+    if (process.env.CI_PIPELINE === "true") {
+      // replace any backend-url="..." with your CI backend URL
+      const ciUrl = "http://localhost:3000"  // or pull from CI_BACKEND_URL env var
+      html = html.replace(
+        /backend-url="[^"]*"/,
+        `backend-url="${ciUrl}"`
+      )
+    }
+
+    res.type("html").send(html)
+  } catch (err) {
+    next(err)
+  }
+})
+
+// 4) Everything else via static
+app.use(express.static(publicDir))
+
+// 5) Your API routes
 app.use(router);
 
-// 5) Error handler
+// 6) Error handler
 app.use(errorHandler);
 
-// 6) Start HTTP + WebSocket
+// 7) Start HTTP + WebSocket
 const server = app.listen(PORT, HOST, () => {
   console.log(`🚀 HTTP on http://${HOST}:${PORT}`);
 });
 initWebSocket(server);
 
-// 7) Graceful shutdown
+// 8) Graceful shutdown
 process.on("SIGTERM", () => server.close());
 
 export default server;
