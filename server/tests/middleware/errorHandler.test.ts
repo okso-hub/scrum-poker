@@ -25,7 +25,7 @@ describe('errorHandler', () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({
-      error: 'Not allowed',
+      message: 'Not allowed',
       code: 'FORBIDDEN',
     });
   });
@@ -36,7 +36,7 @@ describe('errorHandler', () => {
 
     expect(res.status).toHaveBeenCalledWith(500);
     expect(res.json).toHaveBeenCalledWith({
-      error: 'Internal server error',
+      message: 'Internal server error',
       code: 'INTERNAL_ERROR',
     });
   });
