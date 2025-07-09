@@ -61,7 +61,7 @@ test.describe.serial('Home page form', () => {
     const addBtn = page.locator('#add-item-button');
     const listEl = page.locator('#item-list');
 
-    // 2) initial list should be empty
+    // 2) initial list is pre-populated with 3 items
     await expect(listEl.locator('li')).toHaveCount(3);
 
     // 3) attempt to add an invalid item (contains '<')
