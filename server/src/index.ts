@@ -26,8 +26,8 @@ app.get("/dashboard.html", async (req, res, next) => {
     let html = await fs.promises.readFile(filePath, "utf-8")
 
     if (process.env.CI_PIPELINE === "true") {
-      // replace any backend-url="..." with your CI backend URL
-      const ciUrl = "http://localhost:3000"  // or pull from CI_BACKEND_URL env var
+      // replace any backend-url="..."
+      const ciUrl = "http://localhost:3000"
       html = html.replace(
         /backend-url="[^"]*"/,
         `backend-url="${ciUrl}"`
