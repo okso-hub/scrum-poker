@@ -1,19 +1,19 @@
 ## Architektur-Überblick
 
-Die Anwendung ist eine **Full-Stack TypeScript/JavaScript** Anwendung mit einem **Express.js Backend** und einem **Vanilla JavaScript Frontend**. Sie verwendet **WebSockets** für Real-time Kommunikation und **In-Memory Storage** für Daten.
+Die Anwendung ist eine **Full-Stack TypeScript/JavaScript** Anwendung mit einem **Express.js Backend** und einem **Vanilla JavaScript Frontend**. Sie verwendet **WebSockets** für Echtzeitkommunikation und **In-Memory Storage** für Daten.
 
 ### Technologie-Stack
 
 **Backend:**
 - **Node.js** mit **TypeScript**
 - **Express.js** - REST-API-Framework
-- **WebSocket (ws)** - Echtzeitkommunikation
+- **WebSocket (ws)** - Echtzeitkommunikation mit Benutzern
 - **Vitest** - Testframework
 
 **Frontend:**
 - **Vanilla JavaScript** mit **Web Components**
 - **Shadow DOM** für Kapselung
-- **WebSocket-Client** für Echtzeit-Updates
+- **WebSocket-Client** für den Empfang von Echtzeit-Updates
 - **CSS3** für Styling
 - **Playwright** für E2E-Tests
 
@@ -141,7 +141,7 @@ graph LR
     end
     subgraph "API Routes"
         RoomRoutes[Room Routes<br/>/create, /join, /participants]
-        AdminRoutes[Admin Routes<br/>/ban, /start, /items]
+        AdminRoutes[Admin Routes<br/>/ban, /start, /items, /summary, /next/, /repeat, /reveal]
     end
     subgraph "Services"
         RoomService[Room Service<br/>createRoom, joinRoom, banUser]
@@ -313,7 +313,7 @@ Direkt nach der erfolgreichen ws connection wird eine Nachricht vom Client an de
 ## Sicherheit & Validierung
 
 ### Eingabevalidierung
-- **Benutzername/Items**: Regex-Muster `^[^<>&]{0,100}$` (Kein HTML/XSS)
+- **Benutzername/Items**: RegEx-Muster `^[^<>&]{0,100}$` (Kein HTML/XSS) und Überprüfung auf definierte gesperrte Begriffe mittels RegEx
 - **Raum-ID**: Numerische Validierung
 - **IP-basiertes Admin-/Sperrsystem**
 
@@ -343,4 +343,4 @@ Unsere CI-Pipeline besteht aus mehreren Automatisierungsschritten, die bei jedem
 
 Auf dem Produktionsserver läuft zusätzlich **Watchtower**, das zyklisch das GHCR‑Repository überprüft und automatisch das Docker‑Image aktualisiert, sobald eine neue Version verfügbar ist.
 
-![Succesfull Pipeline run](image.png)
+![Succesfull Pipeline Run](image.png)
