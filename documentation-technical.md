@@ -287,6 +287,7 @@ POST /room/:id/ban        # Ban user from room
 ## WebSocket-Ereignisse
 
 ### Client → Server
+Direkt nach der erfolgreichen ws connection wird eine Nachricht vom Client an den Server geschickt, welche raumId und Name des Users enthält, damit die connection zugeordnet werden kann. Alle anderen events werden entsprechend unserer Architektur ausschließlich vom Server zum Client geschickt.
 ```javascript
 {
   roomId: number,
