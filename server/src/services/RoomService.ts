@@ -46,7 +46,6 @@ export class RoomService {
   generateUniqueRoomId(): number {
     let roomId: number;
     do {
-      // yields an integer from 100000 to 999999 (inclusive)
       roomId = Math.floor(Math.random() * 900_000) + 100_000;
     } while (this.rooms.has(roomId));
     return roomId;

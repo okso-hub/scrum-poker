@@ -1,4 +1,4 @@
-/* Results Page spezifische Styles */
+/* Results Page specific styles */
 @layer pages {
   .question-section {
     margin-block-end: var(--spacing-lg);

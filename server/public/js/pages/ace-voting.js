@@ -34,7 +34,6 @@ class AceVoting extends HTMLElement {
     this._backendUrl = this.getAttribute("backend-url");
     this._hideNavbar = this.getAttribute('hide-navbar') === 'true';
     this._render();
-    this._setupEventListeners();
   }
 
   _render() {
@@ -47,7 +46,6 @@ class AceVoting extends HTMLElement {
     
     this.shadowRoot.innerHTML = html;
 
-    // Remove navbar if hide-navbar is true
     if (this._hideNavbar) {
       const navbar = this.shadowRoot.querySelector('ace-navbar');
       if (navbar) {
@@ -185,10 +183,6 @@ class AceVoting extends HTMLElement {
     votedPlayers.forEach(playerName => {
       this._updateStatus(playerName, 'Voted');
     });
-  }
-
-  _setupEventListeners() {
-    // Placeholder for future event listeners
   }
 }
 

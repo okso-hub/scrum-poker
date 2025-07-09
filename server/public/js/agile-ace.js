@@ -8,7 +8,6 @@ import "./components/ace-navbar.js";
 import { createToastHost, showToastInShadow, toast } from "./utils/shadow-toast.js";
 
 class AgileAce extends HTMLElement {
-  // Default configuration
   static get DEFAULT_CONFIG() {
     return {
       width: "800px",
@@ -22,18 +21,12 @@ class AgileAce extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     
-    // Initialize component state
     this._initializeState();
-    
-    // Set up component structure and styling
     this._setupComponent();
-    
-    // Start the application
     this._initialize();
   }
 
   _initializeState() {
-    // Component state
     this._roomId = null;
     this._name = null;
     this._role = null;
@@ -43,8 +36,6 @@ class AgileAce extends HTMLElement {
     this._currentLobby = null;
     this._currentVoting = null;
     this._ws = null;
-    
-    // Configuration
     this._backendUrl = this.getAttribute("backend-url");
   }
 
@@ -68,23 +59,18 @@ class AgileAce extends HTMLElement {
   }
 
   _createStructure() {
-    // Create main wrapper container
     this._wrapperContainer = this._createWrapperContainer();
     
-    // Create navbar container
     this._navbarContainer = this._createNavbarContainer();
     this._navbar = this._createNavbar();
     this._navbarContainer.appendChild(this._navbar);
     
-    // Create content container
     this._contentContainer = this._createContentContainer();
     
-    // Assemble structure
     this._wrapperContainer.appendChild(this._navbarContainer);
     this._wrapperContainer.appendChild(this._contentContainer);
     this.shadowRoot.appendChild(this._wrapperContainer);
     
-    // Initialize toast system
     this._initializeToastHost();
   }
 
@@ -129,21 +115,17 @@ class AgileAce extends HTMLElement {
   }
 
   _initializeToastHost() {
-    // Initialize toast for wrapper container instead of shadow root
     if (this._wrapperContainer) {
       createToastHost(this._wrapperContainer);
     }
   }
 
   _initializeNavbar() {
-    // Create main wrapper container
     this._createWrapperContainer();
     
-    // Create navbar container
     this._navbarContainer = document.createElement("div");
-    this._navbarContainer.style.display = "none"; // Hidden by default
+    this._navbarContainer.style.display = "none";
     
-    // Create navbar element
     this._navbar = document.createElement("ace-navbar");
     this._navbar.setAttribute("backend-url", this._backendUrl);
     
@@ -162,7 +144,6 @@ class AgileAce extends HTMLElement {
 
   _showNavbar() {
     if (this._navbar && this._gameId) {
-      // Set attributes BEFORE making visible
       this._navbar.setAttribute("game-id", this._gameId);
       this._navbar.setAttribute("is-admin", this._role === "admin");
       
@@ -176,15 +157,12 @@ class AgileAce extends HTMLElement {
         }
       }
       
-      // Exit minimal mode - show full navbar
       this._navbar.setMinimalMode(false);
       this._navbarContainer.style.display = "block";
       
-      // Clear existing branding to prevent duplicates
       const existingBranding = this._navbar.querySelectorAll('[slot="branding"]');
       existingBranding.forEach(node => node.remove());
       
-      // Copy branding to navbar only if not already present
       const brandingNodes = Array.from(this.querySelectorAll('[slot="branding"]'));
       brandingNodes.forEach(node => {
         this._navbar.appendChild(node.cloneNode(true));
@@ -202,7 +180,6 @@ class AgileAce extends HTMLElement {
         this._navbar.appendChild(node.cloneNode(true));
       });
       
-      // Wait for navbar to be fully rendered before setting minimal mode
       setTimeout(() => {
         this._navbar.setMinimalMode(true);
       }, 0);
@@ -238,11 +215,9 @@ class AgileAce extends HTMLElement {
     this._currentLobby = null;
     this._currentVoting = null;
 
-    // navigate to landing page
     this._renderLanding();
   }
 
-  // Renders page where the admin can add items
   _renderItems() {
     this._showNavbar();
     
@@ -260,7 +235,6 @@ class AgileAce extends HTMLElement {
     cmp.setAttribute("backend-url", this._backendUrl);
     cmp.setAttribute("hide-navbar", "true"); // Tell component not to render its own navbar
     
-    // Pass default items if they exist
     const defaultItems = this.getAttribute("default-items");
     if (defaultItems) {
       cmp.setAttribute("default-items", defaultItems);
@@ -335,8 +309,6 @@ class AgileAce extends HTMLElement {
     }
   }
 
-  // Renders the results page after each voting
-  //TODO: why is this called show not render?
   _showResults(results, isLastItem = false) {
     this._showNavbar();
     this._contentContainer.innerHTML = "";
@@ -351,7 +323,6 @@ class AgileAce extends HTMLElement {
     comp.setAttribute("all-players", JSON.stringify(this._allPlayers || []));
     comp.setAttribute("question", this._item || "Unknown Item"); // Add current item as question
     
-    // Ensure the component is properly appended and check for errors
     this._contentContainer.appendChild(comp);
     this._currentLobby = null;
     this._currentVoting = null;
@@ -360,7 +331,6 @@ class AgileAce extends HTMLElement {
     console.log("Results data:", results);
   }
 
-  // Renders the summary page (end of the game)
   _renderSummary(summary) {
     this._showNavbar();
     this._contentContainer.innerHTML = "";
@@ -529,7 +499,6 @@ class AgileAce extends HTMLElement {
       console.log("[WS] Received message: ", msg);
 
       if (msg.event === "cards-revealed") {
-        // Update allPlayers if provided in the message
         if (msg.allPlayers) {
           this._allPlayers = msg.allPlayers;
         }
