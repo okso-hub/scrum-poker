@@ -9,9 +9,7 @@ export default defineConfig({
     ],
     
     exclude: [
-      'public/**/*',
-      '**/node_modules/**',
-      '**/dist/**',
+      'public/**/*'
     ],
 
     globals: true,
