@@ -17,26 +17,8 @@ export function requireAdminAccess(req: Request, res: Response, next: NextFuncti
       throw new ForbiddenError("Admin access required for this operation");
     }
 
-    // // Store room validation result for later use in the route handler
-    // req.adminValidated = {
-    //   roomId,
-    //   adminIp: ip,
-    // };
-
     next();
   } catch (error) {
     next(error);
   }
 }
-
-// // Extend Express Request interface to include our custom property
-// declare global {
-//   namespace Express {
-//     interface Request {
-//       adminValidated?: {
-//         roomId: string;
-//         adminIp: string;
-//       };
-//     }
-//   }
-// }
