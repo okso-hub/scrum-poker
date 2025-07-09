@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
-    headless: false,
+    headless: process.env.CI_PIPELINE === 'true' ? true : false,
     viewport: { width: 1280, height: 720 },
   },
   webServer: {
