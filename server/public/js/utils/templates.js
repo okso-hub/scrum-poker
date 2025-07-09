@@ -1,5 +1,5 @@
 /**
- * HTML Template Utility für Web Components
+ * HTML Template Utility for Web Components
  */
 
 const templateCache = new Map();

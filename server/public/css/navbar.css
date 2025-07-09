@@ -55,32 +55,32 @@
       padding: var(--spacing-sm) var(--spacing-md);
       gap: var(--spacing-sm);
 
-      & .info {
+      .info {
         order: 1;
         flex: 0 1 auto;
       }
 
-      & .action-buttons {
+      .action-buttons {
         order: 2;
         flex: 0 1 auto;
         display: flex;
         gap: var(--spacing-sm);
       }
 
-      /* Hide branding on smaller screens */
-      & .branding {
+      .info #copy-id-btn {
+        display: none;
+      }
+
+      .action-buttons #copy-btn {
         display: none;
       }
     }
+  }
 
-    @container (max-width: 425px) {
-      & .info #copy-id-btn {
-        display: none;
-      }
 
-      & .action-buttons #copy-btn {
-        display: none;
-      }
+  @container (max-width: 425px) {
+    .branding img {
+      display: none;
     }
   }
 
