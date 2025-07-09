@@ -94,7 +94,7 @@ describe('Vote Routes', () => {
         .send({ playerName: '', vote: '' })
         .expect(400);
 
-      expect(res.body).toEqual({ error: 'oops', code: 'BAD_REQUEST' });
+      expect(res.body).toEqual({ message: 'oops', code: 'BAD_REQUEST' });
     });
   });
 
