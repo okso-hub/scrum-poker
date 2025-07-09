@@ -56,14 +56,14 @@
       top: 0;
       z-index: 100;
       
-      h1 {
+      & h1 {
         margin: 0;
         color: var(--primary-color);
         font-size: var(--font-size-xl);
         font-weight: 600;
       }
       
-      button {
+      & button {
         background: var(--secondary-color);
         color: white;
         border: none;
@@ -77,7 +77,7 @@
 
     main {
       display: grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 320px 1fr;
       gap: var(--spacing-lg);
       padding: var(--spacing-lg);
       height: calc(100vh - 80px);
@@ -90,7 +90,7 @@
       box-shadow: var(--shadow);
       overflow-y: auto;
       
-      h2 {
+      & h2 {
         color: var(--primary-color);
         font-size: var(--font-size-lg);
         margin-bottom: var(--spacing-lg);
@@ -99,26 +99,26 @@
         padding-bottom: var(--spacing-sm);
       }
       
-      .control-group {
+      & .control-group {
         margin-bottom: var(--spacing-lg);
         
-        h3 {
+        & h3 {
           color: var(--primary-color);
           font-size: var(--font-size-base);
           margin-bottom: var(--spacing-md);
           font-weight: 600;
         }
         
-        label {
+        & label {
           display: block;
           margin-bottom: var(--spacing-sm);
           font-weight: 500;
           color: var(--text-color);
         }
         
-        input[type="color"],
-        input[type="range"],
-        select {
+        & input[type="color"],
+        & input[type="range"],
+        & input[type="file"] {
           width: 100%;
           padding: var(--spacing-sm);
           border: 1px solid var(--border-color);
@@ -131,12 +131,17 @@
           }
         }
         
-        input[type="color"] {
+        & input[type="color"] {
           height: 40px;
           cursor: pointer;
         }
         
-        input[type="range"] {
+        & input[type="file"] {
+          cursor: pointer;
+          background: var(--card-background);
+        }
+        
+        & input[type="range"] {
           height: 8px;
           appearance: none;
           background: var(--border-color);
@@ -161,17 +166,12 @@
           }
         }
         
-        select {
-          background: var(--card-background);
-          cursor: pointer;
-        }
-        
-        .preset-buttons {
+        & .preset-buttons {
           display: flex;
           flex-direction: column;
           gap: var(--spacing-sm);
           
-          button {
+          & button {
             background: var(--background-color);
             color: var(--text-color);
             border: 1px solid var(--border-color);
@@ -188,31 +188,53 @@
           }
         }
         
-        .value-display {
+        & .logo-presets {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: var(--spacing-sm);
+          margin-top: var(--spacing-md);
+          
+          & button {
+            background: var(--background-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: var(--spacing-sm);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-sm);
+            transition: all 0.2s ease;
+            
+            &:hover {
+              background: var(--secondary-color);
+              color: white;
+              border-color: var(--secondary-color);
+            }
+            
+            &.active {
+              background: var(--secondary-color);
+              color: white;
+              border-color: var(--secondary-color);
+            }
+            
+            & img {
+              width: 40px;
+              height: 40px;
+              object-fit: contain;
+              border-radius: var(--border-radius);
+            }
+          }
+        }
+        
+        & .value-display {
           display: block;
           margin-top: var(--spacing-sm);
           font-size: 0.9rem;
           color: var(--text-color);
           font-weight: 500;
-        }
-      }
-      
-      .export-section {
-        margin-top: var(--spacing-xl);
-        padding-top: var(--spacing-lg);
-        border-top: 1px solid var(--border-color);
-        
-        button {
-          width: 100%;
-          background: var(--success-color);
-          color: white;
-          border: none;
-          padding: var(--spacing-md);
-          border-radius: var(--border-radius);
-          cursor: pointer;
-          font-size: var(--font-size-base);
-          font-weight: 500;
-          margin-bottom: var(--spacing-sm);
         }
       }
     }
@@ -226,7 +248,7 @@
       flex-direction: column;
       overflow: hidden;
       
-      h2 {
+      & h2 {
         color: var(--primary-color);
         font-size: var(--font-size-xl);
         margin-bottom: var(--spacing-lg);
@@ -234,7 +256,7 @@
         font-weight: 600;
       }
       
-      agile-ace {
+      & agile-ace {
         flex: 1;
         min-height: 0;
       }
@@ -247,12 +269,13 @@
       }
       
       aside {
-        max-height: 300px;
+        max-height: 400px;
       }
     }
 
     @media (max-width: 768px) {
       main {
+        grid-template-columns: 1fr;
         padding: var(--spacing-md);
         gap: var(--spacing-md);
       }
@@ -265,6 +288,10 @@
       header {
         flex-direction: column;
         gap: var(--spacing-sm);
+      }
+      
+      .logo-presets {
+        grid-template-columns: 1fr !important;
       }
     }
   </style>
@@ -281,57 +308,97 @@
     <aside>
       <h2>Design Settings</h2>
       
-      <div class="control-group">
+      <article class="control-group">
         <h3>Theme Presets</h3>
-        <div class="preset-buttons">
+        <nav class="preset-buttons">
           <button onclick="applyTheme('default')" class="active">Default</button>
           <button onclick="applyTheme('dark')">Dark</button>
-          <button onclick="applyTheme('blue')">Blue</button>
-          <button onclick="applyTheme('green')">Green</button>
-          <button onclick="applyTheme('red')">Red</button>
-        </div>
-      </div>
+          <button onclick="applyTheme('ocean')">Ocean</button>
+          <button onclick="applyTheme('forest')">Forest</button>
+          <button onclick="applyTheme('sunset')">Sunset</button>
+          <button onclick="applyTheme('purple')">Purple</button>
+        </nav>
+      </article>
       
-      <div class="control-group">
+      <article class="control-group">
+        <h3>Logo Settings</h3>
+        <fieldset>
+          <legend>Upload Custom Logo</legend>
+          <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)">
+        </fieldset>
+        
+        <fieldset>
+          <legend>Or Choose Preset Logo</legend>
+          <nav class="logo-presets">
+            <button onclick="selectPresetLogo('./assets/images/agile-ace-high-resolution-logo.png', 'AgileAce Logo', this)">
+              <img src="./assets/images/agile-ace-high-resolution-logo.png" alt="AgileAce">
+              AgileAce
+            </button>
+            <button onclick="selectPresetLogo('./assets/images/dhbw.png', 'DHBW Logo', this)" class="active">
+              <img src="./assets/images/dhbw.png" alt="DHBW">
+              DHBW
+            </button>
+            <button onclick="selectPresetLogo('./assets/images/2023_Aufbau 23s2.png', 'Aufbau Logo', this)">
+              <img src="./assets/images/2023_Aufbau 23s2.png" alt="Aufbau">
+              Aufbau
+            </button>
+            <button onclick="selectPresetLogo('./assets/images/Kubernetes_logo_without_workmark.svg.png', 'Kubernetes Logo', this)">
+              <img src="./assets/images/Kubernetes_logo_without_workmark.svg.png" alt="Kubernetes">
+              Kubernetes
+            </button>
+          </nav>
+        </fieldset>
+      </article>
+      
+      <article class="control-group">
         <h3>Colors</h3>
-        <label for="primaryColor">Primary Color:</label>
-        <input type="color" id="primaryColor" value="#2c3e50" onchange="updateColor('primary', this.value)">
+        <fieldset>
+          <legend>Primary Color</legend>
+          <input type="color" id="primaryColor" value="#cccccc" onchange="updateColor('primary', this.value)">
+        </fieldset>
         
-        <label for="secondaryColor">Secondary Color:</label>
-        <input type="color" id="secondaryColor" value="#3498db" onchange="updateColor('secondary', this.value)">
+        <fieldset>
+          <legend>Hover Color</legend>
+          <input type="color" id="hoverColor" value="#878787" onchange="updateColor('hover', this.value)">
+        </fieldset>
         
-        <label for="accentColor">Accent Color:</label>
-        <input type="color" id="accentColor" value="#e74c3c" onchange="updateColor('accent', this.value)">
+        <fieldset>
+          <legend>Selected Color</legend>
+          <input type="color" id="selectedColor" value="#007bff" onchange="updateColor('selected', this.value)">
+        </fieldset>
         
-        <label for="backgroundColor">Background:</label>
-        <input type="color" id="backgroundColor" value="#f8f9fa" onchange="updateColor('background', this.value)">
-      </div>
+        <fieldset>
+          <legend>Border Color</legend>
+          <input type="color" id="borderColor" value="#cccccc" onchange="updateColor('border', this.value)">
+        </fieldset>
+      </article>
       
-      <div class="control-group">
-        <h3>Font Size</h3>
-        <label for="fontSize">Base Font Size:</label>
-        <input type="range" id="fontSize" min="12" max="20" value="16" onchange="updateFontSize(this.value)">
-        <output id="fontSizeValue" class="value-display">16px</output>
-      </div>
+      <article class="control-group">
+        <h3>Typography</h3>
+        <fieldset>
+          <legend>Base Font Size</legend>
+          <input type="range" id="fontSize" min="12" max="20" value="16" onchange="updateFontSize(this.value)">
+          <output id="fontSizeValue" class="value-display">16px</output>
+        </fieldset>
+      </article>
       
-      <div class="control-group">
+      <article class="control-group">
         <h3>Spacing</h3>
-        <label for="spacing">Spacing Multiplier:</label>
-        <input type="range" id="spacing" min="0.5" max="2" step="0.1" value="1" onchange="updateSpacing(this.value)">
-        <output id="spacingValue" class="value-display">1x</output>
-      </div>
+        <fieldset>
+          <legend>Spacing</legend>
+          <input type="range" id="spacing" min="0.5" max="2" step="0.1" value="1" onchange="updateSpacing(this.value)">
+          <output id="spacingValue" class="value-display">1x</output>
+        </fieldset>
+      </article>
       
-      <div class="control-group">
+      <article class="control-group">
         <h3>Border Radius</h3>
-        <label for="borderRadius">Roundness:</label>
-        <input type="range" id="borderRadius" min="0" max="20" value="6" onchange="updateBorderRadius(this.value)">
-        <output id="borderRadiusValue" class="value-display">6px</output>
-      </div>
-      
-      <div class="export-section">
-        <button onclick="exportCSS()">Export CSS</button>
-        <button onclick="resetToDefault()">Reset</button>
-      </div>
+        <fieldset>
+          <legend>Roundness</legend>
+          <input type="range" id="borderRadius" min="0" max="20" value="8" onchange="updateBorderRadius(this.value)">
+          <output id="borderRadiusValue" class="value-display">8px</output>
+        </fieldset>
+      </article>
     </aside>
 
     <section>
@@ -343,7 +410,7 @@
         height="100%"
         default-items='{"items":["Design Test Item 1","Design Test Item 2","Design Test Item 3"],"exportDate":"2024-01-01T00:00:00.000Z"}'
       >
-        <img slot="branding" src="./assets/images/dhbw.png" alt="DHBW Logo">
+        <img slot="branding" src="./assets/images/dhbw.png" alt="DHBW Logo" id="componentLogo">
       </agile-ace>
     </section>
   </main>
@@ -352,34 +419,40 @@
   <script>
     const themes = {
       default: {
-        primary: '#2c3e50',
-        secondary: '#3498db',
-        accent: '#e74c3c',
-        background: '#f8f9fa'
+        primary: '#cccccc',
+        hover: '#878787',
+        selected: '#007bff',
+        border: '#cccccc'
       },
       dark: {
-        primary: '#1a1a1a',
-        secondary: '#007acc',
-        accent: '#ff6b6b',
-        background: '#2d2d2d'
+        primary: '#4a5568',
+        hover: '#2d3748',
+        selected: '#3182ce',
+        border: '#4a5568'
       },
-      blue: {
-        primary: '#1e3a8a',
-        secondary: '#3b82f6',
-        accent: '#f59e0b',
-        background: '#eff6ff'
+      ocean: {
+        primary: '#2b6cb0',
+        hover: '#1e40af',
+        selected: '#0ea5e9',
+        border: '#38bdf8'
       },
-      green: {
-        primary: '#166534',
-        secondary: '#22c55e',
-        accent: '#ef4444',
-        background: '#f0fdf4'
+      forest: {
+        primary: '#059669',
+        hover: '#047857',
+        selected: '#10b981',
+        border: '#6ee7b7'
       },
-      red: {
-        primary: '#991b1b',
-        secondary: '#ef4444',
-        accent: '#3b82f6',
-        background: '#fef2f2'
+      sunset: {
+        primary: '#dc2626',
+        hover: '#b91c1c',
+        selected: '#f59e0b',
+        border: '#fed7aa'
+      },
+      purple: {
+        primary: '#7c3aed',
+        hover: '#6d28d9',
+        selected: '#a855f7',
+        border: '#c4b5fd'
       }
     };
 
@@ -388,14 +461,14 @@
       if (!theme) return;
 
       document.getElementById('primaryColor').value = theme.primary;
-      document.getElementById('secondaryColor').value = theme.secondary;
-      document.getElementById('accentColor').value = theme.accent;
-      document.getElementById('backgroundColor').value = theme.background;
+      document.getElementById('hoverColor').value = theme.hover;
+      document.getElementById('selectedColor').value = theme.selected;
+      document.getElementById('borderColor').value = theme.border;
 
       updateColor('primary', theme.primary);
-      updateColor('secondary', theme.secondary);
-      updateColor('accent', theme.accent);
-      updateColor('background', theme.background);
+      updateColor('hover', theme.hover);
+      updateColor('selected', theme.selected);
+      updateColor('border', theme.border);
 
       // Update active button
       document.querySelectorAll('.preset-buttons button').forEach(btn => {
@@ -410,9 +483,9 @@
 
       const propertyMap = {
         primary: '--agile-ace-primary-color',
-        secondary: '--agile-ace-secondary-color',
-        accent: '--agile-ace-selected-color',
-        background: '--agile-ace-background-color'
+        hover: '--agile-ace-hover-color',
+        selected: '--agile-ace-selected-color',
+        border: '--agile-ace-border-color'
       };
 
       const property = propertyMap[type];
@@ -433,14 +506,14 @@
       const component = document.getElementById('agileAceComponent');
       if (!component) return;
 
-      const baseSpacing = 16;
-      const smallSpacing = (baseSpacing * 0.5 * multiplier) + 'px';
-      const mediumSpacing = (baseSpacing * multiplier) + 'px';
-      const largeSpacing = (baseSpacing * 1.5 * multiplier) + 'px';
+      const smallSpacing = (4 * multiplier) + 'px';
+      const mediumSpacing = (8 * multiplier) + 'px';
+      const largeSpacing = (16 * multiplier) + 'px';
 
       component.style.setProperty('--agile-ace-spacing-sm', smallSpacing);
       component.style.setProperty('--agile-ace-spacing-md', mediumSpacing);
       component.style.setProperty('--agile-ace-spacing-lg', largeSpacing);
+      component.style.setProperty('--agile-ace-spacing', mediumSpacing);
       
       document.getElementById('spacingValue').textContent = multiplier + 'x';
     }
@@ -450,42 +523,74 @@
       if (!component) return;
 
       component.style.setProperty('--agile-ace-border-radius', radius + 'px');
+      component.style.setProperty('--agile-ace-border-radius-sm', (radius * 0.5) + 'px');
+      component.style.setProperty('--agile-ace-border-radius-md', radius + 'px');
+      component.style.setProperty('--agile-ace-border-radius-lg', (radius * 1.5) + 'px');
+      component.style.setProperty('--agile-ace-border-radius-xl', (radius * 2) + 'px');
+      
       document.getElementById('borderRadiusValue').textContent = radius + 'px';
     }
 
-    function exportCSS() {
+    function updateAllLogos(src, alt) {
+      // Update main component logo
+      const logoImg = document.getElementById('componentLogo');
+      logoImg.src = src;
+      logoImg.alt = alt;
+      
+      // Update any copied logos in navbar (AgileAce component copies branding elements)
       const component = document.getElementById('agileAceComponent');
-      if (!component) return;
-
-      const styles = window.getComputedStyle(component);
-      const cssProperties = [
-        '--agile-ace-primary-color',
-        '--agile-ace-secondary-color',
-        '--agile-ace-selected-color',
-        '--agile-ace-background-color',
-        '--agile-ace-font-size',
-        '--agile-ace-spacing-sm',
-        '--agile-ace-spacing-md',
-        '--agile-ace-spacing-lg',
-        '--agile-ace-border-radius'
-      ];
-
-      let css = 'agile-ace {\n';
-      cssProperties.forEach(prop => {
-        const value = component.style.getPropertyValue(prop) || getComputedStyle(component).getPropertyValue(prop);
-        if (value) {
-          css += `  ${prop}: ${value};\n`;
+      if (component && component.shadowRoot) {
+        const navbarLogos = component.shadowRoot.querySelectorAll('ace-navbar [slot="branding"]');
+        navbarLogos.forEach(logo => {
+          logo.src = src;
+          logo.alt = alt;
+        });
+        
+        // Also check for logos in nested shadow roots
+        const navbar = component.shadowRoot.querySelector('ace-navbar');
+        if (navbar && navbar.shadowRoot) {
+          const nestedLogos = navbar.shadowRoot.querySelectorAll('img[slot="branding"], [slot="branding"] img');
+          nestedLogos.forEach(logo => {
+            logo.src = src;
+            logo.alt = alt;
+          });
         }
-      });
-      css += '}\n';
+      }
+    }
 
-      const blob = new Blob([css], { type: 'text/css' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'agile-ace-theme.css';
-      a.click();
-      URL.revokeObjectURL(url);
+    function handleLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Check if file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        updateAllLogos(e.target.result, 'Custom Logo');
+        
+        // Clear active preset buttons
+        document.querySelectorAll('.logo-presets button').forEach(btn => {
+          btn.classList.remove('active');
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function selectPresetLogo(src, alt, buttonElement) {
+      updateAllLogos(src, alt);
+      
+      // Clear file input
+      document.getElementById('logoUpload').value = '';
+      
+      // Update active button
+      document.querySelectorAll('.logo-presets button').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      buttonElement.classList.add('active');
     }
 
     function resetToDefault() {
@@ -493,18 +598,38 @@
       
       document.getElementById('fontSize').value = '16';
       document.getElementById('spacing').value = '1';
-      document.getElementById('borderRadius').value = '6';
+      document.getElementById('borderRadius').value = '8';
       
       updateFontSize(16);
       updateSpacing(1);
-      updateBorderRadius(6);
+      updateBorderRadius(8);
+      
+      // Reset to default DHBW logo
+      selectPresetLogo('./assets/images/dhbw.png', 'DHBW Logo', document.querySelector('.logo-presets button:nth-child(2)'));
     }
 
     // Initialize component with default theme
     window.addEventListener('load', function() {
       setTimeout(() => {
-        applyTheme('default');
+        resetToDefault();
       }, 100);
+      
+      // Watch for changes in the AgileAce component to update logos when navbar is created
+      const component = document.getElementById('agileAceComponent');
+      if (component) {
+        const observer = new MutationObserver(() => {
+          // Re-apply current logo when DOM changes (e.g., navbar is created)
+          const currentLogo = document.getElementById('componentLogo');
+          if (currentLogo && currentLogo.src) {
+            updateAllLogos(currentLogo.src, currentLogo.alt);
+          }
+        });
+        
+        observer.observe(component, {
+          childList: true,
+          subtree: true
+        });
+      }
     });
   </script>
 </body>
