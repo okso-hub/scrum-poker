@@ -45,7 +45,6 @@ class AceNavbar extends HTMLElement {
     let backendUrl = this.getAttribute("backend-url");
     const gameId = Number(this.getAttribute("game-id"));
     
-    // Handle case where backendUrl is string "undefined" or "null"
     if (backendUrl === "undefined" || backendUrl === "null") {
       backendUrl = null;
     }
@@ -79,18 +78,14 @@ class AceNavbar extends HTMLElement {
   _render() {
     const gameId = Number(this.getAttribute("game-id"));
     
-    // Loads templace
     const templateContent = this._template.content.cloneNode(true);
 
-    // Inserts game ID in the template
     const gameIdElement = templateContent.querySelector('.game-id');
     gameIdElement.textContent = gameId.toString();
     
-    // Places template in shadow root
     this.shadowRoot.innerHTML = '';
     this.shadowRoot.appendChild(templateContent);
 
-    // Render settings button only for the game admin
     if (this._isAdmin) {
       const actionButtonsEl = this.shadowRoot.querySelector('.action-buttons');
       const settingsBtn = document.createElement('button');
@@ -102,7 +97,6 @@ class AceNavbar extends HTMLElement {
       actionButtonsEl.appendChild(settingsBtn);
     }
     
-    // Re-wire event listeners after DOM recreation
     this._wireUp();
   }
 
