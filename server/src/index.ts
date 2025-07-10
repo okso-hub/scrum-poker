@@ -51,7 +51,7 @@ app.use(errorHandler);
 
 // 7) Start HTTP + WebSocket
 const server = app.listen(PORT, HOST, () => {
-  console.log(`🚀 HTTP on http://${HOST}:${PORT}`);
+  console.log(`🚀 HTTP listening on http://${HOST}:${PORT}`);
 });
 initWebSocket(server);
 
