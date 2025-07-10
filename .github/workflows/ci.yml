@@ -76,7 +76,7 @@ jobs:
 
   build_image:
     name: Build Docker image
-    needs: e2e
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
