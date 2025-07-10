@@ -476,7 +476,7 @@ class AgileAce extends HTMLElement {
   }
 
   _connectWS() {
-    const url = "ws://einsnull.vip/ws";
+    const url = this.getAttribute("backend-url") + "/ws";
     this._ws = new WebSocket(url);
 
     this._ws.onopen = () => {
