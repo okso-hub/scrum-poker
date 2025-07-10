@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe.serial('Home page form', () => {
-  const BASE = 'http://localhost:1877/dashboard.html';
+  const BASE = 'http://localhost:3000/dashboard.html';
   let context;
   let page;
 

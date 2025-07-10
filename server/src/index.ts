@@ -7,7 +7,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 
 // Ensure HOST is a string, PORT a number
 const HOST = process.env.HOST || "localhost";
-const PORT = parseInt(process.env.PORT ?? "1877", 10);
+const PORT = parseInt(process.env.PORT ?? "3000", 10);
 
 const app = express();
 

@@ -174,6 +174,10 @@ class AgileAce extends HTMLElement {
     if (this._navbar) {
       this._navbarContainer.style.display = "block";
       
+      // Clear existing branding to prevent duplication
+      const existingBranding = this._navbar.querySelectorAll('[slot="branding"]');
+      existingBranding.forEach(node => node.remove());
+      
       // Copy branding to navbar
       const brandingNodes = Array.from(this.querySelectorAll('[slot="branding"]'));
       brandingNodes.forEach(node => {
@@ -199,7 +203,7 @@ class AgileAce extends HTMLElement {
   }
 
   _goBackToLanding() {
-    // Close WebSocket connection (if still existing)
+    // Close WebSocket connection (if still existing) 
     if (this._ws) {
       this._ws.close();
       this._ws = null;
